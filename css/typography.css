@@ -1,0 +1,74 @@
+/* Typography — Font Imports & Hierarchy */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap');
+
+body {
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  color: var(--clr-fg);
+  background-color: var(--clr-bg);
+}
+
+/* Serif headings */
+h1, h2, h3 { font-family: var(--font-serif); }
+
+h1 {
+  font-size: var(--text-4xl);
+  font-weight: 500;
+  line-height: var(--leading-tight);
+}
+
+h2 {
+  font-size: var(--text-3xl);
+  font-weight: 500;
+  line-height: var(--leading-tight);
+}
+
+h3 {
+  font-size: var(--text-xl);
+  font-weight: 500;
+  line-height: var(--leading-snug);
+}
+
+h4 {
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wider);
+}
+
+p { line-height: var(--leading-relaxed); }
+
+small, .text-sm { font-size: var(--text-sm); }
+.text-xs { font-size: var(--text-xs); }
+.text-lg { font-size: var(--text-lg); }
+.text-muted { color: var(--clr-muted-fg); }
+.text-primary { color: var(--clr-primary); }
+.text-center { text-align: center; }
+
+.font-serif { font-family: var(--font-serif); }
+.font-mono { font-family: var(--font-mono); }
+.font-medium { font-weight: 500; }
+.font-semibold { font-weight: 600; }
+
+/* Section label — small uppercase accent text */
+.section-label {
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wider);
+  color: var(--clr-primary);
+  margin-bottom: var(--space-4);
+}
+
+/* Responsive heading sizes */
+@media (min-width: 768px) {
+  h1 { font-size: var(--text-5xl); }
+  h2 { font-size: var(--text-4xl); }
+}
+
+@media (min-width: 1024px) {
+  h1 { font-size: var(--text-6xl); }
+  h2 { font-size: var(--text-5xl); }
+}
