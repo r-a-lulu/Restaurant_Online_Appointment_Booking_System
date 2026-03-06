@@ -14,13 +14,8 @@ $pageTitle = $pageTitle ?? 'Welcome';
 $pageCSS   = $pageCSS ?? [];
 $navStyle  = $navStyle ?? 'transparent';
 
-/* Resolve base path relative to current file */
-$basePath = '';
-// Count the number of slashes in the SCRIPT_NAME, minus 1 for the leading slash
-$depth = substr_count(str_replace('\\', '/', $_SERVER['SCRIPT_NAME']), '/') - 1;
-if ($depth > 0) {
-    $basePath = str_repeat('../', $depth);
-}
+/* Explicitly use the $basePath provided by the page, or default to current directory */
+$basePath = $basePath ?? './';
 ?>
 <!DOCTYPE html>
 <html lang="en">

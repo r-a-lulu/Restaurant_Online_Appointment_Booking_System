@@ -8,6 +8,7 @@ $pageTitle   = 'Welcome';
 $pageCSS     = ['home.css'];
 $currentPage = 'home';
 $navStyle    = 'transparent';
+$basePath    = './';
 
 include 'includes/header.php';
 include 'includes/nav.php';
