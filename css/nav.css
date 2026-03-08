@@ -1,21 +1,13 @@
 /* Navigation — Fixed header, desktop links, mobile menu */
 
 .site-nav {
-  position: fixed;
+  position: sticky;
   top: 0;
-  left: 0;
-  right: 0;
   z-index: 50;
   height: var(--nav-height);
   display: flex;
   align-items: center;
   padding-inline: var(--space-6);
-  transition: background-color var(--transition-base), box-shadow var(--transition-base);
-  background-color: transparent;
-}
-
-/* Scrolled state — added by JS */
-.site-nav.scrolled {
   background-color: rgba(246, 242, 237, 0.92);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
@@ -40,9 +32,7 @@
   letter-spacing: 0.02em;
 }
 
-.site-nav:not(.scrolled) .nav-logo {
-  color: #fff;
-}
+
 
 /* Desktop links */
 .nav-links {
@@ -84,16 +74,7 @@
   width: 100%;
 }
 
-.site-nav:not(.scrolled) .nav-link {
-  color: rgba(255, 255, 255, 0.85);
-}
-.site-nav:not(.scrolled) .nav-link:hover,
-.site-nav:not(.scrolled) .nav-link.active {
-  color: #fff;
-}
-.site-nav:not(.scrolled) .nav-link::after {
-  background-color: #fff;
-}
+
 
 /* Desktop actions */
 .nav-actions {
@@ -109,20 +90,7 @@
 .nav-actions .btn-ghost {
   color: var(--clr-muted-fg);
 }
-.site-nav:not(.scrolled) .nav-actions .btn-ghost {
-  color: rgba(255, 255, 255, 0.85);
-}
-.site-nav:not(.scrolled) .nav-actions .btn-ghost:hover {
-  color: #fff;
-  background-color: rgba(255, 255, 255, 0.1);
-}
-.site-nav:not(.scrolled) .nav-actions .btn-primary {
-  background-color: #fff;
-  color: var(--clr-primary);
-}
-.site-nav:not(.scrolled) .nav-actions .btn-primary:hover {
-  background-color: rgba(255, 255, 255, 0.9);
-}
+
 
 /* Mobile hamburger */
 .nav-mobile-toggle {
@@ -137,9 +105,7 @@
   background: none;
 }
 
-.site-nav:not(.scrolled) .nav-mobile-toggle {
-  color: #fff;
-}
+
 
 @media (min-width: 768px) {
   .nav-mobile-toggle { display: none; }
