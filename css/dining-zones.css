@@ -1,0 +1,113 @@
+/* Dining Zones Specific Styles */
+
+.dining-hero {
+    height: 70vh;
+    min-height: 500px;
+}
+
+.zone-detail-hero {
+    height: 50vh;
+    min-height: 350px;
+}
+
+.zone-image {
+    position: relative;
+    overflow: hidden;
+    height: 420px;
+    border-radius: var(--radius-xl);
+}
+
+.zone-image img {
+    transition: transform var(--transition-slow);
+}
+
+.zone-image:hover img {
+    transform: scale(1.05);
+}
+
+.zone-features {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+}
+
+@media (min-width: 768px) {
+    .md\:justify-end {
+        justify-content: flex-end;
+    }
+}
+
+.zone-features li {
+    display: flex;
+    align-items: center;
+    font-size: var(--text-sm);
+    color: var(--clr-fg);
+    font-weight: 500;
+    background: var(--clr-bg);
+    padding: var(--space-2) var(--space-4);
+    border-radius: var(--radius-full);
+    border: 1px solid var(--clr-border);
+}
+
+.zone-features li .icon-circle {
+    background: none;
+    padding: 0;
+    width: auto;
+    height: auto;
+}
+
+/* Sidebar List */
+.zone-details-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.zone-details-list li {
+    font-size: var(--text-sm);
+    color: var(--clr-fg);
+    padding-bottom: var(--space-3);
+    border-bottom: 1px solid var(--clr-border);
+}
+
+.zone-details-list li:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.zone-details-list strong {
+    font-weight: 500;
+    color: var(--clr-primary);
+    margin-right: var(--space-2);
+}
+
+.leading-relaxed {
+    line-height: var(--leading-relaxed);
+}
+
+.order-1 {
+    order: 1;
+}
+
+.order-2 {
+    order: 2;
+}
+
+@media (min-width: 768px) {
+    .md\:order-1 {
+        order: 1;
+    }
+
+    .md\:order-2 {
+        order: 2;
+    }
+}
+
+.bg-muted {
+    background-color: var(--clr-muted);
+}

@@ -1,86 +1,14 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Eudaimonia — An exquisite dining experience. Reserve your table today.">
-  <title>Welcome | Eudaimonia</title>
+<?php
 
-  <!-- Favicon -->
-  <link rel="icon" href="assets/images/icon.svg" type="image/svg+xml">
-  <link rel="apple-touch-icon" href="assets/images/apple-icon.png">
+$pageTitle = 'Welcome | Eudaimonia';
+$currentPage = 'home';
+$pageCSS = 'home';
+include 'includes/header.php';
 
-  <!-- Core CSS (order matters) -->
-  <link rel="stylesheet" href="css/variables.css">
-  <link rel="stylesheet" href="css/reset.css">
-  <link rel="stylesheet" href="css/typography.css">
-  <link rel="stylesheet" href="css/base.css">
-  <link rel="stylesheet" href="css/components.css">
-  <link rel="stylesheet" href="css/nav.css">
-  <link rel="stylesheet" href="css/footer.css">
-
-  <!-- Page-specific CSS -->
-  <link rel="stylesheet" href="css/home.css">
-</head>
-<body>
-
-<!-- Navigation -->
-<nav class="site-nav" id="site-nav">
-  <div class="nav-inner">
-    <!-- Logo -->
-    <a href="index.html" class="nav-logo">Eudaimonia</a>
-
-    <!-- Desktop links -->
-    <div class="nav-links">
-      <a href="index.html" class="nav-link active">Home</a>
-      <a href="#" class="nav-link">About</a>
-      <a href="#" class="nav-link">Dining</a>
-    </div>
-
-    <!-- Desktop actions -->
-    <div class="nav-actions">
-      <a href="#" class="btn btn-ghost btn-sm">Sign In</a>
-      <a href="#" class="btn btn-primary btn-sm">Reserve a Table</a>
-    </div>
-
-    <!-- Mobile toggle -->
-    <button class="nav-mobile-toggle" id="nav-mobile-toggle" aria-label="Open menu">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-        <line x1="3" y1="6" x2="21" y2="6"></line>
-        <line x1="3" y1="12" x2="21" y2="12"></line>
-        <line x1="3" y1="18" x2="21" y2="18"></line>
-      </svg>
-    </button>
-  </div>
-</nav>
-
-<!-- Mobile menu overlay -->
-<div class="mobile-menu-overlay" id="mobile-menu-overlay"></div>
-
-<!-- Mobile slide-in menu -->
-<div class="mobile-menu" id="mobile-menu">
-  <button class="mobile-menu-close" id="mobile-menu-close" aria-label="Close menu">
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-      <line x1="18" y1="6" x2="6" y2="18"></line>
-      <line x1="6" y1="6" x2="18" y2="18"></line>
-    </svg>
-  </button>
-
-  <div class="mobile-menu-links">
-    <a href="index.html" class="mobile-menu-link active">Home</a>
-    <a href="#" class="mobile-menu-link">About</a>
-    <a href="#" class="mobile-menu-link">Dining Zones</a>
-    <a href="#" class="mobile-menu-link">Reservations</a>
-  </div>
-
-  <div class="mobile-menu-actions">
-    <a href="#" class="btn btn-outline btn-block">Sign In</a>
-    <a href="#" class="btn btn-primary btn-block">Reserve a Table</a>
-  </div>
-</div>
+?>
 
 <!-- Hero Section -->
-<section class="hero">
+<section class="hero home-hero">
   <div class="hero-bg">
     <img src="assets/images/hero-restaurant.jpg" alt="Eudaimonia restaurant interior" class="img-cover">
   </div>
@@ -90,8 +18,8 @@
     <h1 class="hero-title">Eudaimonia</h1>
     <p class="hero-subtitle">An exquisite dining experience where every detail is crafted to create moments of pure joy and connection.</p>
     <div class="hero-actions">
-      <a href="#" class="btn btn-hero">Reserve a Table</a>
-      <a href="#" class="btn btn-outline-light btn-lg">Our Story</a>
+      <a href="javascript:void(0)" class="btn btn-hero">Reserve a Table</a>
+      <a href="/pages/about.php" class="btn btn-outline-light btn-lg">Our Story</a>
     </div>
   </div>
 </section>
@@ -213,72 +141,10 @@
       Reserve your table today and discover why Eudaimonia is the city's most sought-after dining destination.
     </p>
     <div style="margin-top: var(--space-8); display: flex; gap: var(--space-4); justify-content: center; flex-wrap: wrap;">
-      <a href="#" class="btn btn-hero">Reserve a Table</a>
-      <a href="#" class="btn btn-outline-light btn-lg">Explore Dining Zones</a>
+      <a href="javascript:void(0)" class="btn btn-hero">Reserve a Table</a>
+      <a href="/pages/dining-zones/index.php" class="btn btn-outline-light btn-lg">Explore Dining Zones</a>
     </div>
   </div>
 </section>
 
-<!-- Footer -->
-<footer class="site-footer">
-  <div class="footer-inner">
-    <!-- Brand -->
-    <div class="footer-brand">
-      <h3>Eudaimonia</h3>
-      <p>An exquisite dining experience where every detail is crafted to create moments of pure joy and connection.</p>
-    </div>
-
-    <!-- Quick Links -->
-    <div class="footer-column">
-      <h4>Quick Links</h4>
-      <div class="footer-links">
-        <a href="#" class="footer-link">About Us</a>
-        <a href="#" class="footer-link">Dining Zones</a>
-        <a href="#" class="footer-link">Reservations</a>
-        <a href="#" class="footer-link">Login</a>
-      </div>
-    </div>
-
-    <!-- Contact -->
-    <div class="footer-column">
-      <h4>Contact</h4>
-      <div class="footer-links">
-        <div class="footer-contact-item">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
-          <span>123 Culinary Avenue<br>New York, NY 10001</span>
-        </div>
-        <div class="footer-contact-item">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-          <span>(555) 123-4567</span>
-        </div>
-        <div class="footer-contact-item">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
-          <span>hello@eudaimonia.com</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Hours -->
-    <div class="footer-column">
-      <h4>Hours</h4>
-      <div class="footer-links">
-        <div class="footer-contact-item">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-          <span>Mon – Thu: 5:00 PM – 10:00 PM<br>Fri – Sat: 5:00 PM – 11:00 PM<br>Sun: 4:00 PM – 9:00 PM</span>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Bottom bar -->
-  <div class="footer-bottom">
-    <p>&copy; 2026 Eudaimonia. All rights reserved.</p>
-    <div class="footer-bottom-links">
-      <a href="#">Privacy Policy</a>
-      <a href="#">Terms of Service</a>
-    </div>
-  </div>
-</footer>
-
-</body>
-</html>
+<?php include 'includes/footer.php'; ?>
