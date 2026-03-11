@@ -86,34 +86,34 @@ include '../includes/header.php';
       <!-- Team Member 1 -->
       <div class="team-card">
         <div class="team-image mb-4">
-          <img src="/assets/images/team-1.jpg" alt="Chef Julian Sterling" class="img-cover rounded-xl aspect-square">
+          <img src="/assets/images/famous-chefs/gordon_ramsay.png" alt="Chef Gordon Ramsay" class="img-cover rounded-xl aspect-square">
         </div>
-        <h3 class="text-lg">Julian Sterling</h3>
+        <h3 class="text-lg">Gordon Ramsay</h3>
         <p class="text-sm text-primary">Executive Chef</p>
       </div>
       <!-- Team Member 2 -->
       <div class="team-card">
         <div class="team-image mb-4">
-          <img src="/assets/images/team-2.jpg" alt="Elena Rodriguez" class="img-cover rounded-xl aspect-square">
+          <img src="/assets/images/famous-chefs/massimo_bottura.png" alt="Massimo Bottura" class="img-cover rounded-xl aspect-square">
         </div>
-        <h3 class="text-lg">Elena Rodriguez</h3>
-        <p class="text-sm text-primary">Sommelier</p>
+        <h3 class="text-lg">Massimo Bottura</h3>
+        <p class="text-sm text-primary">Culinary Director</p>
       </div>
       <!-- Team Member 3 -->
       <div class="team-card">
         <div class="team-image mb-4">
-          <img src="/assets/images/team-3.jpg" alt="Marcus Chen" class="img-cover rounded-xl aspect-square">
+          <img src="/assets/images/famous-chefs/dominique_crenn.png" alt="Dominique Crenn" class="img-cover rounded-xl aspect-square">
         </div>
-        <h3 class="text-lg">Marcus Chen</h3>
-        <p class="text-sm text-primary">Pastry Chef</p>
+        <h3 class="text-lg">Dominique Crenn</h3>
+        <p class="text-sm text-primary">Head Chef</p>
       </div>
       <!-- Team Member 4 -->
       <div class="team-card">
         <div class="team-image mb-4">
-          <img src="/assets/images/team-4.jpg" alt="Sarah Jenkins" class="img-cover rounded-xl aspect-square">
+          <img src="/assets/images/famous-chefs/rene_redzepi.png" alt="René Redzepi" class="img-cover rounded-xl aspect-square">
         </div>
-        <h3 class="text-lg">Sarah Jenkins</h3>
-        <p class="text-sm text-primary">Maitre D'</p>
+        <h3 class="text-lg">René Redzepi</h3>
+        <p class="text-sm text-primary">R&D Chef</p>
       </div>
     </div>
   </div>

@@ -84,9 +84,9 @@ include '../../includes/header.php';
 </section>
 
 <!-- Private Events CTA -->
-<section class="cta-section" style="background-color: var(--clr-sidebar);">
+<section class="section-lg" style="background-color: var(--clr-sidebar);">
   <div class="container text-center">
-    <h2 style="color: var(--clr-primary-fg); margin-top: var(--space-6);">Host a Private Event</h2>
+    <h2 style="color: var(--clr-primary-fg);">Host a Private Event</h2>
     <p style="color: rgba(255,255,255,0.7); max-width: 32rem; margin-inline: auto; margin-top: var(--space-4);">
       Looking for an exclusive space for your special occasion? We offer full buyouts and tailored private dining experiences.
     </p>
