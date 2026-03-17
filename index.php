@@ -25,8 +25,8 @@ include 'includes/nav.php';
     <h1 class="hero-title">Eudaimonia</h1>
     <p class="hero-subtitle">An exquisite dining experience where every detail is crafted to create moments of pure joy and connection.</p>
     <div class="hero-actions">
-      <a href="#" onclick="alert('This page will be built in Phase 4'); return false;" class="btn btn-hero">Reserve a Table</a>
-      <a href="#" onclick="alert('This page will be built in Phase 2'); return false;" class="btn btn-outline-light btn-lg">Our Story</a>
+      <a href="#" onclick="alert('Booking page coming in Phase 4'); return false;" class="btn btn-hero">Reserve a Table</a>
+      <a href="pages/about.php" class="btn btn-outline-light btn-lg">Our Story</a>
     </div>
   </div>
 </section>
@@ -57,7 +57,7 @@ include 'includes/nav.php';
 
     <div class="zones-grid">
       <!-- The Patio -->
-      <a href="#" onclick="alert('This page will be built in Phase 2'); return false;" class="zone-card">
+      <a href="pages/dining-zones/patio.php" class="zone-card">
         <div class="zone-card-img">
           <img src="assets/images/zone-patio.jpg" alt="The Patio dining zone" class="img-cover">
         </div>
@@ -69,7 +69,7 @@ include 'includes/nav.php';
       </a>
 
       <!-- Main Dining Room -->
-      <a href="#" onclick="alert('This page will be built in Phase 2'); return false;" class="zone-card">
+      <a href="pages/dining-zones/dining-room.php" class="zone-card">
         <div class="zone-card-img">
           <img src="assets/images/zone-dining.jpg" alt="Main Dining Room" class="img-cover">
         </div>
@@ -81,7 +81,7 @@ include 'includes/nav.php';
       </a>
 
       <!-- The Bar -->
-      <a href="#" onclick="alert('This page will be built in Phase 2'); return false;" class="zone-card">
+      <a href="pages/dining-zones/bar.php" class="zone-card">
         <div class="zone-card-img">
           <img src="assets/images/zone-bar.jpg" alt="The Bar lounge area" class="img-cover">
         </div>
@@ -148,8 +148,8 @@ include 'includes/nav.php';
       Reserve your table today and discover why Eudaimonia is the city's most sought-after dining destination.
     </p>
     <div style="margin-top: var(--space-8); display: flex; gap: var(--space-4); justify-content: center; flex-wrap: wrap;">
-      <a href="#" onclick="alert('This page will be built in Phase 4'); return false;" class="btn btn-hero">Reserve a Table</a>
-      <a href="#" onclick="alert('This page will be built in Phase 2'); return false;" class="btn btn-outline-light btn-lg">Explore Dining Zones</a>
+      <a href="#" onclick="alert('Booking page coming in Phase 4'); return false;" class="btn btn-hero">Reserve a Table</a>
+      <a href="pages/dining-zones/index.php" class="btn btn-outline-light btn-lg">Explore Dining Zones</a>
     </div>
   </div>
 </section>
