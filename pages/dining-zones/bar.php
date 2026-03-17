@@ -140,32 +140,44 @@ include '../../includes/nav.php';
     </div>
     <div class="zone-table-grid">
       <div class="zone-table-card">
-        <div class="zone-table-card-header">
-          <h3>Bar Counter</h3>
-          <span>8 seats</span>
+        <img src="https://images.unsplash.com/photo-1545529468-ecc09cd34bfb?w=600&q=80" alt="Bar Counter seats" class="zone-table-card-img">
+        <div class="zone-table-card-body">
+          <div class="zone-table-card-header">
+            <h3>Bar Counter</h3>
+            <span>8 seats</span>
+          </div>
+          <p>Premium seats at our mahogany bar</p>
         </div>
-        <p>Premium seats at our mahogany bar</p>
       </div>
       <div class="zone-table-card">
-        <div class="zone-table-card-header">
-          <h3>Lounge Booths</h3>
-          <span>4 seats</span>
+        <img src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=600&q=80" alt="Lounge Booths" class="zone-table-card-img">
+        <div class="zone-table-card-body">
+          <div class="zone-table-card-header">
+            <h3>Lounge Booths</h3>
+            <span>4 seats</span>
+          </div>
+          <p>Intimate leather booth seating</p>
         </div>
-        <p>Intimate leather booth seating</p>
       </div>
       <div class="zone-table-card">
-        <div class="zone-table-card-header">
-          <h3>High Tops</h3>
-          <span>4 seats</span>
+        <img src="https://images.unsplash.com/photo-1559339352-11d035aa65ce?w=600&q=80" alt="High Tops" class="zone-table-card-img">
+        <div class="zone-table-card-body">
+          <div class="zone-table-card-header">
+            <h3>High Tops</h3>
+            <span>4 seats</span>
+          </div>
+          <p>Casual elevated tables</p>
         </div>
-        <p>Casual elevated tables</p>
       </div>
       <div class="zone-table-card">
-        <div class="zone-table-card-header">
-          <h3>Corner Sofa</h3>
-          <span>6 seats</span>
+        <img src="https://images.unsplash.com/photo-1436076863939-06870fe779c2?w=600&q=80" alt="Corner Sofa" class="zone-table-card-img">
+        <div class="zone-table-card-body">
+          <div class="zone-table-card-header">
+            <h3>Corner Sofa</h3>
+            <span>6 seats</span>
+          </div>
+          <p>Relaxed seating for larger groups</p>
         </div>
-        <p>Relaxed seating for larger groups</p>
       </div>
     </div>
   </div>

@@ -87,23 +87,43 @@ include '../includes/nav.php';
     </div>
     <div class="team-grid">
       <div class="team-card">
-        <h3>Isabella Marchetti</h3>
-        <p class="team-role">Executive Chef</p>
-        <p>Trained in the kitchens of Milan and Lyon, Chef Marchetti brings 20 years of culinary excellence to Eudaimonia. Her philosophy centers on honoring ingredients while pushing creative boundaries.</p>
+        <div class="team-member-header">
+          <img src="<?= $basePath ?>assets/images/team_jann.png" alt="Jann Francis Juson" class="team-photo">
+          <div class="team-info">
+            <h3>Jann Francis Juson</h3>
+            <p class="team-role">Executive Chef</p>
+          </div>
+        </div>
+        <p>Trained in the kitchens of Milan and Lyon, Chef Juson brings 20 years of culinary excellence to Eudaimonia. His philosophy centers on honoring ingredients while pushing creative boundaries.</p>
       </div>
       <div class="team-card">
-        <h3>Marcus Chen</h3>
-        <p class="team-role">General Manager</p>
+        <div class="team-member-header">
+          <img src="<?= $basePath ?>assets/images/team_marcus.png" alt="Marcus Chen" class="team-photo">
+          <div class="team-info">
+            <h3>Marcus Chen</h3>
+            <p class="team-role">General Manager</p>
+          </div>
+        </div>
         <p>With a background in luxury hospitality spanning three continents, Marcus ensures every guest experience exceeds expectations. His attention to detail is legendary.</p>
       </div>
       <div class="team-card">
-        <h3>Elena Vasquez</h3>
-        <p class="team-role">Head Sommelier</p>
+        <div class="team-member-header">
+          <img src="<?= $basePath ?>assets/images/team_elena.png" alt="Elena Vasquez" class="team-photo">
+          <div class="team-info">
+            <h3>Elena Vasquez</h3>
+            <p class="team-role">Head Sommelier</p>
+          </div>
+        </div>
         <p>A certified Master Sommelier, Elena curates our wine program with passion and precision. Her pairings elevate each dish to new heights.</p>
       </div>
       <div class="team-card">
-        <h3>David Laurent</h3>
-        <p class="team-role">Pastry Chef</p>
+        <div class="team-member-header">
+          <img src="<?= $basePath ?>assets/images/team_david.png" alt="David Laurent" class="team-photo">
+          <div class="team-info">
+            <h3>David Laurent</h3>
+            <p class="team-role">Pastry Chef</p>
+          </div>
+        </div>
         <p>David's desserts are legendary—architectural masterpieces that balance artistry with indulgence. His creations provide the perfect finale to every meal.</p>
       </div>
     </div>

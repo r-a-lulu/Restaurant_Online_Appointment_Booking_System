@@ -155,17 +155,31 @@
   border-radius: var(--radius-sm);
 }
 
-.team-card h3 {
+.team-member-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.team-photo {
+  width: 4rem;
+  height: 4rem;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.team-info h3 {
   font-family: var(--font-serif);
   font-size: var(--text-xl);
   color: var(--clr-fg);
   margin-bottom: var(--space-1);
 }
 
-.team-card .team-role {
+.team-info .team-role {
   font-size: var(--text-sm);
   color: var(--clr-primary);
-  margin-bottom: var(--space-4);
+  display: block;
 }
 
 .team-card p {

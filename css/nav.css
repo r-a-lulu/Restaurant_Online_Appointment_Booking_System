@@ -29,6 +29,7 @@
   width: 100%;
   max-width: var(--container-max);
   margin-inline: auto;
+  position: relative;
 }
 
 /* Logo */
@@ -52,7 +53,12 @@
 }
 
 @media (min-width: 768px) {
-  .nav-links { display: flex; }
+  .nav-links { 
+    display: flex;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+  }
 }
 
 .nav-link {

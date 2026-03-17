@@ -100,46 +100,64 @@ include '../../includes/nav.php';
     </div>
     <div class="zone-table-grid zone-table-grid--3col">
       <div class="zone-table-card">
-        <div class="zone-table-card-header">
-          <h3>Chef's View</h3>
-          <span>2 seats</span>
+        <img src="https://images.unsplash.com/photo-1590846406792-0adc7f938f1d?w=600&q=80" alt="Chef's View seats" class="zone-table-card-img">
+        <div class="zone-table-card-body">
+          <div class="zone-table-card-header">
+            <h3>Chef's View</h3>
+            <span>2 seats</span>
+          </div>
+          <p>Front-row seats to our open kitchen</p>
         </div>
-        <p>Front-row seats to our open kitchen</p>
       </div>
       <div class="zone-table-card">
-        <div class="zone-table-card-header">
-          <h3>Window Table</h3>
-          <span>4 seats</span>
+        <img src="https://images.unsplash.com/photo-1550966871-3ed3cfd6b4a3?w=600&q=80" alt="Window Table" class="zone-table-card-img">
+        <div class="zone-table-card-body">
+          <div class="zone-table-card-header">
+            <h3>Window Table</h3>
+            <span>4 seats</span>
+          </div>
+          <p>Elegant seating with street views</p>
         </div>
-        <p>Elegant seating with street views</p>
       </div>
       <div class="zone-table-card">
-        <div class="zone-table-card-header">
-          <h3>Banquette</h3>
-          <span>6 seats</span>
+        <img src="https://images.unsplash.com/photo-1551632436-cbf8dd35adfa?w=600&q=80" alt="Banquette seating" class="zone-table-card-img">
+        <div class="zone-table-card-body">
+          <div class="zone-table-card-header">
+            <h3>Banquette</h3>
+            <span>6 seats</span>
+          </div>
+          <p>Comfortable booth seating in our main area</p>
         </div>
-        <p>Comfortable booth seating in our main area</p>
       </div>
       <div class="zone-table-card">
-        <div class="zone-table-card-header">
-          <h3>Fireplace</h3>
-          <span>4 seats</span>
+        <img src="https://images.unsplash.com/photo-1567521464027-f127ff144326?w=600&q=80" alt="Fireplace table" class="zone-table-card-img">
+        <div class="zone-table-card-body">
+          <div class="zone-table-card-header">
+            <h3>Fireplace</h3>
+            <span>4 seats</span>
+          </div>
+          <p>Cozy setting near our marble fireplace</p>
         </div>
-        <p>Cozy setting near our marble fireplace</p>
       </div>
       <div class="zone-table-card">
-        <div class="zone-table-card-header">
-          <h3>Private Alcove</h3>
-          <span>8 seats</span>
+        <img src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600&q=80" alt="Private Alcove" class="zone-table-card-img">
+        <div class="zone-table-card-body">
+          <div class="zone-table-card-header">
+            <h3>Private Alcove</h3>
+            <span>8 seats</span>
+          </div>
+          <p>Semi-private space for larger parties</p>
         </div>
-        <p>Semi-private space for larger parties</p>
       </div>
       <div class="zone-table-card">
-        <div class="zone-table-card-header">
-          <h3>Chandelier</h3>
-          <span>4 seats</span>
+        <img src="https://images.unsplash.com/photo-1482275548304-a58859dc31b7?w=600&q=80" alt="Chandelier table" class="zone-table-card-img">
+        <div class="zone-table-card-body">
+          <div class="zone-table-card-header">
+            <h3>Chandelier</h3>
+            <span>4 seats</span>
+          </div>
+          <p>Centered beneath our signature crystal chandelier</p>
         </div>
-        <p>Centered beneath our signature crystal chandelier</p>
       </div>
     </div>
   </div>

@@ -28,7 +28,7 @@
 .zone-row-img {
   position: relative;
   aspect-ratio: 4 / 3;
-  border-radius: var(--radius-sm);
+  border-radius: 1.25rem;
   overflow: hidden;
 }
 
@@ -42,6 +42,16 @@
 
 .zone-row:hover .zone-row-img img {
   transform: scale(1.03);
+}
+
+/* Seating card image */
+.zone-table-card-img {
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  object-fit: cover;
+  display: block;
+  border-radius: 0.625rem;
+  margin-bottom: var(--space-4);
 }
 
 /* Reverse layout for odd rows on desktop */
@@ -303,12 +313,30 @@
   background-color: var(--clr-card);
   border: 1px solid var(--clr-border);
   border-radius: var(--radius-sm);
-  padding: var(--space-6);
+  overflow: hidden;
   transition: box-shadow var(--transition-fast);
 }
 
 .zone-table-card:hover {
   box-shadow: var(--shadow-md);
+}
+
+/* Image fills card top edge */
+.zone-table-card-img {
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  object-fit: cover;
+  display: block;
+  transition: transform var(--transition-slower);
+}
+
+.zone-table-card:hover .zone-table-card-img {
+  transform: scale(1.04);
+}
+
+/* Text content below image */
+.zone-table-card-body {
+  padding: var(--space-6);
 }
 
 .zone-table-card-header {
