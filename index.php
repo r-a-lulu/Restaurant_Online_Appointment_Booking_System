@@ -33,10 +33,10 @@ include 'includes/nav.php';
 
 <!-- Philosophy Section -->
 <section class="section-lg">
-  <div class="container" style="max-width: 48rem; text-align: center;">
+  <div class="container philosophy-inner">
     <h4 class="section-label">Our Philosophy</h4>
     <h2>The Art of Dining</h2>
-    <p class="text-muted" style="margin-top: var(--space-6); font-size: var(--text-lg);">
+    <p class="text-muted">
       At Eudaimonia, we believe that dining is more than just a meal — it's an experience 
       that nourishes the soul. Every dish is crafted with passion, every moment designed 
       to create lasting memories.
@@ -45,12 +45,12 @@ include 'includes/nav.php';
 </section>
 
 <!-- Dining Zones Section -->
-<section class="section" style="background-color: var(--clr-muted);">
+<section class="section zones-section">
   <div class="container">
-    <div style="text-align: center;" class="mb-12">
+    <div class="zones-header mb-12">
       <h4 class="section-label">Explore Our Spaces</h4>
       <h2>Dining Zones</h2>
-      <p class="text-muted" style="margin-top: var(--space-4); max-width: 36rem; margin-inline: auto;">
+      <p class="text-muted">
         Three distinctive environments, each offering a unique atmosphere for your perfect dining experience.
       </p>
     </div>
@@ -98,7 +98,7 @@ include 'includes/nav.php';
 <!-- Features Section -->
 <section class="section-lg">
   <div class="container">
-    <div style="text-align: center;" class="mb-12">
+    <div class="features-header mb-12">
       <h4 class="section-label">Why Eudaimonia</h4>
       <h2>An Unparalleled Experience</h2>
     </div>
@@ -141,13 +141,13 @@ include 'includes/nav.php';
 
 <!-- CTA Section -->
 <section class="cta-section">
-  <div class="container" style="text-align: center;">
-    <h4 class="section-label" style="color: rgba(255,255,255,0.7);">Begin Your Journey</h4>
-    <h2 style="color: #fff;">Ready for an Unforgettable Evening?</h2>
-    <p style="color: rgba(255,255,255,0.7); margin-top: var(--space-4); max-width: 32rem; margin-inline: auto;">
+  <div class="container cta-inner">
+    <h4 class="section-label">Begin Your Journey</h4>
+    <h2>Ready for an Unforgettable Evening?</h2>
+    <p>
       Reserve your table today and discover why Eudaimonia is the city's most sought-after dining destination.
     </p>
-    <div style="margin-top: var(--space-8); display: flex; gap: var(--space-4); justify-content: center; flex-wrap: wrap;">
+    <div class="cta-actions">
       <a href="#" onclick="alert('Booking page coming in Phase 4'); return false;" class="btn btn-hero">Reserve a Table</a>
       <a href="pages/dining-zones/index.php" class="btn btn-outline-light btn-lg">Explore Dining Zones</a>
     </div>
