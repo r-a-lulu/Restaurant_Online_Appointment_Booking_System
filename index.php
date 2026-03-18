@@ -17,7 +17,7 @@ include 'includes/nav.php';
 <!-- Hero Section -->
 <section class="hero">
   <div class="hero-bg">
-    <img src="assets/images/hero-restaurant.jpg" alt="Eudaimonia restaurant interior" class="img-cover">
+    <img src="assets/images/hero/hero-restaurant.jpg" alt="Interior of Eudaimonia restaurant" class="img-cover">
   </div>
   <div class="hero-overlay"></div>
   <div class="hero-content container">
@@ -59,7 +59,7 @@ include 'includes/nav.php';
       <!-- The Patio -->
       <a href="pages/dining-zones/patio.php" class="zone-card">
         <div class="zone-card-img">
-          <img src="assets/images/zone-patio.jpg" alt="The Patio dining zone" class="img-cover">
+          <img src="assets/images/zones/zone-patio.jpg" alt="The Patio dining zone" class="img-cover">
         </div>
         <div class="zone-card-overlay"></div>
         <div class="zone-card-content">
@@ -71,7 +71,7 @@ include 'includes/nav.php';
       <!-- Main Dining Room -->
       <a href="pages/dining-zones/dining-room.php" class="zone-card">
         <div class="zone-card-img">
-          <img src="assets/images/zone-dining.jpg" alt="Main Dining Room" class="img-cover">
+          <img src="assets/images/zones/zone-dining.jpg" alt="Main Dining Room" class="img-cover">
         </div>
         <div class="zone-card-overlay"></div>
         <div class="zone-card-content">
@@ -83,7 +83,7 @@ include 'includes/nav.php';
       <!-- The Bar -->
       <a href="pages/dining-zones/bar.php" class="zone-card">
         <div class="zone-card-img">
-          <img src="assets/images/zone-bar.jpg" alt="The Bar lounge area" class="img-cover">
+          <img src="assets/images/zones/zone-bar.jpg" alt="The Bar lounge area" class="img-cover">
         </div>
         <div class="zone-card-overlay"></div>
         <div class="zone-card-content">

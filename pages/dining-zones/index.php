@@ -33,8 +33,8 @@ include '../../includes/nav.php';
       <!-- The Patio (image left) -->
       <div class="zone-row">
         <div class="zone-row-img">
-          <img src="<?= $basePath ?>assets/images/zone-patio.jpg" alt="The Patio at Eudaimonia">
-        </div>
+        <img src="<?= $basePath ?>assets/images/zones/zone-patio.jpg" alt="The Patio Dining Zone">
+      </div>
         <div class="zone-row-text">
           <div>
             <p class="section-label">Al Fresco Elegance</p>
@@ -67,8 +67,8 @@ include '../../includes/nav.php';
       <!-- Main Dining Room (image right) -->
       <div class="zone-row zone-row--reverse">
         <div class="zone-row-img">
-          <img src="<?= $basePath ?>assets/images/zone-dining.jpg" alt="Main Dining Room at Eudaimonia">
-        </div>
+        <img src="<?= $basePath ?>assets/images/zones/zone-dining.jpg" alt="Main Dining Room">
+      </div>
         <div class="zone-row-text">
           <div>
             <p class="section-label">Timeless Sophistication</p>
@@ -101,8 +101,8 @@ include '../../includes/nav.php';
       <!-- The Bar (image left) -->
       <div class="zone-row">
         <div class="zone-row-img">
-          <img src="<?= $basePath ?>assets/images/zone-bar.jpg" alt="The Bar at Eudaimonia">
-        </div>
+        <img src="<?= $basePath ?>assets/images/zones/zone-bar.jpg" alt="The Bar Lounge">
+      </div>
         <div class="zone-row-text">
           <div>
             <p class="section-label">Intimate Indulgence</p>

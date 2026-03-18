@@ -30,7 +30,7 @@ include '../includes/nav.php';
   <div class="container">
     <div class="story-grid">
       <div class="story-img">
-        <img src="<?= $basePath ?>assets/images/about-chef.jpg" alt="Our Executive Chef at Eudaimonia">
+        <img src="<?= $basePath ?>assets/images/team/about-chef.jpg" alt="Our Executive Chef at Eudaimonia">
       </div>
       <div class="story-text">
         <p class="section-label">The Beginning</p>
@@ -88,7 +88,7 @@ include '../includes/nav.php';
     <div class="team-grid">
       <div class="team-card">
         <div class="team-member-header">
-          <img src="<?= $basePath ?>assets/images/team_jann.png" alt="Jann Francis Juson" class="team-photo">
+          <img src="<?= $basePath ?>assets/images/team/team_jann.png" alt="Jann Francis Juson" class="team-photo">
           <div class="team-info">
             <h3>Jann Francis Juson</h3>
             <p class="team-role">Executive Chef</p>
@@ -98,7 +98,7 @@ include '../includes/nav.php';
       </div>
       <div class="team-card">
         <div class="team-member-header">
-          <img src="<?= $basePath ?>assets/images/team_marcus.png" alt="Marcus Chen" class="team-photo">
+          <img src="<?= $basePath ?>assets/images/team/team_marcus.png" alt="Marcus Chen" class="team-photo">
           <div class="team-info">
             <h3>Marcus Chen</h3>
             <p class="team-role">General Manager</p>
@@ -108,7 +108,7 @@ include '../includes/nav.php';
       </div>
       <div class="team-card">
         <div class="team-member-header">
-          <img src="<?= $basePath ?>assets/images/team_elena.png" alt="Elena Vasquez" class="team-photo">
+          <img src="<?= $basePath ?>assets/images/team/team_elena.png" alt="Elena Vasquez" class="team-photo">
           <div class="team-info">
             <h3>Elena Vasquez</h3>
             <p class="team-role">Head Sommelier</p>
@@ -118,7 +118,7 @@ include '../includes/nav.php';
       </div>
       <div class="team-card">
         <div class="team-member-header">
-          <img src="<?= $basePath ?>assets/images/team_david.png" alt="David Laurent" class="team-photo">
+          <img src="<?= $basePath ?>assets/images/team/team_david.png" alt="David Laurent" class="team-photo">
           <div class="team-info">
             <h3>David Laurent</h3>
             <p class="team-role">Pastry Chef</p>

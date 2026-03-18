@@ -17,7 +17,7 @@ include '../../includes/nav.php';
 <!-- Hero -->
 <section class="zone-detail-hero">
   <div class="zone-detail-hero-bg">
-    <img src="<?= $basePath ?>assets/images/zone-dining.jpg" alt="Main Dining Room at Eudaimonia">
+    <img src="<?= $basePath ?>assets/images/zones/zone-dining.jpg" alt="Main Dining Room at Eudaimonia">
   </div>
   <div class="zone-detail-hero-overlay"></div>
   <div class="zone-detail-hero-content container">
