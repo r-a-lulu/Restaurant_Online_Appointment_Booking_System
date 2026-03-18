@@ -4,10 +4,11 @@
 
 * Always use **PDO**
 * Never use deprecated procedural database functions
-* Separate business logic from presentation
+* Separate business logic from presentation (All data fetching, database operations, and form processing must occur at the very top of the PHP file, before any HTML is rendered)
 * Validate and sanitize ALL user input
 * Escape output using `htmlspecialchars()`
 * Use prepared statements for ALL database queries
+* Always use the `$basePath` variable for routing and asset linking (CSS, JS, images) in all PHP files to prevent broken links across different directory depths
 
 Example:
 
@@ -20,9 +21,9 @@ $stmt->execute([$email]);
 
 ## 🌐 HTML Rules
 
-* Use semantic HTML5 tags (`section`, `nav`, `main`, `header`, `footer`)
+* Write strictly Semantic HTML5 (`<main>`, `<section>`, `<article>`, `nav`, `header`, `footer`)
 * Avoid inline styles
-* Maintain accessibility basics (labels, alt text, button types)
+* Maintain accessibility basics (Every image must have a descriptive `alt` tag, interactive elements must have proper `aria-labels`, inputs must have `labels`, and maintain keyboard accessibility)
 * Keep layout clean and structured
 
 Example:
@@ -154,5 +155,7 @@ When generating code:
 * Prefer simple and safe implementations
 * Follow existing project structure strictly
 * Do not introduce frameworks unless explicitly requested
+* Before committing any frontend changes to Git, always visually verify (via browser tool or manual review) that the layout and CSS have not broken
+* Always use semantic Conventional Commits for Git messages (e.g., `feat:`, `fix:`, `refactor:`, `style:`, `docs:`)
 
 ---
