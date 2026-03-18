@@ -82,7 +82,7 @@ include '../../includes/nav.php';
             </div>
           </div>
         </div>
-        <a href="#" onclick="alert('Booking page coming in Phase 4'); return false;" class="btn btn-primary btn-block">
+        <a href="../../pages/book.php" class="btn btn-primary btn-block">
           Reserve a Seat
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
         </a>
@@ -188,7 +188,7 @@ include '../../includes/nav.php';
   <div class="container">
     <h2>Reserve at The Bar</h2>
     <p>Secure your spot for an evening of exceptional cocktails and conversation.</p>
-    <a href="#" onclick="alert('Booking page coming in Phase 4'); return false;" class="btn btn-outline-light btn-lg">
+    <a href="../../pages/book.php" class="btn btn-outline-light btn-lg">
       Make a Reservation
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
     </a>

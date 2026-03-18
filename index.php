@@ -25,7 +25,7 @@ include 'includes/nav.php';
     <h1 class="hero-title">Eudaimonia</h1>
     <p class="hero-subtitle">An exquisite dining experience where every detail is crafted to create moments of pure joy and connection.</p>
     <div class="hero-actions">
-      <a href="#" onclick="alert('Booking page coming in Phase 4'); return false;" class="btn btn-hero">Reserve a Table</a>
+      <a href="pages/book.php" class="btn btn-hero">Reserve a Table</a>
       <a href="pages/about.php" class="btn btn-outline-light btn-lg">Our Story</a>
     </div>
   </div>
@@ -148,7 +148,7 @@ include 'includes/nav.php';
       Reserve your table today and discover why Eudaimonia is the city's most sought-after dining destination.
     </p>
     <div class="cta-actions">
-      <a href="#" onclick="alert('Booking page coming in Phase 4'); return false;" class="btn btn-hero">Reserve a Table</a>
+      <a href="pages/book.php" class="btn btn-hero">Reserve a Table</a>
       <a href="pages/dining-zones/index.php" class="btn btn-outline-light btn-lg">Explore Dining Zones</a>
     </div>
   </div>

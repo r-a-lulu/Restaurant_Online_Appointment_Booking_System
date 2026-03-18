@@ -143,7 +143,7 @@ include '../../includes/nav.php';
       <p class="section-label">Private Events</p>
       <h2>Host Your Special Occasion</h2>
       <p>Each of our dining zones can be reserved for private events. From intimate dinners to corporate gatherings, our team will create a bespoke experience tailored to your needs.</p>
-      <a href="#" onclick="alert('Booking page coming in Phase 4'); return false;" class="btn btn-primary btn-lg">
+      <a href="../../pages/book.php" class="btn btn-primary btn-lg">
         Inquire About Events
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
       </a>

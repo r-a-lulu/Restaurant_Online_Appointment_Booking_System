@@ -135,7 +135,7 @@ include '../includes/nav.php';
   <div class="container" style="text-align: center;">
     <h2>Experience Eudaimonia</h2>
     <p>We invite you to join us for an unforgettable dining experience.</p>
-    <a href="#" onclick="alert('Booking page coming in Phase 4'); return false;" class="btn btn-outline-light btn-lg">
+    <a href="<?= $basePath ?>pages/book.php" class="btn btn-outline-light btn-lg">
       Reserve Your Table
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
     </a>
