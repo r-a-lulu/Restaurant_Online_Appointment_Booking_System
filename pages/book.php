@@ -528,5 +528,6 @@ include '../includes/nav.php';
 
 <script src="<?= $basePath ?>js/nav.js"></script>
 <script src="<?= $basePath ?>js/book.js"></script>
+<script src="<?= $basePath ?>js/dev-tools.js"></script>
 </body>
 </html>

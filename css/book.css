@@ -200,12 +200,47 @@
   border: 1px solid rgba(196, 154, 60, 0.2);
   font-size: var(--text-sm);
   color: var(--clr-muted-fg);
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  min-width: 0;
 }
 
 .guest-note svg {
   color: var(--clr-accent);
   flex-shrink: 0;
   margin-top: 1px;
+}
+
+/* Wizard validation error */
+.wizard-error {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  background-color: var(--clr-red-bg);
+  border: 1px solid rgba(220, 38, 38, 0.2);
+  border-radius: var(--radius-lg);
+  font-size: var(--text-sm);
+  color: var(--clr-red-text);
+  margin-bottom: var(--space-4);
+  animation: wizardErrorIn 0.3s ease both;
+}
+
+.wizard-error svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--clr-red-text);
+}
+
+@keyframes wizardErrorIn {
+  from {
+    opacity: 0;
+    transform: translateY(-0.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* ===== STEP 2: Zone Selection ===== */
@@ -520,7 +555,7 @@
 
 .summary-card-header {
   background-color: var(--clr-primary);
-  padding: var(--space-5) var(--space-6);
+  padding: var(--space-6);
 }
 
 .summary-card-header h3 {
