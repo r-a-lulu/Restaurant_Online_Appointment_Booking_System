@@ -363,5 +363,6 @@ include '../includes/header.php';
 <?php include '../includes/footer.php'; ?>
 
 <script src="<?= $basePath ?>js/nav.js"></script>
+<script src="<?= $basePath ?>js/dev-tools.js"></script>
 </body>
 </html>
