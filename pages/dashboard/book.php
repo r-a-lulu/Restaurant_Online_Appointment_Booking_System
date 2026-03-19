@@ -19,11 +19,14 @@ include '../../includes/header.php';
     <div class="dashboard-content" style="max-width: 72rem;">
 
       <header class="dashboard-header">
-        <div class="dashboard-header-row">
+        <div class="dashboard-header-row" style="display: flex; justify-content: space-between; align-items: flex-start; gap: var(--space-4);">
           <div>
             <h1 class="dashboard-page-title">Book a Table</h1>
             <p class="dashboard-page-subtitle">Reserve your table at Eudaimonia.</p>
           </div>
+          <button type="button" id="magicFillBook" class="btn btn-outline" style="font-size: var(--text-sm); padding: var(--space-2) var(--space-4);">
+            ✨ Magic Fill
+          </button>
         </div>
       </header>
 

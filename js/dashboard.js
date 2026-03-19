@@ -86,10 +86,11 @@
   });
 
   /* ─── Seating Spots Data ─── */
+  // Names match the zone detail pages (patio.php, dining-room.php, bar.php)
   var SEATING_SPOTS = {
-    'Patio':       { title: 'in the Patio',        spots: ['Garden Terrace', 'Pergola Nook', 'Fountain View', 'Open Lawn'] },
-    'Bar':         { title: 'at the Bar',           spots: ['Bar Counter Seats', 'High-top Table', 'Lounge Sofas', 'Cocktail Booth'] },
-    'Dining Room': { title: 'in the Dining Room',   spots: ['Window Table', 'Centre Room', 'Chef\'s Table', 'Intimate Alcove', 'Banquet Booth'] },
+    'Patio':       { title: 'in the Patio',       spots: ['Garden View', 'Fountain Side', 'Pergola', 'Corner Alcove', 'Olive Grove'] },
+    'Bar':         { title: 'at the Bar',          spots: ['Bar Counter', 'Lounge Booths', 'High Tops', 'Corner Sofa'] },
+    'Dining Room': { title: 'in the Dining Room',  spots: ['Chef\'s View', 'Window Table', 'Banquette', 'Fireplace', 'Private Alcove', 'Chandelier'] },
   };
 
   /* ─── Zone Card Selection (Book page) ─── */
@@ -201,5 +202,68 @@
       });
     });
   });
+
+  /* ─── Magic Fill (Book page) ─── */
+  const magicBtn = document.getElementById('magicFillBook');
+  if (magicBtn) {
+    magicBtn.addEventListener('click', function() {
+      // 1. Select the first Zone (Patio)
+      const zoneCards = document.querySelectorAll('.zone-card-select');
+      if (zoneCards.length > 0) {
+        zoneCards[0].click(); 
+      }
+      
+      // 2. Schedule for 3 days from now
+      const datePicker = document.getElementById('bookDate');
+      if (datePicker) {
+        const d = new Date();
+        d.setDate(d.getDate() + 3);
+        const iso = d.toISOString().split('T')[0];
+        datePicker.value = iso;
+        datePicker.dispatchEvent(new Event('change'));
+      }
+      
+      // 3. Set Guests
+      const guestInput = document.getElementById('bookGuests');
+      if (guestInput) {
+        guestInput.value = '2';
+        guestInput.dispatchEvent(new Event('input'));
+      }
+
+      // 4. Set Notes
+      const notes = document.getElementById('bookNotes');
+      if (notes) {
+        notes.value = "We're celebrating our anniversary, please arrange a romantic setup!";
+      }
+
+      // 5. Select Time Slot and Seating Preference
+      // (Using setTimeout to wait for the DOM updates triggered by the zone click)
+      setTimeout(() => {
+        const timeSlots = document.querySelectorAll('.time-slot:not(.unavailable)');
+        if (timeSlots.length > 2) {
+          timeSlots[2].click(); // Select an available time slot
+        }
+
+        const spotPills = document.querySelectorAll('.seating-spot-pill');
+        if (spotPills.length > 0) {
+          spotPills[0].click(); // Select the first available seating spot
+        }
+      }, 50);
+
+      // Flashing effect for visual feedback
+      const originalText = magicBtn.textContent;
+      magicBtn.textContent = "✨ Filled!";
+      magicBtn.style.backgroundColor = 'var(--clr-primary)';
+      magicBtn.style.color = 'var(--clr-primary-fg)';
+      magicBtn.style.borderColor = 'var(--clr-primary)';
+      
+      setTimeout(() => {
+        magicBtn.textContent = originalText;
+        magicBtn.style.backgroundColor = '';
+        magicBtn.style.color = '';
+        magicBtn.style.borderColor = '';
+      }, 1000);
+    });
+  }
 
 })();

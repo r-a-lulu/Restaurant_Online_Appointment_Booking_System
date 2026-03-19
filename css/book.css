@@ -360,13 +360,13 @@
 }
 
 .seating-reveal.visible {
-  max-height: 20rem;
+  max-height: 32rem;
   opacity: 1;
   margin-top: var(--space-6);
 }
 
 .seating-reveal-inner {
-  padding: var(--space-6);
+  padding: var(--space-6) var(--space-7);
   background-color: var(--clr-card);
   border: 1px solid var(--clr-border);
   border-radius: var(--radius-xl);
@@ -392,7 +392,8 @@
 .seating-spot-pills {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-2);
+  gap: var(--space-3);
+  padding-top: var(--space-1);
 }
 
 .seating-spot-pill {

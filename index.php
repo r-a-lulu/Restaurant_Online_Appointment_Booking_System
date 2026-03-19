@@ -27,6 +27,7 @@ include 'includes/nav.php';
     <div class="hero-actions">
       <a href="pages/book.php" class="btn btn-hero">Reserve a Table</a>
       <a href="pages/about.php" class="btn btn-outline-light btn-lg">Our Story</a>
+      <a href="pages/dashboard/index.php" class="btn btn-outline-light btn-lg" style="border-color: var(--clr-accent); color: var(--clr-accent);">Guest Dashboard (Demo)</a>
     </div>
   </div>
 </section>

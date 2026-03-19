@@ -29,10 +29,11 @@
   };
 
   // ─── Seating spots per zone ───────────────────────────────────────────────
+  // Names match the zone detail pages (patio.php, dining-room.php, bar.php)
   var SEATING_SPOTS = {
-    'patio':       { title: 'in the Patio', spots: ['Garden Terrace', 'Pergola Nook', 'Fountain View', 'Open Lawn'] },
-    'dining-room': { title: 'in the Dining Room', spots: ['Window Table', 'Centre Room', 'Chef\'s Table', 'Intimate Alcove', 'Banquet Booth'] },
-    'bar':         { title: 'at the Bar', spots: ['Bar Counter Seats', 'High-top Table', 'Lounge Sofas', 'Cocktail Booth'] },
+    'patio':       { title: 'in the Patio',       spots: ['Garden View', 'Fountain Side', 'Pergola', 'Corner Alcove', 'Olive Grove'] },
+    'dining-room': { title: 'in the Dining Room', spots: ['Chef\'s View', 'Window Table', 'Banquette', 'Fireplace', 'Private Alcove', 'Chandelier'] },
+    'bar':         { title: 'at the Bar',          spots: ['Bar Counter', 'Lounge Booths', 'High Tops', 'Corner Sofa'] },
   };
 
   // ─── DOM helpers ──────────────────────────────────────────────────────────

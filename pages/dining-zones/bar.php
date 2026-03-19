@@ -140,7 +140,7 @@ include '../../includes/nav.php';
     </div>
     <div class="zone-table-grid">
       <div class="zone-table-card">
-        <img src="https://images.unsplash.com/photo-1545529468-ecc09cd34bfb?w=600&q=80" alt="Bar Counter seats" class="zone-table-card-img">
+        <img src="<?= $basePath ?>assets/images/tables/bar_counter_1773918516293.png" alt="Bar Counter seats" class="zone-table-card-img">
         <div class="zone-table-card-body">
           <div class="zone-table-card-header">
             <h3>Bar Counter</h3>
