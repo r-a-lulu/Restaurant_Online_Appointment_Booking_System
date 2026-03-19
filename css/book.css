@@ -427,10 +427,11 @@
   border-radius: var(--radius-xl);
   overflow: hidden;
   background-color: var(--clr-card);
+  padding: var(--space-6);
 }
 
 .review-card-section {
-  padding: var(--space-5) var(--space-6);
+  padding: var(--space-5) var(--space-8);
   border-bottom: 1px solid var(--clr-border);
 }
 
