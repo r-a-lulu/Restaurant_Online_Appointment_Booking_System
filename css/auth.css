@@ -13,7 +13,7 @@
   background-color: var(--clr-primary);
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
+  justify-content: center;
   padding: var(--space-12) var(--space-12);
   overflow: hidden;
 }
@@ -255,10 +255,21 @@
   transition: background-color var(--transition-base);
 }
 
-.strength-bar.active-weak   { background-color: var(--clr-destructive); }
-.strength-bar.active-fair   { background-color: var(--clr-accent); }
-.strength-bar.active-good   { background-color: #4ade80; }
-.strength-bar.active-strong { background-color: #16a34a; }
+.strength-bar.active-weak {
+  background-color: var(--clr-destructive);
+}
+
+.strength-bar.active-fair {
+  background-color: var(--clr-accent);
+}
+
+.strength-bar.active-good {
+  background-color: #4ade80;
+}
+
+.strength-bar.active-strong {
+  background-color: #16a34a;
+}
 
 .strength-label {
   font-size: var(--text-xs);
