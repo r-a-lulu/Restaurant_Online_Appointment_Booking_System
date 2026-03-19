@@ -248,6 +248,18 @@ include '../includes/nav.php';
 
         </div><!-- /zone-cards-grid -->
 
+        <!-- Seating Spot Sub-selection (revealed once zone is chosen) -->
+        <div class="seating-reveal" id="seating-reveal">
+          <div class="seating-reveal-inner">
+            <p class="seating-reveal-label">Seating Preference</p>
+            <p class="seating-reveal-title" id="seating-reveal-title">Choose your preferred spot</p>
+            <div class="seating-spot-pills" id="seating-spot-pills">
+              <!-- Pills injected by book.js based on selected zone -->
+            </div>
+          </div>
+        </div>
+
+
         <div class="wizard-nav">
           <div class="wizard-nav-left">
             <button class="btn btn-outline" id="btn-prev">
@@ -261,6 +273,7 @@ include '../includes/nav.php';
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
           </button>
         </div>
+
       </div><!-- /step-2 -->
 
 
@@ -373,6 +386,10 @@ include '../includes/nav.php';
                 <span class="review-row-val" id="rev-zone">—</span>
               </div>
               <div class="review-row">
+                <span class="review-row-key">Seating</span>
+                <span class="review-row-val" id="rev-spot">—</span>
+              </div>
+              <div class="review-row">
                 <span class="review-row-key">Date</span>
                 <span class="review-row-val" id="rev-date">—</span>
               </div>
@@ -458,6 +475,16 @@ include '../includes/nav.php';
             <div class="summary-item-text">
               <span class="summary-item-label">Dining Zone</span>
               <span class="summary-item-value empty" id="sum-zone">—</span>
+            </div>
+          </div>
+
+          <div class="summary-item">
+            <div class="summary-item-icon">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h18M3 12h18M3 17h18"/></svg>
+            </div>
+            <div class="summary-item-text">
+              <span class="summary-item-label">Seating</span>
+              <span class="summary-item-value empty" id="sum-spot">—</span>
             </div>
           </div>
 

@@ -315,6 +315,76 @@
   display: block;
 }
 
+/* ===== STEP 2: Seating Spot Sub-selection ===== */
+.seating-reveal {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: max-height var(--transition-slow), opacity var(--transition-base);
+  margin-top: 0;
+}
+
+.seating-reveal.visible {
+  max-height: 20rem;
+  opacity: 1;
+  margin-top: var(--space-6);
+}
+
+.seating-reveal-inner {
+  padding: var(--space-6);
+  background-color: var(--clr-card);
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-xl);
+}
+
+.seating-reveal-label {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-widest);
+  color: var(--clr-accent);
+  margin-bottom: var(--space-3);
+}
+
+.seating-reveal-title {
+  font-family: var(--font-serif);
+  font-size: var(--text-base);
+  font-weight: 500;
+  color: var(--clr-fg);
+  margin-bottom: var(--space-4);
+}
+
+.seating-spot-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.seating-spot-pill {
+  padding: var(--space-2) var(--space-4);
+  border: 1.5px solid var(--clr-border);
+  border-radius: var(--radius-full);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  cursor: pointer;
+  background-color: var(--clr-bg);
+  color: var(--clr-fg);
+  transition: all var(--transition-fast);
+  user-select: none;
+}
+
+.seating-spot-pill:hover {
+  border-color: var(--clr-primary);
+  background-color: var(--clr-primary-light);
+  color: var(--clr-primary);
+}
+
+.seating-spot-pill.selected {
+  border-color: var(--clr-primary);
+  background-color: var(--clr-primary);
+  color: var(--clr-primary-fg);
+}
+
 /* ===== STEP 3: Date & Time ===== */
 .datetime-grid {
   display: grid;

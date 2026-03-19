@@ -204,12 +204,18 @@
   opacity: 0.7;
 }
 
+.form-input[type="date"],
+.form-input[type="time"] {
+  cursor: pointer;
+}
+
 .form-textarea {
   min-height: 100px;
   resize: vertical;
 }
 
 .form-select {
+  cursor: pointer;
   appearance: none;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b5e55' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
@@ -284,7 +290,7 @@
 .switch-slider {
   position: absolute;
   inset: 0;
-  background-color: var(--clr-muted);
+  background-color: var(--clr-border);
   border-radius: var(--radius-full);
   cursor: pointer;
   transition: background-color var(--transition-fast);

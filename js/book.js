@@ -18,13 +18,21 @@
     guests:      '',
     occasion:    '',
     requests:    '',
-    // Step 2 – Zone
+    // Step 2 – Zone & Spot
     zone:        '',       // 'patio' | 'dining-room' | 'bar'
     zoneLabel:   '',
+    spot:        '',       // e.g. 'Garden Terrace'
     // Step 3 – Date & Time
     date:        '',
     dateLabel:   '',
     time:        '',
+  };
+
+  // ─── Seating spots per zone ───────────────────────────────────────────────
+  var SEATING_SPOTS = {
+    'patio':       { title: 'in the Patio', spots: ['Garden Terrace', 'Pergola Nook', 'Fountain View', 'Open Lawn'] },
+    'dining-room': { title: 'in the Dining Room', spots: ['Window Table', 'Centre Room', 'Chef\'s Table', 'Intimate Alcove', 'Banquet Booth'] },
+    'bar':         { title: 'at the Bar', spots: ['Bar Counter Seats', 'High-top Table', 'Lounge Sofas', 'Cocktail Booth'] },
   };
 
   // ─── DOM helpers ──────────────────────────────────────────────────────────
@@ -97,6 +105,7 @@
     }
     if (n === 2) {
       if (!state.zone) { showStepError('Please select a dining zone to continue.', null); return false; }
+      if (!state.spot) { showStepError('Please select a seating preference to continue.', null); return false; }
     }
     if (n === 3) {
       var dateEl = $('#book-date');
@@ -136,6 +145,7 @@
     setVal('#sum-email',  state.email || null);
     setVal('#sum-guests', state.guests ? state.guests + (state.guests === '1' ? ' guest' : ' guests') : null);
     setVal('#sum-zone',   state.zoneLabel || null);
+    setVal('#sum-spot',   state.spot || null);
     setVal('#sum-date',   state.dateLabel || null);
     setVal('#sum-time',   state.time || null);
     setVal('#sum-occasion', state.occasion || null);
@@ -161,9 +171,40 @@
         card.classList.add('selected');
         state.zone      = card.dataset.zone;
         state.zoneLabel = card.dataset.label;
+        state.spot      = '';   // reset spot when zone changes
+        revealSpotPills(state.zone);
         updateSummary();
       });
     });
+  }
+
+  function revealSpotPills(zone) {
+    var container = $('#seating-reveal');
+    var pillsEl   = $('#seating-spot-pills');
+    var titleEl   = $('#seating-reveal-title');
+    if (!container || !pillsEl) return;
+
+    var data = SEATING_SPOTS[zone];
+    if (!data) { container.classList.remove('visible'); return; }
+
+    // Build pills
+    pillsEl.innerHTML = '';
+    if (titleEl) titleEl.textContent = 'Select your spot ' + data.title;
+    data.spots.forEach(function (spot) {
+      var pill = document.createElement('button');
+      pill.type = 'button';
+      pill.className = 'seating-spot-pill';
+      pill.textContent = spot;
+      pill.addEventListener('click', function () {
+        pillsEl.querySelectorAll('.seating-spot-pill').forEach(function (p) { p.classList.remove('selected'); });
+        pill.classList.add('selected');
+        state.spot = spot;
+        updateSummary();
+      });
+      pillsEl.appendChild(pill);
+    });
+
+    container.classList.add('visible');
   }
 
   // ─── Time slot selection ──────────────────────────────────────────────────
@@ -230,6 +271,7 @@
       '#rev-phone':    state.phone || '—',
       '#rev-guests':   state.guests + (state.guests === '1' ? ' guest' : ' guests'),
       '#rev-zone':     state.zoneLabel,
+      '#rev-spot':     state.spot || '—',
       '#rev-date':     state.dateLabel,
       '#rev-time':     state.time,
       '#rev-occasion': state.occasion || '—',
@@ -267,6 +309,7 @@
             email:   state.email,
             guests:  state.guests,
             zone:    state.zoneLabel,
+            spot:    state.spot,
             date:    state.dateLabel,
             time:    state.time,
             occasion: state.occasion,
