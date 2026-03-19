@@ -1,0 +1,214 @@
+/* About Page — Hero, Story, Values, Team, CTA */
+
+/* === PAGE HERO (text-only, nav-pad) === */
+.page-hero {
+  padding-top: calc(var(--nav-height) + var(--space-20));
+  padding-bottom: var(--space-16);
+  background-color: var(--clr-bg);
+}
+
+.page-hero-inner {
+  max-width: 48rem;
+  margin-inline: auto;
+  text-align: center;
+}
+
+.page-hero-inner h1 {
+  font-size: var(--text-4xl);
+  line-height: var(--leading-tight);
+  margin-bottom: var(--space-6);
+}
+
+@media (min-width: 768px) {
+  .page-hero-inner h1 { font-size: var(--text-5xl); }
+}
+
+@media (min-width: 1024px) {
+  .page-hero-inner h1 { font-size: var(--text-6xl); }
+}
+
+.page-hero-inner p {
+  font-size: var(--text-lg);
+  color: var(--clr-muted-fg);
+  line-height: var(--leading-relaxed);
+}
+
+/* === STORY SECTION === */
+.story-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-12);
+  align-items: center;
+}
+
+@media (min-width: 1024px) {
+  .story-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-20);
+  }
+}
+
+.story-img {
+  position: relative;
+  aspect-ratio: 4 / 5;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.story-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.story-text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.story-text h2 {
+  font-size: var(--text-3xl);
+  line-height: var(--leading-snug);
+}
+
+@media (min-width: 768px) {
+  .story-text h2 { font-size: var(--text-4xl); }
+}
+
+.story-paragraphs {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  color: var(--clr-muted-fg);
+  line-height: var(--leading-relaxed);
+}
+
+/* === VALUES SECTION === */
+.values-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-8);
+  max-width: 64rem;
+  margin-inline: auto;
+}
+
+@media (min-width: 768px) {
+  .values-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+.value-card {
+  text-align: center;
+  padding: var(--space-8);
+  background-color: var(--clr-card);
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-sm);
+}
+
+.value-card-icon {
+  width: 4rem;
+  height: 4rem;
+  border-radius: 50%;
+  background-color: var(--clr-primary-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto var(--space-6);
+}
+
+.value-card-icon span {
+  font-family: var(--font-serif);
+  font-size: var(--text-2xl);
+  color: var(--clr-primary);
+}
+
+.value-card h3 {
+  font-family: var(--font-serif);
+  font-size: var(--text-xl);
+  margin-bottom: var(--space-3);
+}
+
+.value-card p {
+  font-size: var(--text-sm);
+  color: var(--clr-muted-fg);
+  line-height: var(--leading-relaxed);
+}
+
+/* === TEAM SECTION === */
+.team-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-8);
+  max-width: 56rem;
+  margin-inline: auto;
+}
+
+@media (min-width: 768px) {
+  .team-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+.team-card {
+  padding: var(--space-8);
+  background-color: var(--clr-card);
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-sm);
+}
+
+.team-member-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.team-photo {
+  width: 4rem;
+  height: 4rem;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.team-info h3 {
+  font-family: var(--font-serif);
+  font-size: var(--text-xl);
+  color: var(--clr-fg);
+  margin-bottom: var(--space-1);
+}
+
+.team-info .team-role {
+  font-size: var(--text-sm);
+  color: var(--clr-primary);
+  display: block;
+}
+
+.team-card p {
+  font-size: var(--text-sm);
+  color: var(--clr-muted-fg);
+  line-height: var(--leading-relaxed);
+}
+
+/* === CTA (About) === */
+.about-cta {
+  background-color: var(--clr-primary);
+  padding-block: var(--space-24);
+}
+
+.about-cta h2 {
+  font-size: var(--text-3xl);
+  color: #fff;
+  margin-bottom: var(--space-6);
+}
+
+@media (min-width: 768px) {
+  .about-cta h2 { font-size: var(--text-4xl); }
+}
+
+.about-cta p {
+  color: rgba(245, 239, 232, 0.8);
+  font-size: var(--text-lg);
+  max-width: 36rem;
+  margin-inline: auto;
+  margin-bottom: var(--space-10);
+  line-height: var(--leading-relaxed);
+}

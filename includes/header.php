@@ -27,7 +27,10 @@ $basePath = $basePath ?? './';
 
   <!-- Favicon -->
   <link rel="icon" href="<?= $basePath ?>assets/images/icon.svg" type="image/svg+xml">
-  <link rel="apple-touch-icon" href="<?= $basePath ?>assets/images/apple-icon.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="<?= $basePath ?>assets/images/icons/apple-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="<?= $basePath ?>assets/images/icons/icon-light-32x32.png" media="(prefers-color-scheme: light)">
+  <link rel="icon" type="image/png" sizes="32x32" href="<?= $basePath ?>assets/images/icons/icon-dark-32x32.png" media="(prefers-color-scheme: dark)">
+  <link rel="icon" type="image/svg+xml" href="<?= $basePath ?>assets/images/icons/icon.svg">
 
   <!-- Core CSS (order matters) -->
   <link rel="stylesheet" href="<?= $basePath ?>css/variables.css">
