@@ -88,9 +88,9 @@
   /* ─── Seating Spots Data ─── */
   // Names match the zone detail pages (patio.php, dining-room.php, bar.php)
   var SEATING_SPOTS = {
-    'Patio':       { title: 'in the Patio',       spots: ['Garden View', 'Fountain Side', 'Pergola', 'Corner Alcove', 'Olive Grove'] },
-    'Bar':         { title: 'at the Bar',          spots: ['Bar Counter', 'Lounge Booths', 'High Tops', 'Corner Sofa'] },
-    'Dining Room': { title: 'in the Dining Room',  spots: ['Chef\'s View', 'Window Table', 'Banquette', 'Fireplace', 'Private Alcove', 'Chandelier'] },
+    'The Patio':       { title: 'in the Patio',       spots: ['Garden View', 'Fountain Side', 'Pergola', 'Corner Alcove', 'Olive Grove'] },
+    'The Bar':         { title: 'at the Bar',          spots: ['Bar Counter', 'Lounge Booths', 'High Tops', 'Corner Sofa'] },
+    'Main Dining Room': { title: 'in the Dining Room',  spots: ['Chef\'s View', 'Window Table', 'Banquette', 'Fireplace', 'Private Alcove', 'Chandelier'] },
   };
 
   /* ─── Zone Card Selection (Book page) ─── */
@@ -113,6 +113,12 @@
       revealSpotPills(zoneName);
     });
   });
+
+  // Automatically initialize seating pill visibility for the default selected card
+  var defaultSelectedZone = document.querySelector('.zone-card-select.selected');
+  if (defaultSelectedZone) {
+    revealSpotPills(defaultSelectedZone.getAttribute('data-zone'));
+  }
 
   function revealSpotPills(zone) {
     var reveal   = document.getElementById('seatingReveal');
