@@ -100,7 +100,7 @@ include '../../includes/nav.php';
     </div>
     <div class="zone-table-grid zone-table-grid--3col">
       <div class="zone-table-card">
-        <img src="https://images.unsplash.com/photo-1590846406792-0adc7f938f1d?w=600&q=80" alt="Chef's View seats" class="zone-table-card-img">
+        <img src="<?= $basePath ?>assets/images/tables/chefs_view_table_1773970272373.png" alt="Chef's View seats" class="zone-table-card-img">
         <div class="zone-table-card-body">
           <div class="zone-table-card-header">
             <h3>Chef's View</h3>
@@ -110,7 +110,7 @@ include '../../includes/nav.php';
         </div>
       </div>
       <div class="zone-table-card">
-        <img src="https://images.unsplash.com/photo-1550966871-3ed3cfd6b4a3?w=600&q=80" alt="Window Table" class="zone-table-card-img">
+        <img src="<?= $basePath ?>assets/images/tables/window_table_1773970293042.png" alt="Window Table" class="zone-table-card-img">
         <div class="zone-table-card-body">
           <div class="zone-table-card-header">
             <h3>Window Table</h3>
@@ -120,7 +120,7 @@ include '../../includes/nav.php';
         </div>
       </div>
       <div class="zone-table-card">
-        <img src="https://images.unsplash.com/photo-1551632436-cbf8dd35adfa?w=600&q=80" alt="Banquette seating" class="zone-table-card-img">
+        <img src="<?= $basePath ?>assets/images/tables/banquette_seating_1773970310731.png" alt="Banquette seating" class="zone-table-card-img">
         <div class="zone-table-card-body">
           <div class="zone-table-card-header">
             <h3>Banquette</h3>
@@ -130,7 +130,7 @@ include '../../includes/nav.php';
         </div>
       </div>
       <div class="zone-table-card">
-        <img src="https://images.unsplash.com/photo-1567521464027-f127ff144326?w=600&q=80" alt="Fireplace table" class="zone-table-card-img">
+        <img src="<?= $basePath ?>assets/images/tables/fireplace_table_1773970334377.png" alt="Fireplace table" class="zone-table-card-img">
         <div class="zone-table-card-body">
           <div class="zone-table-card-header">
             <h3>Fireplace</h3>
@@ -140,7 +140,7 @@ include '../../includes/nav.php';
         </div>
       </div>
       <div class="zone-table-card">
-        <img src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600&q=80" alt="Private Alcove" class="zone-table-card-img">
+        <img src="<?= $basePath ?>assets/images/tables/private_alcove_1773970353136.png" alt="Private Alcove" class="zone-table-card-img">
         <div class="zone-table-card-body">
           <div class="zone-table-card-header">
             <h3>Private Alcove</h3>
@@ -150,7 +150,7 @@ include '../../includes/nav.php';
         </div>
       </div>
       <div class="zone-table-card">
-        <img src="https://images.unsplash.com/photo-1482275548304-a58859dc31b7?w=600&q=80" alt="Chandelier table" class="zone-table-card-img">
+        <img src="<?= $basePath ?>assets/images/tables/chandelier_table_1773970369619.png" alt="Chandelier table" class="zone-table-card-img">
         <div class="zone-table-card-body">
           <div class="zone-table-card-header">
             <h3>Chandelier</h3>
