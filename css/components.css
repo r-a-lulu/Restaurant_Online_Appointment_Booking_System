@@ -209,6 +209,11 @@
   cursor: pointer;
 }
 
+.form-input[type="date"]::-webkit-calendar-picker-indicator,
+.form-input[type="time"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+}
+
 .form-textarea {
   min-height: 100px;
   resize: vertical;

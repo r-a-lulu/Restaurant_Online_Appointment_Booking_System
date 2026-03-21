@@ -140,7 +140,7 @@ include '../../includes/nav.php';
     </div>
     <div class="zone-table-grid">
       <div class="zone-table-card">
-        <img src="https://images.unsplash.com/photo-1545529468-ecc09cd34bfb?w=600&q=80" alt="Bar Counter seats" class="zone-table-card-img">
+        <img src="<?= $basePath ?>assets/images/tables/bar_counter_new_1773970929154.png" alt="Bar Counter seats" class="zone-table-card-img">
         <div class="zone-table-card-body">
           <div class="zone-table-card-header">
             <h3>Bar Counter</h3>
@@ -150,7 +150,6 @@ include '../../includes/nav.php';
         </div>
       </div>
       <div class="zone-table-card">
-        <img src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=600&q=80" alt="Lounge Booths" class="zone-table-card-img">
         <div class="zone-table-card-body">
           <div class="zone-table-card-header">
             <h3>Lounge Booths</h3>
@@ -160,7 +159,6 @@ include '../../includes/nav.php';
         </div>
       </div>
       <div class="zone-table-card">
-        <img src="https://images.unsplash.com/photo-1559339352-11d035aa65ce?w=600&q=80" alt="High Tops" class="zone-table-card-img">
         <div class="zone-table-card-body">
           <div class="zone-table-card-header">
             <h3>High Tops</h3>
@@ -170,7 +168,6 @@ include '../../includes/nav.php';
         </div>
       </div>
       <div class="zone-table-card">
-        <img src="https://images.unsplash.com/photo-1436076863939-06870fe779c2?w=600&q=80" alt="Corner Sofa" class="zone-table-card-img">
         <div class="zone-table-card-body">
           <div class="zone-table-card-header">
             <h3>Corner Sofa</h3>

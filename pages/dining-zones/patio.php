@@ -100,7 +100,7 @@ include '../../includes/nav.php';
     </div>
     <div class="zone-table-grid zone-table-grid--3col">
       <div class="zone-table-card">
-        <img src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=600&q=80" alt="Garden View table" class="zone-table-card-img">
+        <img src="<?= $basePath ?>assets/images/tables/patio_garden_view_1773918068395.png" alt="Garden View table" class="zone-table-card-img">
         <div class="zone-table-card-body">
           <div class="zone-table-card-header">
             <h3>Garden View</h3>
@@ -110,7 +110,7 @@ include '../../includes/nav.php';
         </div>
       </div>
       <div class="zone-table-card">
-        <img src="https://images.unsplash.com/photo-1424847651672-bf20a4b0982b?w=600&q=80" alt="Fountain Side table" class="zone-table-card-img">
+        <img src="<?= $basePath ?>assets/images/tables/patio_fountain_side_1773918088124.png" alt="Fountain Side table" class="zone-table-card-img">
         <div class="zone-table-card-body">
           <div class="zone-table-card-header">
             <h3>Fountain Side</h3>
@@ -120,7 +120,7 @@ include '../../includes/nav.php';
         </div>
       </div>
       <div class="zone-table-card">
-        <img src="https://images.unsplash.com/photo-1600565193348-f74bd3c7ccdf?w=600&q=80" alt="Pergola seating" class="zone-table-card-img">
+        <img src="<?= $basePath ?>assets/images/tables/patio_pergola_1773918246375.png" alt="Pergola seating" class="zone-table-card-img">
         <div class="zone-table-card-body">
           <div class="zone-table-card-header">
             <h3>Pergola</h3>
@@ -130,7 +130,7 @@ include '../../includes/nav.php';
         </div>
       </div>
       <div class="zone-table-card">
-        <img src="https://images.unsplash.com/photo-1594744803329-e58b31de8bf5?w=600&q=80" alt="Corner Alcove seating" class="zone-table-card-img">
+        <img src="<?= $basePath ?>assets/images/tables/patio_corner_alcove_1773918268216.png" alt="Corner Alcove seating" class="zone-table-card-img">
         <div class="zone-table-card-body">
           <div class="zone-table-card-header">
             <h3>Corner Alcove</h3>
@@ -140,7 +140,7 @@ include '../../includes/nav.php';
         </div>
       </div>
       <div class="zone-table-card">
-        <img src="https://images.unsplash.com/photo-1466978913421-dad2ebd01d17?w=600&q=80" alt="Olive Grove table" class="zone-table-card-img">
+        <img src="<?= $basePath ?>assets/images/tables/patio_olive_grove_1773918467697.png" alt="Olive Grove table" class="zone-table-card-img">
         <div class="zone-table-card-body">
           <div class="zone-table-card-header">
             <h3>Olive Grove</h3>
