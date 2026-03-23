@@ -275,4 +275,94 @@
     });
   });
 
+  /* ═══════════════════════════════════════════════════════
+     Guest Profile Modal Dynamic Population & Edit
+  ═══════════════════════════════════════════════════════ */
+  document.querySelectorAll('.view-profile-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      const row = btn.closest('tr');
+      if (!row) return;
+      
+      const index = row.getAttribute('data-user-index');
+      const name = row.querySelector('.guest-name').textContent.trim();
+      const statusBadge = row.querySelector('.guest-status-badge');
+      const statusText = statusBadge ? statusBadge.textContent.trim() : 'Regular';
+      
+      const initials = name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+      
+      const modal = document.getElementById('userProfileModal');
+      if (!modal) return;
+      
+      modal.setAttribute('data-active-user-index', index);
+      
+      const modalName = modal.querySelector('#modalGuestName');
+      const modalInitials = modal.querySelector('#modalGuestInitials');
+      const modalStatus = modal.querySelector('#modalGuestStatus');
+      const selectStatus = modal.querySelector('#guestStatusSelect');
+      
+      if (modalName) modalName.textContent = name;
+      if (modalInitials) modalInitials.textContent = initials;
+      if (modalStatus) {
+        modalStatus.textContent = statusText;
+        modalStatus.className = 'badge badge-' + statusText.toLowerCase() + ' guest-status-badge';
+      }
+      if (selectStatus) {
+        selectStatus.value = statusText;
+      }
+      
+      const editBlock = document.getElementById('guestStatusEdit');
+      const viewBlock = document.getElementById('guestStatusView');
+      if(editBlock && viewBlock) {
+        editBlock.style.display = 'none';
+        viewBlock.style.display = 'flex';
+      }
+    });
+  });
+
+  const editStatusBtn = document.getElementById('editGuestStatusBtn');
+  const saveStatusBtn = document.getElementById('saveGuestStatusBtn');
+  const cancelStatusBtn = document.getElementById('cancelGuestStatusBtn');
+  
+  if (editStatusBtn && saveStatusBtn && cancelStatusBtn) {
+    const viewMode = document.getElementById('guestStatusView');
+    const editMode = document.getElementById('guestStatusEdit');
+    const statusSelect = document.getElementById('guestStatusSelect');
+    const modalStatus = document.getElementById('modalGuestStatus');
+    const modal = document.getElementById('userProfileModal');
+    
+    editStatusBtn.addEventListener('click', function() {
+      viewMode.style.display = 'none';
+      editMode.style.display = 'flex';
+    });
+    
+    cancelStatusBtn.addEventListener('click', function() {
+      editMode.style.display = 'none';
+      viewMode.style.display = 'flex';
+      statusSelect.value = modalStatus.textContent.trim();
+    });
+    
+    saveStatusBtn.addEventListener('click', function() {
+      const newStatus = statusSelect.value;
+      const lowerStatus = newStatus.toLowerCase();
+      
+      modalStatus.textContent = newStatus;
+      modalStatus.className = 'badge badge-' + lowerStatus + ' guest-status-badge';
+      
+      const activeIndex = modal.getAttribute('data-active-user-index');
+      if (activeIndex !== null) {
+        const row = document.querySelector('tr[data-user-index="' + activeIndex + '"]');
+        if (row) {
+          const rowBadge = row.querySelector('.guest-status-badge');
+          if (rowBadge) {
+            rowBadge.textContent = newStatus;
+            rowBadge.className = 'badge badge-' + lowerStatus + ' guest-status-badge';
+          }
+        }
+      }
+      
+      editMode.style.display = 'none';
+      viewMode.style.display = 'flex';
+    });
+  }
+
 })();

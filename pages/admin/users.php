@@ -50,16 +50,16 @@ $users = [
           </thead>
           <tbody>
             <?php foreach ($users as $i => $u): ?>
-            <tr>
-              <td style="font-weight:500;color:var(--clr-fg);"><?= $u['name'] ?></td>
+            <tr data-user-index="<?= $i ?>">
+              <td class="guest-name" style="font-weight:500;color:var(--clr-fg);"><?= $u['name'] ?></td>
               <td style="color:var(--clr-muted-fg);font-size:var(--text-sm)"><?= $u['email'] ?></td>
               <td style="color:var(--clr-muted-fg);font-size:var(--text-sm)"><?= $u['phone'] ?></td>
               <td style="font-size:var(--text-sm);color:var(--clr-muted-fg);"><?= $u['res'] ?></td>
-              <td>
-                <span class="badge badge-<?= strtolower($u['status']) ?>"><?= $u['status'] ?></span>
+              <td class="status-cell">
+                <span class="badge badge-<?= strtolower($u['status']) ?> guest-status-badge"><?= $u['status'] ?></span>
               </td>
               <td style="text-align:right;">
-                <button class="btn btn-icon" data-modal-open="userProfileModal" aria-label="View Profile">
+                <button class="btn btn-icon view-profile-btn" data-modal-open="userProfileModal" aria-label="View Profile">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--clr-fg);opacity:0.8"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                 </button>
               </td>
@@ -86,10 +86,29 @@ $users = [
 
     <!-- Header info -->
     <div class="guest-profile-header">
-      <div class="guest-avatar-large">MB</div>
+      <div class="guest-avatar-large" id="modalGuestInitials">MB</div>
       <div class="guest-info">
-        <h3>Michael Brown</h3>
-        <span class="badge badge-regular">Regular</span>
+        <h3 id="modalGuestName">Michael Brown</h3>
+        
+        <!-- View Mode -->
+        <div class="guest-status-wrapper" id="guestStatusView" style="display: flex; gap: var(--space-2); align-items: center;">
+          <span class="badge badge-regular" id="modalGuestStatus">Regular</span>
+          <button class="btn btn-icon btn-ghost" id="editGuestStatusBtn" style="width: 24px; height: 24px; padding: 0; color: var(--clr-muted-fg);" aria-label="Edit Status">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+          </button>
+        </div>
+        
+        <!-- Edit Mode -->
+        <div class="guest-status-edit" id="guestStatusEdit" style="display: none; gap: var(--space-2); align-items: center; margin-top: 4px;">
+          <select class="form-select status-select" id="guestStatusSelect" style="padding: 2px 8px; font-size: var(--text-xs); height: 28px; width: auto; background-color: var(--bg-card); border-color: rgba(0,0,0,0.1);">
+            <option value="VIP">VIP</option>
+            <option value="Regular">Regular</option>
+            <option value="New">New</option>
+          </select>
+          <button class="btn btn-primary" id="saveGuestStatusBtn" style="padding: 0 8px; height: 28px; font-size: var(--text-xs);">Save</button>
+          <button class="btn btn-ghost" id="cancelGuestStatusBtn" style="padding: 0 8px; height: 28px; font-size: var(--text-xs);">Cancel</button>
+        </div>
+
       </div>
     </div>
 
