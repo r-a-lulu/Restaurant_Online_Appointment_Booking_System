@@ -122,6 +122,7 @@ CREATE TABLE IF NOT EXISTS appointments (
   start_time TIME NOT NULL,
   end_time TIME NOT NULL,
   party_size INT NOT NULL,
+  special_requests TEXT NULL,
   status_id INT NOT NULL,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT ck_appointments_time_order CHECK (end_time > start_time),
@@ -132,7 +133,10 @@ CREATE TABLE IF NOT EXISTS appointments (
       (table_id IS NULL AND zone_id IS NOT NULL)
     ),
   CONSTRAINT ck_appointments_bookable_item
-    CHECK (service_id IS NOT NULL OR event_package_id IS NOT NULL),
+    CHECK (
+      (service_id IS NOT NULL AND event_package_id IS NULL)
+      OR (service_id IS NULL AND event_package_id IS NOT NULL)
+    ),
   CONSTRAINT fk_appointments_user
     FOREIGN KEY (user_id) REFERENCES users (user_id)
     ON UPDATE CASCADE
@@ -184,6 +188,8 @@ CREATE INDEX idx_appointments_date_status ON appointments (appointment_date, sta
 CREATE INDEX idx_appointments_table_datetime ON appointments (table_id, appointment_date, start_time, end_time);
 CREATE INDEX idx_appointments_zone_datetime ON appointments (zone_id, appointment_date, start_time, end_time);
 CREATE INDEX idx_appointments_created_at ON appointments (created_at);
+CREATE INDEX idx_appointments_service_id ON appointments (service_id);
+CREATE INDEX idx_appointments_event_package_id ON appointments (event_package_id);
 CREATE INDEX idx_appointment_add_ons_add_on ON appointment_add_ons (add_on_id);
 CREATE UNIQUE INDEX uq_appointments_exact_table_slot ON appointments (table_id, appointment_date, start_time);
 CREATE UNIQUE INDEX uq_appointments_exact_zone_slot ON appointments (zone_id, appointment_date, start_time);

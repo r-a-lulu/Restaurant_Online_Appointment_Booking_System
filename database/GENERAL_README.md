@@ -26,11 +26,12 @@ This file summarizes the key things you must remember before running the SQL scr
 
 1. `setup_xampp_sqlyog.sql`
 2. `functions.sql`
-3. `procedures.sql`
-4. `triggers.sql`
-5. `events.sql`
-6. `security.sql`
-7. `seed.sql`
+3. `views.sql`
+4. `procedures.sql`
+5. `triggers.sql`
+6. `events.sql`
+7. `security.sql`
+8. `seed.sql`
 
 ---
 
@@ -40,6 +41,8 @@ This file summarizes the key things you must remember before running the SQL scr
   - base schema
   - audit tables
   - `updated_at` columns required by triggers
-- Triggers, functions, procedures, and events are in separate files by design.
+- Triggers, functions, procedures, views, and events are in separate files by design.
 
 ---
+
+If you want this converted into a checklist or a single “master setup” script, say the word.
