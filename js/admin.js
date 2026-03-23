@@ -365,4 +365,91 @@
     });
   }
 
+  /* ═══════════════════════════════════════════════════════
+     Add New Table Flow (Floor Management)
+  ═══════════════════════════════════════════════════════ */
+  const addTableForm = document.getElementById('addTableForm');
+  if (addTableForm) {
+    addTableForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      
+      const zone = document.getElementById('newTableZone').value;
+      const name = document.getElementById('newTableName').value;
+      const seats = document.getElementById('newTableSeats').value;
+      
+      const panel = document.querySelector('[data-panel="' + zone + '"]');
+      const grid = panel ? panel.querySelector('.floor-grid-new') : null;
+      
+      if (grid) {
+        // Create the new tile element
+        const tile = document.createElement('div');
+        tile.className = 'floor-tile-new floor-tile-new--available';
+        tile.setAttribute('data-status', 'available');
+        tile.setAttribute('tabindex', '0');
+        
+        tile.innerHTML = `
+          <div class="floor-tile-new-top">
+            <span class="floor-tile-new-number">${name}</span>
+            <svg class="floor-tile-new-edit" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+          </div>
+          <div class="floor-tile-new-capacity">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            ${seats} seats
+          </div>
+          <div class="floor-tile-new-status">Walk-in</div>
+        `;
+        
+        // Attach the critical click handler so the new tile behaves like natively rendered ones
+        tile.addEventListener('click', function () {
+          const current = tile.getAttribute('data-status');
+          const STATUS_CYCLE = ['available', 'reserved', 'occupied'];
+          const next = STATUS_CYCLE[(STATUS_CYCLE.indexOf(current) + 1) % STATUS_CYCLE.length];
+          
+          STATUS_CYCLE.forEach(function (s) { tile.classList.remove('floor-tile-new--' + s); });
+          tile.classList.add('floor-tile-new--' + next);
+          tile.setAttribute('data-status', next);
+          
+          const lbl = tile.querySelector('.floor-tile-new-status');
+          if (lbl) {
+             lbl.textContent = next === 'available' ? 'Walk-in' : (next === 'reserved' ? '6:30 PM' : 'VIP');
+          }
+
+          if (panel) {
+            let avail = 0, res = 0, occ = 0;
+            panel.querySelectorAll('.floor-tile-new').forEach(function(t) {
+              const st = t.getAttribute('data-status');
+              if (st === 'available') avail++;
+              if (st === 'reserved') res++;
+              if (st === 'occupied') occ++;
+            });
+            const statVals = panel.querySelectorAll('.floor-stat-val');
+            if (statVals.length >= 3) {
+              statVals[0].textContent = avail;
+              statVals[1].textContent = res;
+              statVals[2].textContent = occ;
+            }
+          }
+        });
+        
+        // Render it to the DOM
+        grid.appendChild(tile);
+        
+        // Instantly increment the parent panel's Available counter since new tables are always Available
+        let avail = 0;
+        panel.querySelectorAll('.floor-tile-new').forEach(function(t) {
+          if (t.getAttribute('data-status') === 'available') avail++;
+        });
+        const statVals = panel.querySelectorAll('.floor-stat-val');
+        if (statVals.length > 0) {
+          statVals[0].textContent = avail;
+        }
+      }
+      
+      // Clear up the form and shut the modal safely
+      addTableForm.reset();
+      const modal = document.getElementById('addTableModal');
+      if (modal) modal.classList.remove('open');
+    });
+  }
+
 })();

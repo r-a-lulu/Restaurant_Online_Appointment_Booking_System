@@ -163,24 +163,24 @@ $zones = [
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     </div>
-    <form class="admin-form" onsubmit="event.preventDefault(); document.getElementById('addTableModal').classList.remove('open');">
+    <form class="admin-form" id="addTableForm">
       <div class="form-group" style="margin-bottom:var(--space-4);">
         <label class="form-label">Zone</label>
         <div style="position:relative; width:max-content; min-width:8rem;">
-          <select class="form-select" style="background-color:var(--clr-bg);">
-            <option>The Bar</option>
-            <option>The Patio</option>
-            <option>Main Dining Room</option>
+          <select class="form-select" id="newTableZone" style="background-color:var(--clr-bg);" required>
+            <option value="bar" selected>The Bar</option>
+            <option value="patio">The Patio</option>
+            <option value="dining-room">Main Dining Room</option>
           </select>
         </div>
       </div>
       <div class="form-group" style="margin-bottom:var(--space-4);">
         <label class="form-label">Table Name</label>
-        <input type="text" class="form-input" placeholder="e.g., Table 11" required>
+        <input type="text" class="form-input" id="newTableName" placeholder="e.g., Table 11" required>
       </div>
       <div class="form-group" style="margin-bottom:var(--space-6);">
         <label class="form-label">Seats</label>
-        <input type="number" class="form-input" min="1" max="50" placeholder="e.g., 4" required style="width: 8rem;">
+        <input type="number" class="form-input" id="newTableSeats" min="1" max="50" placeholder="e.g., 4" required style="width: 8rem;">
       </div>
       <div class="admin-modal-footer" style="padding-top:0; border-top:none; display:flex; gap:var(--space-3); justify-content:flex-end;">
         <button type="button" class="btn btn-outline" data-modal-close>Cancel</button>
