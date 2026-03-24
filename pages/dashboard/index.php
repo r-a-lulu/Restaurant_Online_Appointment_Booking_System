@@ -31,12 +31,12 @@ try {
   $stats['total'] = (int) $stmt->fetchColumn();
   $stmt->closeCursor();
 
-  $stmt = $pdo->prepare("SELECT COUNT(*) FROM appointments a JOIN appointment_status s ON s.status_id = a.status_id WHERE a.user_id = :uid AND s.status_name = 'confirmed' AND a.appointment_date >= CURDATE()");
+  $stmt = $pdo->prepare("SELECT COUNT(*) FROM appointments a JOIN appointment_status s ON s.status_id = a.status_id WHERE a.user_id = :uid AND a.status_id = (SELECT status_id FROM appointment_status WHERE status_name = 'confirmed' LIMIT 1) AND a.appointment_date >= CURDATE()");
   $stmt->execute([':uid' => (int) $_SESSION['user_id']]);
   $stats['upcoming'] = (int) $stmt->fetchColumn();
   $stmt->closeCursor();
 
-  $stmt = $pdo->prepare("SELECT COUNT(*) FROM appointments a JOIN appointment_status s ON s.status_id = a.status_id WHERE a.user_id = :uid AND s.status_name = 'completed'");
+  $stmt = $pdo->prepare("SELECT COUNT(*) FROM appointments a JOIN appointment_status s ON s.status_id = a.status_id WHERE a.user_id = :uid AND a.status_id = (SELECT status_id FROM appointment_status WHERE status_name = 'completed' LIMIT 1)");
   $stmt->execute([':uid' => (int) $_SESSION['user_id']]);
   $stats['completed'] = (int) $stmt->fetchColumn();
   $stmt->closeCursor();
@@ -46,7 +46,7 @@ try {
   $stats['favorite_zone'] = $stmt->fetchColumn() ?: '—';
   $stmt->closeCursor();
 
-  $stmt = $pdo->prepare("SELECT appointment_id, zone_name, appointment_date, start_time, party_size, status_name FROM vw_appointments_detail WHERE user_id = :uid AND status_name IN ('pending','confirmed') AND appointment_date >= CURDATE() ORDER BY appointment_date ASC, start_time ASC LIMIT 5");
+  $stmt = $pdo->prepare("SELECT appointment_id, zone_name, appointment_date, start_time, party_size, status_name FROM vw_appointments_detail WHERE user_id = :uid AND status_id IN (SELECT status_id FROM appointment_status WHERE status_name IN ('pending','confirmed')) AND appointment_date >= CURDATE() ORDER BY appointment_date ASC, start_time ASC LIMIT 5");
   $stmt->execute([':uid' => (int) $_SESSION['user_id']]);
   $upcoming = $stmt->fetchAll() ?: [];
   $stmt->closeCursor();
