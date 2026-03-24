@@ -19,6 +19,8 @@ if (!isset($_SESSION['user_id'])) {
   redirect('/pages/login.php');
 }
 
+$hideLogout = (isset($_GET['source']) && $_GET['source'] === 'dashboard');
+
 include '../includes/header.php';
 include '../includes/nav.php';
 ?>

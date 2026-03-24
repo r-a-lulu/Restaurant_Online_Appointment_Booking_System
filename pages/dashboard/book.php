@@ -47,7 +47,7 @@ try {
   $stmt = $pdo->query('SELECT zone_id, zone_name FROM dining_zones ORDER BY zone_name');
   $zones = $stmt->fetchAll();
 
-  $stmt = $pdo->query('SELECT table_id, table_number, capacity, zone_id, zone_name FROM vw_available_tables');
+  $stmt = $pdo->query('SELECT table_id, table_number, capacity, seating_preference, zone_id, zone_name FROM vw_available_tables');
   $tables = $stmt->fetchAll();
 } catch (PDOException $e) {
   $bookingError = safe_error_message($e);

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Register Page — Eudaimonia Restaurant
  * Registration form: name, email, phone, password, confirm, terms checkbox.
@@ -13,6 +14,7 @@ $basePath    = '../';
 require_once '../includes/security.php';
 start_secure_session();
 $authError = get_flash('error');
+$formData = get_flash('form_data') ?: [];
 
 include '../includes/header.php';
 ?>
@@ -33,19 +35,27 @@ include '../includes/header.php';
 
       <div class="auth-features">
         <div class="auth-feature-item">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 6 9 17l-5-5" />
+          </svg>
           Book tables in seconds from your personal dashboard
         </div>
         <div class="auth-feature-item">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 6 9 17l-5-5" />
+          </svg>
           Track all past and upcoming reservations
         </div>
         <div class="auth-feature-item">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 6 9 17l-5-5" />
+          </svg>
           Save dining preferences and special requests
         </div>
         <div class="auth-feature-item">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 6 9 17l-5-5" />
+          </svg>
           Receive exclusive member offers and invitations
         </div>
       </div>
@@ -86,7 +96,7 @@ include '../includes/header.php';
               placeholder="Jane"
               autocomplete="given-name"
               required
-            >
+              value="<?= e($formData['first_name'] ?? '') ?>">
           </div>
           <div class="form-group">
             <label for="reg-lastname" class="form-label">Last Name</label>
@@ -98,7 +108,7 @@ include '../includes/header.php';
               placeholder="Doe"
               autocomplete="family-name"
               required
-            >
+              value="<?= e($formData['last_name'] ?? '') ?>">
           </div>
         </div>
 
@@ -113,7 +123,7 @@ include '../includes/header.php';
             placeholder="you@example.com"
             autocomplete="email"
             required
-          >
+            value="<?= e($formData['email'] ?? '') ?>">
         </div>
 
         <!-- Phone -->
@@ -129,7 +139,7 @@ include '../includes/header.php';
             class="form-input"
             placeholder="+1 (555) 000-0000"
             autocomplete="tel"
-          >
+            value="<?= e($formData['phone'] ?? '') ?>">
         </div>
 
         <!-- Password -->
@@ -143,22 +153,20 @@ include '../includes/header.php';
               class="form-input"
               placeholder="Create a strong password"
               autocomplete="new-password"
-              required
-            >
+              required>
             <button
               type="button"
               class="input-password-toggle"
               id="toggle-reg-password"
-              aria-label="Show/hide password"
-            >
+              aria-label="Show/hide password">
               <svg id="reg-eye-open" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/>
-                <circle cx="12" cy="12" r="3"/>
+                <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z" />
+                <circle cx="12" cy="12" r="3" />
               </svg>
               <svg id="reg-eye-closed" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none">
-                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-10-7-10-7a18.45 18.45 0 0 1 5.06-5.94"/>
-                <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 10 7 10 7a18.5 18.5 0 0 1-2.16 3.19"/>
-                <line x1="1" y1="1" x2="23" y2="23"/>
+                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-10-7-10-7a18.45 18.45 0 0 1 5.06-5.94" />
+                <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 10 7 10 7a18.5 18.5 0 0 1-2.16 3.19" />
+                <line x1="1" y1="1" x2="23" y2="23" />
               </svg>
             </button>
           </div>
@@ -185,22 +193,20 @@ include '../includes/header.php';
               class="form-input"
               placeholder="Re-enter your password"
               autocomplete="new-password"
-              required
-            >
+              required>
             <button
               type="button"
               class="input-password-toggle"
               id="toggle-reg-confirm"
-              aria-label="Show/hide confirm password"
-            >
+              aria-label="Show/hide confirm password">
               <svg id="conf-eye-open" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/>
-                <circle cx="12" cy="12" r="3"/>
+                <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z" />
+                <circle cx="12" cy="12" r="3" />
               </svg>
               <svg id="conf-eye-closed" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none">
-                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-10-7-10-7a18.45 18.45 0 0 1 5.06-5.94"/>
-                <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 10 7 10 7a18.5 18.5 0 0 1-2.16 3.19"/>
-                <line x1="1" y1="1" x2="23" y2="23"/>
+                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-10-7-10-7a18.45 18.45 0 0 1 5.06-5.94" />
+                <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 10 7 10 7a18.5 18.5 0 0 1-2.16 3.19" />
+                <line x1="1" y1="1" x2="23" y2="23" />
               </svg>
             </button>
           </div>
@@ -213,8 +219,7 @@ include '../includes/header.php';
             id="reg-terms"
             name="terms"
             class="form-checkbox"
-            required
-          >
+            required>
           <label for="reg-terms">
             I agree to the
             <a href="#" class="auth-link">Terms of Service</a>
@@ -251,32 +256,32 @@ include '../includes/header.php';
     var eyeOpen = document.getElementById(eyeOpenId);
     var eyeClosed = document.getElementById(eyeClosedId);
     if (!btn || !input) return;
-    btn.addEventListener('click', function () {
+    btn.addEventListener('click', function() {
       var isPass = input.type === 'password';
       input.type = isPass ? 'text' : 'password';
-      eyeOpen.style.display  = isPass ? 'none'  : 'block';
+      eyeOpen.style.display = isPass ? 'none' : 'block';
       eyeClosed.style.display = isPass ? 'block' : 'none';
     });
   }
-  makeToggle('toggle-reg-password', 'reg-password',  'reg-eye-open',  'reg-eye-closed');
-  makeToggle('toggle-reg-confirm',  'reg-confirm',   'conf-eye-open', 'conf-eye-closed');
+  makeToggle('toggle-reg-password', 'reg-password', 'reg-eye-open', 'reg-eye-closed');
+  makeToggle('toggle-reg-confirm', 'reg-confirm', 'conf-eye-open', 'conf-eye-closed');
 
-  (function () {
-    var input      = document.getElementById('reg-password');
-    var meter      = document.getElementById('password-strength');
-    var bars       = [
+  (function() {
+    var input = document.getElementById('reg-password');
+    var meter = document.getElementById('password-strength');
+    var bars = [
       document.getElementById('bar-1'),
       document.getElementById('bar-2'),
       document.getElementById('bar-3'),
       document.getElementById('bar-4'),
     ];
-    var label      = document.getElementById('strength-label');
-    var levels     = ['Weak', 'Fair', 'Good', 'Strong'];
+    var label = document.getElementById('strength-label');
+    var levels = ['Weak', 'Fair', 'Good', 'Strong'];
     var levelClass = ['active-weak', 'active-fair', 'active-good', 'active-strong'];
 
     function getScore(pw) {
       var score = 0;
-      if (pw.length >= 8)  score++;
+      if (pw.length >= 8) score++;
       if (/[A-Z]/.test(pw)) score++;
       if (/[0-9]/.test(pw)) score++;
       if (/[^A-Za-z0-9]/.test(pw)) score++;
@@ -285,7 +290,7 @@ include '../includes/header.php';
 
     if (!input) return;
 
-    input.addEventListener('input', function () {
+    input.addEventListener('input', function() {
       var val = input.value;
       if (!val) {
         meter.style.display = 'none';
@@ -295,7 +300,7 @@ include '../includes/header.php';
       var score = getScore(val);
       if (score === 0) score = 1;
 
-      bars.forEach(function (bar, i) {
+      bars.forEach(function(bar, i) {
         bar.className = 'strength-bar';
         if (i < score) bar.classList.add(levelClass[score - 1]);
       });
@@ -308,6 +313,13 @@ include '../includes/header.php';
 <?php include '../includes/footer.php'; ?>
 
 <script src="<?= $basePath ?>js/nav.js"></script>
-<script src="<?= $basePath ?>js/dev-tools.js"></script>
-</body>
-</html>
+
+
+</xai:function_call">
+
+
+<xai:function_call name="edit_file">
+  <parameter name="path">TODO.md
+    </body>
+
+    </html>

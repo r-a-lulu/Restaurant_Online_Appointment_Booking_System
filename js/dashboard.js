@@ -107,8 +107,8 @@
     const state = {
       zoneId: '',
       zoneLabel: '',
-      tableId: '',
-      tableLabel: '',
+      seatingPref: '',
+      tableId: '', // Set when a time slot is selected (check_availability returns this)
       date: '',
       timeVal: '',
       partySize: 2
@@ -130,7 +130,7 @@
     function updateSummary() {
       if (sumGuests) sumGuests.textContent = state.partySize + (state.partySize === 1 ? ' Guest' : ' Guests');
       if (sumZone) sumZone.textContent = state.zoneLabel || '—';
-      if (sumSpot) sumSpot.textContent = state.tableLabel || '—';
+      if (sumSpot) sumSpot.textContent = state.seatingPref || '—';
       
       if (sumDate && state.date) {
         const d = new Date(state.date + 'T00:00:00');
@@ -149,40 +149,47 @@
         card.classList.add('selected');
         state.zoneId = card.getAttribute('data-zone-id');
         state.zoneLabel = card.getAttribute('data-zone');
+        state.seatingPref = '';
         state.tableId = '';
-        state.tableLabel = '';
         state.timeVal = '';
-        renderTablePills();
+        renderPills();
         updateSummary();
         fetchAvailability();
       });
     });
 
-    /* 2. Table/Spot Selection */
-    function renderTablePills() {
+    /* 2. Seating Preference Selection */
+    function renderPills() {
       const reveal = document.getElementById('seatingReveal');
       const pillsEl = document.getElementById('seatingSpotPills');
       if (!reveal || !pillsEl) return;
       if (!state.zoneId) { reveal.classList.remove('visible'); return; }
 
-      // Filter DB_TABLES (passed from PHP via window.DB_TABLES)
+      // Filter DB_TABLES
       const tables = (window.DB_TABLES || []).filter(t => String(t.zone_id) === String(state.zoneId) && parseInt(t.capacity, 10) >= state.partySize);
+      
+      // Get unique seating preferences
+      const prefs = new Set();
+      tables.forEach(t => {
+        if (t.seating_preference) prefs.add(t.seating_preference);
+      });
+
       pillsEl.innerHTML = '';
       
-      if (tables.length === 0) {
-        pillsEl.innerHTML = '<p style="color:var(--clr-muted-fg); font-size:0.875rem;">No tables big enough for your party in this zone.</p>';
+      if (prefs.size === 0) {
+        pillsEl.innerHTML = '<p style="color:var(--clr-muted-fg); font-size:0.875rem;">No seating options big enough for your party in this zone.</p>';
       } else {
-        tables.forEach(t => {
+        prefs.forEach(pref => {
           const pill = document.createElement('button');
           pill.type = 'button';
           pill.className = 'seating-spot-pill';
-          pill.textContent = t.table_number + " (" + t.capacity + " seats)";
+          pill.textContent = pref;
           pill.addEventListener('click', function() {
             pillsEl.querySelectorAll('.seating-spot-pill').forEach(p => p.classList.remove('selected'));
             pill.classList.add('selected');
-            state.tableId = t.table_id;
-            state.tableLabel = t.table_number;
-            state.timeVal = ''; // Reset time on table change
+            state.seatingPref = pref;
+            state.tableId = '';
+            state.timeVal = ''; // Reset time on spot change
             updateSummary();
             fetchAvailability();
           });
@@ -196,9 +203,10 @@
     if (guestInput) {
       guestInput.addEventListener('input', function() {
         state.partySize = parseInt(guestInput.value, 10) || 1;
+        state.seatingPref = ''; 
         state.tableId = ''; 
-        state.tableLabel = '';
-        renderTablePills();
+        state.timeVal = '';
+        renderPills();
         updateSummary();
         fetchAvailability();
       });
@@ -209,6 +217,7 @@
       datePicker.addEventListener('change', function() {
         state.date = datePicker.value;
         state.timeVal = '';
+        state.tableId = '';
         updateSummary();
         fetchAvailability();
       });
@@ -219,8 +228,8 @@
       const timeContainer = document.getElementById('timeSlotContainer');
       if (!timeContainer) return;
 
-      if (!state.date || !state.zoneId) {
-        timeContainer.innerHTML = '<p style="color:var(--clr-muted-fg); font-size:0.875rem;">Please select a zone and date to view available times.</p>';
+      if (!state.date || !state.zoneId || !state.seatingPref) {
+        timeContainer.innerHTML = '<p style="color:var(--clr-muted-fg); font-size:0.875rem;">Please select a zone, seating preference, and date to view available times.</p>';
         return;
       }
       
@@ -239,11 +248,9 @@
       body.set('csrf_token', csrf);
       body.set('action_token', actionToken);
       body.set('appointment_date', state.date);
-      if (state.tableId) {
-        body.set('table_id', state.tableId);
-      } else {
-        body.set('zone_id', state.zoneId);
-      }
+      body.set('zone_id', state.zoneId);
+      body.set('seating_preference', state.seatingPref);
+      body.set('party_size', state.partySize);
 
       fetch('../../actions.php?action=check_availability', {
         method: 'POST',
@@ -288,6 +295,8 @@
             });
             t.classList.add('selected');
             state.timeVal = time;
+            // availabilityMap[time] contains the active table_id for this slot
+            state.tableId = availabilityMap[time]; 
             updateSummary();
           });
         }
@@ -317,7 +326,7 @@
         e.preventDefault();
         
         // Validation check
-        if (!state.zoneId || !state.date || !state.timeVal || !state.tableId) {
+        if (!state.zoneId || !state.date || !state.timeVal || !state.tableId || !state.seatingPref) {
           if (errorMsg) {
             errorMsg.style.display = 'block';
             setTimeout(() => { errorMsg.style.display = 'none'; }, 4000);
@@ -336,6 +345,11 @@
         document.getElementById('hidden-appointment-date').value = state.date;
         
         let reqNotes = notesInput ? notesInput.value.trim() : '';
+        // Prepend seating preference to notes (optional but nice for DB records)
+        if (state.seatingPref) {
+           reqNotes = `Seating Preference: ${state.seatingPref} ` + (reqNotes ? `\nNotes: ${reqNotes}` : '');
+        }
+
         document.getElementById('hidden-special-requests').value = reqNotes;
 
         bookingForm.submit();

@@ -21,6 +21,8 @@ if (!verify_csrf($csrf)) {
 $appointmentDate = clean_string($_POST['appointment_date'] ?? '');
 $zoneId = isset($_POST['zone_id']) && $_POST['zone_id'] !== '' ? (int) $_POST['zone_id'] : null;
 $tableId = isset($_POST['table_id']) && $_POST['table_id'] !== '' ? (int) $_POST['table_id'] : null;
+$seatingPref = clean_string($_POST['seating_preference'] ?? '');
+$partySize = isset($_POST['party_size']) && $_POST['party_size'] !== '' ? (int) $_POST['party_size'] : 0;
 
 if (!$appointmentDate || (!$zoneId && !$tableId)) {
     header('Content-Type: application/json');
@@ -37,6 +39,20 @@ try {
     $pdo = db();
     $availability = [];
 
+    // If seating preference is used, find all matching tables in the zone with enough capacity
+    $possibleTables = [];
+    if ($seatingPref && $zoneId) {
+        $stmt = $pdo->prepare('SELECT table_id FROM `tables` WHERE zone_id = :z AND seating_preference = :sp AND capacity >= :cap');
+        $stmt->execute([':z' => $zoneId, ':sp' => $seatingPref, ':cap' => $partySize]);
+        $possibleTables = $stmt->fetchAll(PDO::FETCH_COLUMN);
+        $stmt->closeCursor();
+    } elseif ($tableId) {
+        $possibleTables = [$tableId];
+    } else {
+        // If neither, we just return false for everything
+        $possibleTables = [];
+    }
+
     foreach ($timeSlots as $time) {
         $startDt = DateTime::createFromFormat('H:i', $time);
         if (!$startDt) {
@@ -46,18 +62,26 @@ try {
         $endDt = clone $startDt;
         $endDt->modify('+2 hours');
 
-        $stmt = $pdo->prepare('SELECT fn_is_slot_available(:date, :start_time, :end_time, :table_id, :zone_id, NULL) AS available');
-        $stmt->execute([
-            ':date' => $appointmentDate,
-            ':start_time' => $startDt->format('H:i:s'),
-            ':end_time' => $endDt->format('H:i:s'),
-            ':table_id' => $tableId,
-            ':zone_id' => $tableId ? null : $zoneId,
-        ]);
-        $row = $stmt->fetch();
-        $stmt->closeCursor();
+        $slotAvail = false;
+        foreach ($possibleTables as $tid) {
+            $stmt = $pdo->prepare('SELECT fn_is_slot_available(:date, :start_time, :end_time, :table_id, :zone_id, NULL) AS available');
+            $stmt->execute([
+                ':date' => $appointmentDate,
+                ':start_time' => $startDt->format('H:i:s'),
+                ':end_time' => $endDt->format('H:i:s'),
+                ':table_id' => $tid,
+                ':zone_id' => null, // fn requires explicit table evaluation
+            ]);
+            $row = $stmt->fetch();
+            $stmt->closeCursor();
 
-        $availability[$time] = isset($row['available']) ? (int) $row['available'] === 1 : false;
+            if (isset($row['available']) && (int) $row['available'] === 1) {
+                $slotAvail = $tid; // Return the specific table_id that is available
+                break;
+            }
+        }
+        
+        $availability[$time] = $slotAvail;
     }
 
     header('Content-Type: application/json');

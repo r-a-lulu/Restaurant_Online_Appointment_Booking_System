@@ -92,7 +92,7 @@ function get_flash($key) {
 }
 
 // Global project base path for redirects
-$globalBasePath = '/Restaurant_Online_Appointment_Booking_System';
+$globalBasePath = '';
 
 function require_login() {
     global $globalBasePath;

@@ -161,8 +161,7 @@ try {
     ]);
 
     if ($source === 'dashboard') {
-        set_flash('dash_success', 'Reservation created successfully! View it in "My Reservations" below.');
-        redirect('../pages/dashboard/book.php');
+        redirect('../pages/book-confirmation.php?' . $params . '&source=dashboard');
     } else {
         redirect('../pages/book-confirmation.php?' . $params);
     }

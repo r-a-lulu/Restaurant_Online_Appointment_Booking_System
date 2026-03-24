@@ -1,6 +1,6 @@
 <?php
 /**
- * Dashboard Reservations � pages/dashboard/reservations.php
+ * Dashboard Reservations — pages/dashboard/reservations.php
  */
 
 require_once '../../includes/security.php';
@@ -15,24 +15,12 @@ $basePath        = '../../';
 $dashError = get_flash('dash_error');
 $dashSuccess = get_flash('dash_success');
 
-$byStatus = ['upcoming'=>[], 'pending'=>[], 'cancelled'=>[]];
-
 try {
   $pdo = db();
   $stmt = $pdo->prepare("SELECT appointment_id, zone_name, appointment_date, start_time, party_size, status_name FROM vw_appointments_detail WHERE user_id = :uid ORDER BY appointment_date DESC, start_time DESC");
   $stmt->execute([':uid' => (int) $_SESSION['user_id']]);
-  $rows = $stmt->fetchAll() ?: [];
+  $allReservations = $stmt->fetchAll() ?: [];
   $stmt->closeCursor();
-
-  foreach ($rows as $r) {
-    if ($r['status_name'] === 'cancelled') {
-      $byStatus['cancelled'][] = $r;
-    } elseif ($r['status_name'] === 'pending') {
-      $byStatus['pending'][] = $r;
-    } elseif ($r['status_name'] === 'confirmed' && $r['appointment_date'] >= date('Y-m-d')) {
-      $byStatus['upcoming'][] = $r;
-    }
-  }
 } catch (PDOException $e) {
   $dashError = safe_error_message($e);
 }
@@ -67,96 +55,55 @@ include '../../includes/header.php';
       </header>
 
       <div class="dash-section">
-        <div class="dash-section-header">
-          <div class="tabs-container">
-            <div class="tabs-list" role="tablist">
-              <button class="tab-trigger active" data-tab="upcoming" role="tab" aria-selected="true">Upcoming</button>
-              <button class="tab-trigger" data-tab="pending" role="tab" aria-selected="false">Pending</button>
-              <button class="tab-trigger" data-tab="cancelled" role="tab" aria-selected="false">Cancelled</button>
+        <div class="reservation-list" style="margin-top: 1rem;">
+          <?php foreach ($allReservations as $row): 
+              $sName = $row['status_name'];
+              $badgeClass = 'badge-pending';
+              $badgeLabel = 'Pending';
+              if ($sName === 'confirmed') {
+                  $badgeClass = 'badge-confirmed';
+                  $badgeLabel = 'Upcoming';
+              } elseif ($sName === 'cancelled') {
+                  $badgeClass = 'badge-cancelled';
+                  $badgeLabel = 'Cancelled';
+              } elseif ($sName === 'completed') {
+                  $badgeClass = 'badge-confirmed';
+                  $badgeLabel = 'Completed';
+              } elseif ($sName === 'no_show') {
+                  $badgeClass = 'badge-cancelled';
+                  $badgeLabel = 'No Show';
+              }
+          ?>
+          <div class="reservation-row">
+            <div class="reservation-date-block">
+              <span class="reservation-date-day"><?= e(date('d', strtotime($row['appointment_date']))) ?></span>
+              <span class="reservation-date-month"><?= e(date('M', strtotime($row['appointment_date']))) ?></span>
+            </div>
+            <div class="reservation-info">
+              <p class="reservation-zone"><?= e($row['zone_name'] ?? '—') ?></p>
+              <p class="reservation-meta"><?= e(date('g:i A', strtotime($row['start_time']))) ?> • <?= e((string) $row['party_size']) ?> Guests • #<?= e((string) $row['appointment_id']) ?></p>
+            </div>
+            <span class="badge <?= $badgeClass ?>"><?= e($badgeLabel) ?></span>
+            <div class="reservation-actions">
+              <?php if (in_array($sName, ['pending', 'confirmed'])): ?>
+              <form method="post" action="<?= $basePath ?>actions.php?action=user_cancel_booking">
+                <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+                <input type="hidden" name="action_token" value="<?= e(action_token('user_cancel_booking')) ?>">
+                <input type="hidden" name="appointment_id" value="<?= e($row['appointment_id']) ?>">
+                <button class="btn btn-outline btn-sm" type="submit" onclick="return confirm('Are you sure you want to cancel this reservation?');">Cancel</button>
+              </form>
+              <?php endif; ?>
             </div>
           </div>
-        </div>
-
-        <div class="tab-content active" data-tab-content="upcoming" role="tabpanel">
-          <div class="reservation-list">
-            <?php foreach ($byStatus['upcoming'] as $row): ?>
+          <?php endforeach; ?>
+          <?php if (empty($allReservations)): ?>
             <div class="reservation-row">
-              <div class="reservation-date-block">
-                <span class="reservation-date-day"><?= e(date('d', strtotime($row['appointment_date']))) ?></span>
-                <span class="reservation-date-month"><?= e(date('M', strtotime($row['appointment_date']))) ?></span>
-              </div>
               <div class="reservation-info">
-                <p class="reservation-zone"><?= e($row['zone_name'] ?? '�') ?></p>
-                <p class="reservation-meta"><?= e(date('g:i A', strtotime($row['start_time']))) ?> � <?= e((string) $row['party_size']) ?> Guests � #<?= e((string) $row['appointment_id']) ?></p>
-              </div>
-              <span class="badge badge-confirmed">Confirmed</span>
-              <div class="reservation-actions">
-                <form method="post" action="<?= $basePath ?>actions.php?action=user_cancel_booking">
-                  <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
-                  <input type="hidden" name="action_token" value="<?= e(action_token('user_cancel_booking')) ?>">
-                  <input type="hidden" name="appointment_id" value="<?= e($row['appointment_id']) ?>">
-                  <button class="btn btn-outline btn-sm" type="submit">Cancel</button>
-                </form>
+                <p class="reservation-zone">You have no reservations yet.</p>
               </div>
             </div>
-            <?php endforeach; ?>
-            <?php if (empty($byStatus['upcoming'])): ?>
-              <div class="reservation-row"><div class="reservation-info"><p class="reservation-zone">No upcoming reservations.</p></div></div>
-            <?php endif; ?>
-          </div>
+          <?php endif; ?>
         </div>
-
-        <div class="tab-content" data-tab-content="pending" role="tabpanel">
-          <div class="reservation-list">
-            <?php foreach ($byStatus['pending'] as $row): ?>
-            <div class="reservation-row">
-              <div class="reservation-date-block">
-                <span class="reservation-date-day"><?= e(date('d', strtotime($row['appointment_date']))) ?></span>
-                <span class="reservation-date-month"><?= e(date('M', strtotime($row['appointment_date']))) ?></span>
-              </div>
-              <div class="reservation-info">
-                <p class="reservation-zone"><?= e($row['zone_name'] ?? '�') ?></p>
-                <p class="reservation-meta"><?= e(date('g:i A', strtotime($row['start_time']))) ?> � <?= e((string) $row['party_size']) ?> Guests � #<?= e((string) $row['appointment_id']) ?></p>
-              </div>
-              <span class="badge badge-pending">Pending</span>
-              <div class="reservation-actions">
-                <form method="post" action="<?= $basePath ?>actions.php?action=user_cancel_booking">
-                  <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
-                  <input type="hidden" name="action_token" value="<?= e(action_token('user_cancel_booking')) ?>">
-                  <input type="hidden" name="appointment_id" value="<?= e($row['appointment_id']) ?>">
-                  <button class="btn btn-ghost btn-sm" type="submit">Cancel</button>
-                </form>
-              </div>
-            </div>
-            <?php endforeach; ?>
-            <?php if (empty($byStatus['pending'])): ?>
-              <div class="reservation-row"><div class="reservation-info"><p class="reservation-zone">No pending reservations.</p></div></div>
-            <?php endif; ?>
-          </div>
-        </div>
-
-        <div class="tab-content" data-tab-content="cancelled" role="tabpanel">
-          <div class="reservation-list">
-            <?php foreach ($byStatus['cancelled'] as $row): ?>
-            <div class="reservation-row">
-              <div class="reservation-date-block">
-                <span class="reservation-date-day"><?= e(date('d', strtotime($row['appointment_date']))) ?></span>
-                <span class="reservation-date-month"><?= e(date('M', strtotime($row['appointment_date']))) ?></span>
-              </div>
-              <div class="reservation-info">
-                <p class="reservation-zone"><?= e($row['zone_name'] ?? '�') ?></p>
-                <p class="reservation-meta"><?= e(date('g:i A', strtotime($row['start_time']))) ?> � <?= e((string) $row['party_size']) ?> Guests � #<?= e((string) $row['appointment_id']) ?></p>
-              </div>
-              <span class="badge badge-cancelled">Cancelled</span>
-              <div class="reservation-actions"></div>
-            </div>
-            <?php endforeach; ?>
-            <?php if (empty($byStatus['cancelled'])): ?>
-              <div class="reservation-row"><div class="reservation-info"><p class="reservation-zone">No cancelled reservations.</p></div></div>
-            <?php endif; ?>
-          </div>
-        </div>
-
       </div>
 
     </div>
@@ -167,4 +114,3 @@ include '../../includes/header.php';
 <script src="<?= $basePath ?>js/dashboard.js"></script>
 </body>
 </html>
-

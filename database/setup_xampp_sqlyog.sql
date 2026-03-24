@@ -1,4 +1,4 @@
-﻿-- XAMPP + SQLyog setup (MariaDB/MySQL compatible)
+-- XAMPP + SQLyog setup (MariaDB/MySQL compatible)
 -- To change database name in SQLyog, replace both occurrences of `restaurant_booking_v1` below.
 
 CREATE DATABASE IF NOT EXISTS restaurant_booking_v1
@@ -88,6 +88,7 @@ CREATE TABLE IF NOT EXISTS `tables` (
   zone_id INT NOT NULL,
   table_number VARCHAR(30) NOT NULL,
   capacity INT NOT NULL,
+  seating_preference VARCHAR(100) NULL,
   CONSTRAINT ck_tables_capacity_positive CHECK (capacity > 0),
   CONSTRAINT uq_tables_zone_table_number UNIQUE (zone_id, table_number),
   CONSTRAINT fk_tables_zone

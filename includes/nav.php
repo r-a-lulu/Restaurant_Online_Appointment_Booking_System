@@ -42,11 +42,13 @@ $firstName = $_SESSION['first_name'] ?? '';
     <div class="nav-actions">
       <?php if ($isLoggedIn): ?>
         <span class="nav-welcome">Hi, <?= e($firstName) ?></span>
-        <form method="post" action="<?= $basePath ?>actions.php?action=logout" style="display:inline;">
-          <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
-          <input type="hidden" name="action_token" value="<?= e(action_token('logout')) ?>">
-          <button type="submit" class="btn btn-ghost btn-sm">Logout</button>
-        </form>
+        <?php if (empty($hideLogout)): ?>
+          <form method="post" action="<?= $basePath ?>actions.php?action=logout" style="display:inline;">
+            <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+            <input type="hidden" name="action_token" value="<?= e(action_token('logout')) ?>">
+            <button type="submit" class="btn btn-ghost btn-sm">Logout</button>
+          </form>
+        <?php endif; ?>
       <?php else: ?>
         <a href="<?= $basePath ?>pages/login.php" class="btn btn-ghost btn-sm <?= $currentPage === 'login' ? 'active' : '' ?>">Sign In</a>
         <a href="<?= $basePath ?>pages/book.php" class="btn btn-primary btn-sm">Reserve a Table</a>
@@ -91,11 +93,13 @@ $firstName = $_SESSION['first_name'] ?? '';
 
   <div class="mobile-menu-actions">
     <?php if ($isLoggedIn): ?>
-      <form method="post" action="<?= $basePath ?>actions.php?action=logout">
-        <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
-        <input type="hidden" name="action_token" value="<?= e(action_token('logout')) ?>">
-        <button type="submit" class="btn btn-outline btn-block">Logout</button>
-      </form>
+      <?php if (empty($hideLogout)): ?>
+        <form method="post" action="<?= $basePath ?>actions.php?action=logout">
+          <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+          <input type="hidden" name="action_token" value="<?= e(action_token('logout')) ?>">
+          <button type="submit" class="btn btn-outline btn-block">Logout</button>
+        </form>
+      <?php endif; ?>
     <?php else: ?>
       <a href="<?= $basePath ?>pages/login.php" class="btn btn-outline btn-block">Sign In</a>
       <a href="<?= $basePath ?>pages/book.php" class="btn btn-primary btn-block">Reserve a Table</a>

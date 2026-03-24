@@ -29,24 +29,48 @@ $confirm   = $_POST['confirm_password'] ?? '';
 
 if (empty($firstName) || empty($lastName) || empty($email) || empty($password)) {
     set_flash('error', 'All fields are required.');
+    set_flash('form_data', [
+        'first_name' => $firstName,
+        'last_name' => $lastName,
+        'email' => $email,
+        'phone' => $phone
+    ]);
     header("Location: ../pages/register.php");
     exit;
 }
 
 if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
     set_flash('error', 'Please enter a valid email address.');
+    set_flash('form_data', [
+        'first_name' => $firstName,
+        'last_name' => $lastName,
+        'email' => $email,
+        'phone' => $phone
+    ]);
     header("Location: ../pages/register.php");
     exit;
 }
 
 if (strlen($password) < 8) {
     set_flash('error', 'Password must be at least 8 characters long.');
+    set_flash('form_data', [
+        'first_name' => $firstName,
+        'last_name' => $lastName,
+        'email' => $email,
+        'phone' => $phone
+    ]);
     header("Location: ../pages/register.php");
     exit;
 }
 
 if ($password !== $confirm) {
     set_flash('error', 'Passwords do not match.');
+    set_flash('form_data', [
+        'first_name' => $firstName,
+        'last_name' => $lastName,
+        'email' => $email,
+        'phone' => $phone
+    ]);
     header("Location: ../pages/register.php");
     exit;
 }
@@ -68,6 +92,12 @@ try {
     if ($stmt->fetch()) {
         rate_limit_hit($rateKey, 3600);
         set_flash('error', 'An account with that email already exists.');
+        set_flash('form_data', [
+            'first_name' => $firstName,
+            'last_name' => $lastName,
+            'email' => $email,
+            'phone' => $phone
+        ]);
         header("Location: ../pages/register.php");
         exit;
     }
@@ -86,6 +116,12 @@ try {
     }
     if (!$roleId) {
         set_flash('error', 'Default role not found. Please contact support.');
+        set_flash('form_data', [
+            'first_name' => $firstName,
+            'last_name' => $lastName,
+            'email' => $email,
+            'phone' => $phone
+        ]);
         header("Location: ../pages/register.php");
         exit;
     }
@@ -104,6 +140,12 @@ try {
 
 } catch (PDOException $e) {
     set_flash('error', 'Database error: ' . safe_error_message($e));
+    set_flash('form_data', [
+        'first_name' => $firstName,
+        'last_name' => $lastName,
+        'email' => $email,
+        'phone' => $phone
+    ]);
     header("Location: ../pages/register.php");
     exit;
 }

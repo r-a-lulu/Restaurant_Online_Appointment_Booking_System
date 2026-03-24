@@ -82,6 +82,7 @@ SELECT
   t.table_id,
   t.table_number,
   t.capacity,
+  t.seating_preference,
   dz.zone_id,
   dz.zone_name
 FROM `tables` t

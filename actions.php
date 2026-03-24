@@ -18,6 +18,8 @@ $routes = [
     'user_cancel_booking' => __DIR__ . '/actions/user_cancel_booking.php',
     'admin_update_status' => __DIR__ . '/actions/admin_update_status.php',
     'admin_master_data' => __DIR__ . '/actions/admin_master_data.php',
+    'update_profile' => __DIR__ . '/actions/update_profile.php',
+    'update_password' => __DIR__ . '/actions/update_password.php',
 ];
 
 if (!$action || empty($routes[$action])) {

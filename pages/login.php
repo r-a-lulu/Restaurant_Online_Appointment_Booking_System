@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Login Page — Eudaimonia Restaurant
  * Centered two-panel auth layout with email/password form.
@@ -34,15 +35,21 @@ include '../includes/header.php';
 
       <div class="auth-features">
         <div class="auth-feature-item">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 6 9 17l-5-5" />
+          </svg>
           Manage your reservations with ease
         </div>
         <div class="auth-feature-item">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 6 9 17l-5-5" />
+          </svg>
           View your dining history and preferences
         </div>
         <div class="auth-feature-item">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 6 9 17l-5-5" />
+          </svg>
           Exclusive member-only offers and updates
         </div>
       </div>
@@ -85,8 +92,7 @@ include '../includes/header.php';
             class="form-input"
             placeholder="you@example.com"
             autocomplete="email"
-            required
-          >
+            required>
         </div>
 
         <!-- Password -->
@@ -103,24 +109,22 @@ include '../includes/header.php';
               class="form-input"
               placeholder="Enter your password"
               autocomplete="current-password"
-              required
-            >
+              required>
             <button
               type="button"
               class="input-password-toggle"
               id="toggle-login-password"
-              aria-label="Show/hide password"
-            >
+              aria-label="Show/hide password">
               <!-- Eye icon (visible when password is hidden) -->
               <svg id="eye-open" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/>
-                <circle cx="12" cy="12" r="3"/>
+                <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z" />
+                <circle cx="12" cy="12" r="3" />
               </svg>
               <!-- Eye-off icon (visible when password is shown) -->
               <svg id="eye-closed" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none">
-                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-10-7-10-7a18.45 18.45 0 0 1 5.06-5.94"/>
-                <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 10 7 10 7a18.5 18.5 0 0 1-2.16 3.19"/>
-                <line x1="1" y1="1" x2="23" y2="23"/>
+                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-10-7-10-7a18.45 18.45 0 0 1 5.06-5.94" />
+                <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 10 7 10 7a18.5 18.5 0 0 1-2.16 3.19" />
+                <line x1="1" y1="1" x2="23" y2="23" />
               </svg>
             </button>
           </div>
@@ -147,18 +151,18 @@ include '../includes/header.php';
 </div>
 
 <script>
-  (function () {
-    var btn      = document.getElementById('toggle-login-password');
-    var input    = document.getElementById('login-password');
-    var eyeOpen  = document.getElementById('eye-open');
+  (function() {
+    var btn = document.getElementById('toggle-login-password');
+    var input = document.getElementById('login-password');
+    var eyeOpen = document.getElementById('eye-open');
     var eyeClosed = document.getElementById('eye-closed');
 
     if (!btn || !input) return;
 
-    btn.addEventListener('click', function () {
+    btn.addEventListener('click', function() {
       var isPassword = input.type === 'password';
-      input.type     = isPassword ? 'text' : 'password';
-      eyeOpen.style.display  = isPassword ? 'none'  : 'block';
+      input.type = isPassword ? 'text' : 'password';
+      eyeOpen.style.display = isPassword ? 'none' : 'block';
       eyeClosed.style.display = isPassword ? 'block' : 'none';
     });
   })();
@@ -167,6 +171,11 @@ include '../includes/header.php';
 <?php include '../includes/footer.php'; ?>
 
 <script src="<?= $basePath ?>js/nav.js"></script>
-<script src="<?= $basePath ?>js/dev-tools.js"></script>
-</body>
-</html>
+
+</xai:function_call">
+
+<xai:function_call name="read_file">
+  <parameter name="path">pages/register.php
+    </body>
+
+    </html>
