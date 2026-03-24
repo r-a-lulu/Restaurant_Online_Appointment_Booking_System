@@ -1,7 +1,11 @@
 <?php
 /**
- * Dashboard Book a Table — pages/dashboard/book.php
+ * Dashboard Book a Table � pages/dashboard/book.php
  */
+
+require_once '../../includes/security.php';
+start_secure_session();
+require_login();
 
 $pageTitle       = 'Book a Table';
 $pageCSS         = ['dashboard.css'];
@@ -28,9 +32,9 @@ include '../../includes/header.php';
       </header>
 
       <div class="book-form-grid" style="display: grid; grid-template-columns: 1fr 22rem; gap: var(--space-8); align-items: start;">
-        
-        <!-- Left Column: Steps -->
+        <!-- This dashboard form is a UI-only view. Use the main booking flow at /pages/book.php -->
         <div class="book-steps" style="display: flex; flex-direction: column; gap: var(--space-6);">
+
 
           <!-- Step 1: Dining Zone -->
           <div class="dash-section" style="margin-bottom:0; border-color:#e5cd9e;">
@@ -152,67 +156,26 @@ include '../../includes/header.php';
             </div>
           </div>
 
+
         </div>
 
-        <!-- Right Side: Summary Sidebar -->
         <div class="book-summary-card">
           <h3 class="summary-card-title">Reservation Summary</h3>
-          
-          <div class="summary-item">
-            <svg class="summary-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-            <div class="summary-item-text">
-              <span class="si-lbl">Party Size</span>
-              <strong class="si-val">2 Guests</strong>
-            </div>
-          </div>
-
-          <div class="summary-item">
-            <svg class="summary-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-            <div class="summary-item-text">
-              <span class="si-lbl">Dining Zone</span>
-              <strong class="si-val">The Patio</strong>
-            </div>
-          </div>
-
-          <div class="summary-item">
-            <svg class="summary-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
-            <div class="summary-item-text">
-              <span class="si-lbl">Seating</span>
-              <strong class="si-val" id="summarySpot">—</strong>
-            </div>
-          </div>
-
-          <div class="summary-item">
-            <svg class="summary-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-            <div class="summary-item-text">
-              <span class="si-lbl">Date</span>
-              <strong class="si-val">Saturday, March 28, 2026</strong>
-            </div>
-          </div>
-
-          <div class="summary-item">
-            <svg class="summary-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-            <div class="summary-item-text">
-              <span class="si-lbl">Time</span>
-              <strong class="si-val">5:30 PM</strong>
-            </div>
-          </div>
-
-          <a href="<?= $basePath ?>pages/book-confirmation.php" class="btn-confirm-res">
-            Confirm Reservation &rarr;
+          <a href="<?= $basePath ?>pages/book.php" class="btn-confirm-res">
+            Go to Booking Form ?
           </a>
           <p style="font-size: 0.75rem; color: #7b6d5f; text-align: center; margin-top: var(--space-3); font-weight: 400;">
-            You can cancel or modify your reservation up to 24 hours in advance.
+            Use the main booking flow to submit reservations.
           </p>
         </div>
+      </div>
 
-      </div><!-- /.book-form-grid -->
-
-    </div><!-- /.dashboard-content -->
+    </div>
   </main>
 
-</div><!-- /.dashboard-layout -->
+</div>
 
 <script src="<?= $basePath ?>js/dashboard.js"></script>
 </body>
 </html>
+

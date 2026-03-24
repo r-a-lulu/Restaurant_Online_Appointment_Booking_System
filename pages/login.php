@@ -10,6 +10,11 @@ $currentPage = 'login';
 $navStyle    = 'solid';
 $basePath    = '../';
 
+require_once '../includes/security.php';
+start_secure_session();
+$authError = get_flash('auth_error');
+$authSuccess = get_flash('auth_success');
+
 include '../includes/header.php';
 ?>
 
@@ -55,8 +60,19 @@ include '../includes/header.php';
         <p>Enter your credentials below to access your Eudaimonia guest portal.</p>
       </div>
 
+      <?php if ($authError): ?>
+        <div class="auth-alert">
+          <span><?= e($authError) ?></span>
+        </div>
+      <?php elseif ($authSuccess): ?>
+        <div class="auth-alert" style="border-color: var(--clr-success, #2e7d32); color: var(--clr-success, #2e7d32);">
+          <span><?= e($authSuccess) ?></span>
+        </div>
+      <?php endif; ?>
+
       <!-- Login Form -->
-      <form class="auth-form" id="login-form" novalidate>
+      <form class="auth-form" id="login-form" method="post" action="<?= $basePath ?>actions/process_login.php" novalidate>
+        <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
 
         <!-- Email -->
         <div class="form-group">
@@ -142,7 +158,6 @@ include '../includes/header.php';
 </div>
 
 <script>
-  // ──── Password Show/Hide Toggle ────
   (function () {
     var btn      = document.getElementById('toggle-login-password');
     var input    = document.getElementById('login-password');
@@ -156,44 +171,6 @@ include '../includes/header.php';
       input.type     = isPassword ? 'text' : 'password';
       eyeOpen.style.display  = isPassword ? 'none'  : 'block';
       eyeClosed.style.display = isPassword ? 'block' : 'none';
-    });
-  })();
-
-  // ──── Basic client-side validation feedback ────
-  (function () {
-    var form = document.getElementById('login-form');
-    var btn  = document.getElementById('login-btn');
-    if (!form) return;
-
-    form.addEventListener('submit', function (e) {
-      e.preventDefault();
-
-      var email    = document.getElementById('login-email').value.trim();
-      var password = document.getElementById('login-password').value;
-
-      // Remove any existing alert
-      var existing = form.querySelector('.auth-alert');
-      if (existing) existing.remove();
-
-      if (!email || !password) {
-        var alert = document.createElement('div');
-        alert.className = 'auth-alert';
-        alert.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span>Please fill in all fields.</span>';
-        form.insertBefore(alert, form.firstChild);
-        return;
-      }
-
-      // Simulate loading state
-      btn.disabled = true;
-      btn.textContent = 'Signing in…';
-
-      // Simulate API delay (replace with real PHP form action later)
-      setTimeout(function () {
-        btn.disabled = false;
-        btn.textContent = 'Sign In';
-        // In a real implementation, redirect to dashboard or show server error.
-        alert('Login functionality will connect to the PHP backend in a future phase. Email: ' + email);
-      }, 1200);
     });
   })();
 </script>

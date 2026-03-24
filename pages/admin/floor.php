@@ -1,56 +1,73 @@
 <?php
 /**
- * Admin Floor Management â€” pages/admin/floor.php
+ * Admin Floor Management — pages/admin/floor.php
  */
 
-$pageTitle        = 'Floor Management â€” Admin';
+require_once '../../includes/security.php';
+start_secure_session();
+require_admin();
+
+$pageTitle        = 'Floor Management — Admin';
 $pageCSS = ['dashboard.css', 'admin.css'];
 $currentAdminPage = 'floor';
 $basePath         = '../../';
 
-include '../../includes/header.php';
+$adminError = get_flash('admin_error');
+$zones = [];
 
-$zones = [
-  'patio' => [
-    'label'  => 'The Patio',
-    'tables' => [
-      ['no'=>'P1','cap'=>2,'status'=>'available','label'=>'Garden View'],
-      ['no'=>'P2','cap'=>4,'status'=>'reserved', 'label'=>'Fountain Side'],
-      ['no'=>'P3','cap'=>6,'status'=>'occupied',  'label'=>'Pergola'],
-      ['no'=>'P4','cap'=>4,'status'=>'available','label'=>'Corner Alcove'],
-      ['no'=>'P5','cap'=>8,'status'=>'reserved', 'label'=>'Olive Grove'],
-      ['no'=>'P6','cap'=>2,'status'=>'available','label'=>'Garden View 2'],
-      ['no'=>'P7','cap'=>4,'status'=>'occupied',  'label'=>'Fountain 2'],
-      ['no'=>'P8','cap'=>6,'status'=>'available','label'=>'Pergola 2'],
-    ],
-  ],
-  'dining-room' => [
-    'label'  => 'Main Dining Room',
-    'tables' => [
-      ['no'=>'D1','cap'=>2,'status'=>'occupied',  'label'=>"Chef's View"],
-      ['no'=>'D2','cap'=>4,'status'=>'reserved', 'label'=>'Window Table'],
-      ['no'=>'D3','cap'=>6,'status'=>'available','label'=>'Banquette'],
-      ['no'=>'D4','cap'=>4,'status'=>'occupied',  'label'=>'Fireplace'],
-      ['no'=>'D5','cap'=>8,'status'=>'available','label'=>'Private Alcove'],
-      ['no'=>'D6','cap'=>4,'status'=>'reserved', 'label'=>'Chandelier'],
-      ['no'=>'D7','cap'=>2,'status'=>'available','label'=>'Corner Table'],
-      ['no'=>'D8','cap'=>4,'status'=>'available','label'=>'Centre Table'],
-      ['no'=>'D9','cap'=>6,'status'=>'occupied',  'label'=>'Arch Booth'],
-      ['no'=>'D10','cap'=>4,'status'=>'reserved','label'=>'South Window'],
-    ],
-  ],
-  'bar' => [
-    'label'  => 'The Bar',
-    'tables' => [
-      ['no'=>'B1','cap'=>8,'status'=>'occupied',  'label'=>'Bar Counter'],
-      ['no'=>'B2','cap'=>4,'status'=>'reserved', 'label'=>'Lounge Booths'],
-      ['no'=>'B3','cap'=>4,'status'=>'available','label'=>'High Tops'],
-      ['no'=>'B4','cap'=>6,'status'=>'available','label'=>'Corner Sofa'],
-      ['no'=>'B5','cap'=>2,'status'=>'occupied',  'label'=>'Bar Nook'],
-      ['no'=>'B6','cap'=>4,'status'=>'reserved', 'label'=>'Side Booth'],
-    ],
-  ],
-];
+try {
+  $pdo = db();
+  $stmt = $pdo->prepare('SELECT zone_id, zone_name FROM dining_zones ORDER BY zone_name');
+  $stmt->execute();
+  $zoneRows = $stmt->fetchAll() ?: [];
+  $stmt->closeCursor();
+
+  $stmt = $pdo->prepare("SELECT t.table_id, t.table_number, t.capacity, dz.zone_id, dz.zone_name,
+    MAX(CASE
+      WHEN a.appointment_id IS NULL THEN 0
+      WHEN a.start_time <= CURTIME() AND a.end_time > CURTIME() THEN 2
+      ELSE 1
+    END) AS status_rank
+    FROM `tables` t
+    JOIN dining_zones dz ON dz.zone_id = t.zone_id
+    LEFT JOIN appointments a ON a.table_id = t.table_id
+      AND a.appointment_date = CURDATE()
+      AND a.status_id IN (SELECT status_id FROM appointment_status WHERE status_name IN ('pending','confirmed'))
+    GROUP BY t.table_id
+    ORDER BY dz.zone_name, t.table_number");
+  $stmt->execute();
+  $tables = $stmt->fetchAll() ?: [];
+  $stmt->closeCursor();
+
+  $tablesByZone = [];
+  foreach ($tables as $t) {
+    $status = 'available';
+    if ((int) $t['status_rank'] === 2) {
+      $status = 'occupied';
+    } elseif ((int) $t['status_rank'] === 1) {
+      $status = 'reserved';
+    }
+    $tablesByZone[$t['zone_id']][] = [
+      'no' => $t['table_number'],
+      'cap' => $t['capacity'],
+      'status' => $status,
+      'label' => $t['table_number'],
+    ];
+  }
+
+  foreach ($zoneRows as $z) {
+    $zoneTables = $tablesByZone[$z['zone_id']] ?? [];
+    $zones[] = [
+      'key' => strtolower(preg_replace('/[^a-z0-9]+/i', '-', $z['zone_name'])),
+      'label' => $z['zone_name'],
+      'tables' => $zoneTables,
+    ];
+  }
+} catch (PDOException $e) {
+  $adminError = safe_error_message($e);
+}
+
+include '../../includes/header.php';
 ?>
 <body>
 <div class="admin-layout" id="adminLayout">
@@ -60,32 +77,34 @@ $zones = [
   <main class="admin-main">
     <div class="admin-content">
 
+      <?php if ($adminError): ?>
+        <div class="auth-alert"><span><?= e($adminError) ?></span></div>
+      <?php endif; ?>
+
       <header class="admin-header">
         <div class="admin-header-row" style="display:flex; justify-content:space-between; align-items:center;">
           <div>
             <h1 class="admin-page-title">Floor Management</h1>
             <p class="admin-page-subtitle">Manage tables and dining zones</p>
           </div>
-          <button class="btn btn-primary" data-modal-open="addTableModal" style="display:flex; align-items:center; gap:var(--space-2);">
+          <a class="btn btn-primary" href="master-data.php" style="display:flex; align-items:center; gap:var(--space-2);">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Add Table
-          </button>
+            Manage Tables
+          </a>
         </div>
       </header>
 
       <div class="admin-floor-wrap" style="margin-top:var(--space-6); overflow:visible;">
 
-        <!-- Segmented Tabs -->
         <div class="segmented-tabs" data-admin-tabs>
-          <?php $first = true; foreach ($zones as $key => $zone): ?>
-          <button class="segment-btn <?= $first ? 'active' : '' ?>" data-tab="<?= $key ?>" aria-selected="<?= $first ? 'true' : 'false' ?>">
-            <?= $zone['label'] ?>
+          <?php $first = true; foreach ($zones as $zone): ?>
+          <button class="segment-btn <?= $first ? 'active' : '' ?>" data-tab="<?= e($zone['key']) ?>" aria-selected="<?= $first ? 'true' : 'false' ?>">
+            <?= e($zone['label']) ?>
           </button>
           <?php $first = false; endforeach; ?>
         </div>
 
-        <!-- Floor Panels -->
-        <?php $first = true; foreach ($zones as $key => $zone): 
+        <?php $first = true; foreach ($zones as $zone):
           $avail = 0; $reserved = 0; $occupied = 0;
           foreach ($zone['tables'] as $t) {
              if ($t['status'] === 'available') $avail++;
@@ -93,54 +112,50 @@ $zones = [
              elseif ($t['status'] === 'occupied') $occupied++;
           }
         ?>
-        <div class="admin-panel <?= $first ? 'active' : '' ?>" data-panel="<?= $key ?>">
-          
-          <!-- Summary Cards Row -->
+        <div class="admin-panel <?= $first ? 'active' : '' ?>" data-panel="<?= e($zone['key']) ?>">
           <div class="floor-stats-grid">
             <div class="floor-stat-card">
-              <div class="floor-stat-val text-green"><?= $avail ?></div>
+              <div class="floor-stat-val text-green"><?= e((string) $avail) ?></div>
               <div class="floor-stat-lbl">Available</div>
             </div>
             <div class="floor-stat-card">
-              <div class="floor-stat-val text-yellow"><?= $reserved ?></div>
+              <div class="floor-stat-val text-yellow"><?= e((string) $reserved) ?></div>
               <div class="floor-stat-lbl">Reserved</div>
             </div>
             <div class="floor-stat-card">
-              <div class="floor-stat-val text-red"><?= $occupied ?></div>
+              <div class="floor-stat-val text-red"><?= e((string) $occupied) ?></div>
               <div class="floor-stat-lbl">Occupied</div>
             </div>
           </div>
 
-          <!-- Tables Grid Card -->
           <div class="admin-card" style="margin-top: var(--space-6);">
             <div class="admin-card-header">
-              <h2 class="admin-card-title"><?= $zone['label'] ?> Tables</h2>
+              <h2 class="admin-card-title"><?= e($zone['label']) ?> Tables</h2>
             </div>
             <div class="admin-card-body">
               <div class="floor-grid-new">
                 <?php foreach ($zone['tables'] as $t): ?>
-                <div class="floor-tile-new floor-tile-new--<?= $t['status'] ?>" data-status="<?= $t['status'] ?>" tabindex="0">
+                <div class="floor-tile-new floor-tile-new--<?= e($t['status']) ?>" data-status="<?= e($t['status']) ?>" tabindex="0">
                   <div class="floor-tile-new-top">
-                    <span class="floor-tile-new-number"><?= $t['label'] ?></span>
+                    <span class="floor-tile-new-number"><?= e($t['label']) ?></span>
                     <svg class="floor-tile-new-edit" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
                   </div>
                   <div class="floor-tile-new-capacity">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                    <?= $t['cap'] ?> seats
+                    <?= e((string) $t['cap']) ?> seats
                   </div>
-                  <div class="floor-tile-new-status"><?= $t['status'] === 'available' ? 'Walk-in' : ($t['status'] === 'reserved' ? '6:30 PM' : 'VIP') ?></div>
+                  <div class="floor-tile-new-status"><?= e(ucfirst($t['status'])) ?></div>
                 </div>
                 <?php endforeach; ?>
               </div>
 
-              <!-- Legend -->
               <div class="floor-legend-new">
                 <div class="legend-item"><span class="legend-box available"></span> Available</div>
                 <div class="legend-item"><span class="legend-box reserved"></span> Reserved</div>
                 <div class="legend-item"><span class="legend-box occupied"></span> Occupied</div>
               </div>
             </div>
-          </div> <!-- /.admin-card -->
+          </div>
 
         </div>
         <?php $first = false; endforeach; ?>
@@ -150,6 +165,7 @@ $zones = [
   </main>
 
 </div>
+
 
 <!-- Add Table Modal -->
 <div class="admin-modal" id="addTableModal">
@@ -190,6 +206,9 @@ $zones = [
   </div>
 </div>
 
+
 <script src="<?= $basePath ?>js/admin.js"></script>
 </body>
 </html>
+
+

@@ -1,6 +1,6 @@
 # Database Triggers — `restaurant_booking_v1`
 
-**Total: 41 triggers** | **Script:** [`triggers.sql`](triggers.sql)
+**Total: 43 triggers** | **Script:** [`triggers.sql`](triggers.sql)
 
 ---
 
@@ -54,7 +54,7 @@ All follow the same pattern: log INSERT/UPDATE/DELETE into `general_audit_logs` 
 
 ---
 
-## Category 4: Business Rule Enforcement (6 triggers)
+## Category 4: Business Rule Enforcement (8 triggers)
 
 **Trigger #27:** `trg_appointments_before_insert_capacity`
 - Validates that `party_size` does not exceed the booked table's `capacity` on insert.
@@ -74,47 +74,53 @@ All follow the same pattern: log INSERT/UPDATE/DELETE into `general_audit_logs` 
 **Trigger #32:** `trg_appointments_before_update_past_date`
 - Blocks rescheduling appointments to a past date or a start time that has already passed today.
 
+**Trigger #33:** `trg_appointments_before_insert_service_package`
+- Enforces that exactly one of `service_id` or `event_package_id` is provided on insert.
+
+**Trigger #34:** `trg_appointments_before_update_service_package`
+- Enforces that exactly one of `service_id` or `event_package_id` is provided on update.
+
 ---
 
 ## Category 5: User Lifecycle (1 trigger)
 
-**Trigger #33:** `trg_users_before_update_login`
+**Trigger #35:** `trg_users_before_update_login`
 - Updates `users.updated_at` whenever `last_login` changes, keeping the two timestamps in sync.
 
 ---
 
 ## Category 6: Appointment Add-Ons Audit (3 triggers)
 
-**Trigger #34:** `trg_appt_add_ons_after_insert`
+**Trigger #36:** `trg_appt_add_ons_after_insert`
 - Logs when an add-on is attached to an appointment (appointment_id, add_on_id, quantity).
 
-**Trigger #35:** `trg_appt_add_ons_after_update`
+**Trigger #37:** `trg_appt_add_ons_after_update`
 - Logs when an add-on's quantity is modified on an appointment.
 
-**Trigger #36:** `trg_appt_add_ons_after_delete`
+**Trigger #38:** `trg_appt_add_ons_after_delete`
 - Logs when an add-on is removed from an appointment.
 
 ---
 
 ## Category 7: Additional Business Rules (3 triggers)
 
-**Trigger #37:** `trg_appointments_before_update_status_flow`
+**Trigger #39:** `trg_appointments_before_update_status_flow`
 - Enforces valid status transitions: `pending → confirmed/cancelled`, `confirmed → completed/cancelled/no_show`. Blocks all transitions out of terminal statuses (`completed`, `cancelled`, `no_show`).
 
-**Trigger #38:** `trg_appt_add_ons_before_insert_status_check`
+**Trigger #40:** `trg_appt_add_ons_before_insert_status_check`
 - Prevents adding add-ons to appointments that are `cancelled`, `completed`, or `no_show`.
 
-**Trigger #39:** `trg_appointments_before_delete_guard`
+**Trigger #41:** `trg_appointments_before_delete_guard`
 - Prevents deleting confirmed appointments. Must cancel first before deletion.
 
 ---
 
 ## Category 8: Max Active Bookings (2 triggers)
 
-**Trigger #40:** `trg_appointments_before_insert_max_active`
+**Trigger #42:** `trg_appointments_before_insert_max_active`
 - Blocks new bookings if the user already has 5 active (pending/confirmed) appointments.
 
-**Trigger #41:** `trg_appointments_before_update_max_active`
+**Trigger #43:** `trg_appointments_before_update_max_active`
 - Re-checks the active booking limit when `user_id` or `status_id` changes to an active status. Limit: 5.
 
 ---
@@ -125,5 +131,5 @@ All follow the same pattern: log INSERT/UPDATE/DELETE into `general_audit_logs` 
 SELECT COUNT(*) AS total_triggers
 FROM information_schema.triggers
 WHERE TRIGGER_SCHEMA = 'restaurant_booking_v1';
--- Expected: 41
+-- Expected: 43
 ```

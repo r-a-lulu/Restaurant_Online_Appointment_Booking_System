@@ -40,6 +40,7 @@
 -- Procedure #33: sp_audit_general_log
 -- Procedure #34: sp_status_list
 -- Procedure #35: sp_seed_default_statuses
+-- Procedure #36: sp_update_appointment_status
 
 USE restaurant_booking_v1;
 
@@ -55,12 +56,13 @@ CREATE PROCEDURE sp_user_create(
   IN p_first_name VARCHAR(100),
   IN p_last_name VARCHAR(100),
   IN p_email VARCHAR(255),
+  IN p_phone VARCHAR(30),
   IN p_password_hash VARCHAR(255),
   IN p_created_by INT
 )
 BEGIN
-  INSERT INTO users (role_id, first_name, last_name, email, password_hash, created_by)
-  VALUES (p_role_id, p_first_name, p_last_name, p_email, p_password_hash, p_created_by);
+  INSERT INTO users (role_id, first_name, last_name, email, phone, password_hash, created_by)
+  VALUES (p_role_id, p_first_name, p_last_name, p_email, p_phone, p_password_hash, p_created_by);
 
   SELECT LAST_INSERT_ID() AS user_id;
 END$$
@@ -72,6 +74,7 @@ CREATE PROCEDURE sp_user_update(
   IN p_first_name VARCHAR(100),
   IN p_last_name VARCHAR(100),
   IN p_email VARCHAR(255),
+  IN p_phone VARCHAR(30),
   IN p_is_active BOOLEAN
 )
 BEGIN
@@ -80,6 +83,7 @@ BEGIN
       first_name = p_first_name,
       last_name = p_last_name,
       email = p_email,
+      phone = p_phone,
       is_active = p_is_active
   WHERE user_id = p_user_id;
 
@@ -334,18 +338,19 @@ CREATE PROCEDURE sp_appointment_create(
   IN p_start_time TIME,
   IN p_end_time TIME,
   IN p_party_size INT,
-  IN p_status_id INT
+  IN p_status_id INT,
+  IN p_special_requests TEXT
 )
 BEGIN
   START TRANSACTION;
 
   INSERT INTO appointments (
     user_id, service_id, table_id, zone_id, event_package_id,
-    appointment_date, start_time, end_time, party_size, status_id
+    appointment_date, start_time, end_time, party_size, status_id, special_requests
   )
   VALUES (
     p_user_id, p_service_id, p_table_id, p_zone_id, p_event_package_id,
-    p_appointment_date, p_start_time, p_end_time, p_party_size, p_status_id
+    p_appointment_date, p_start_time, p_end_time, p_party_size, p_status_id, p_special_requests
   );
 
   COMMIT;
@@ -532,6 +537,31 @@ CREATE PROCEDURE sp_seed_default_statuses()
 BEGIN
   INSERT IGNORE INTO appointment_status (status_name)
   VALUES ('pending'), ('confirmed'), ('completed'), ('cancelled'), ('no_show');
+END$$
+
+DROP PROCEDURE IF EXISTS sp_update_appointment_status$$
+CREATE PROCEDURE sp_update_appointment_status(
+  IN p_appointment_id INT,
+  IN p_status_name VARCHAR(30)
+)
+BEGIN
+  DECLARE v_status_id INT;
+
+  SELECT status_id INTO v_status_id
+  FROM appointment_status
+  WHERE status_name = p_status_name
+  LIMIT 1;
+
+  IF v_status_id IS NULL THEN
+    SIGNAL SQLSTATE '45000'
+      SET MESSAGE_TEXT = 'Invalid appointment status.';
+  END IF;
+
+  UPDATE appointments
+  SET status_id = v_status_id
+  WHERE appointment_id = p_appointment_id;
+
+  SELECT ROW_COUNT() AS rows_affected;
 END$$
 
 DELIMITER ;

@@ -11,6 +11,77 @@ $currentPage = 'book';
 $navStyle    = 'solid';
 $basePath    = '../';
 
+require_once '../includes/security.php';
+start_secure_session();
+require_login();
+
+$bookingError = get_flash('booking_error');
+$services = [];
+$packages = [];
+$addOns = [];
+$zones = [];
+$user = [];
+
+$zoneMeta = [
+  'The Patio' => [
+    'image' => 'assets/images/zones/zone-patio.jpg',
+    'desc' => 'An enchanting garden courtyard with al-fresco dining beneath open skies and fragrant flora.',
+    'capacity' => 'Up to 40 guests',
+    'tag' => 'Al fresco',
+    'slug' => 'patio',
+  ],
+  'Main Dining Room' => [
+    'image' => 'assets/images/zones/zone-dining.jpg',
+    'desc' => 'Our signature indoor space — warm oak panels, candlelit tables, and impeccable service.',
+    'capacity' => 'Up to 80 guests',
+    'tag' => 'Indoor',
+    'slug' => 'dining-room',
+  ],
+  'The Bar' => [
+    'image' => 'assets/images/zones/zone-bar.jpg',
+    'desc' => 'A sophisticated cocktail lounge crafted for conversation — curated spirits and creative small plates.',
+    'capacity' => 'Up to 30 guests',
+    'tag' => 'Lounge',
+    'slug' => 'bar',
+  ],
+];
+
+try {
+  $pdo = db();
+
+  $stmt = $pdo->prepare('SELECT first_name, last_name, email, phone FROM users WHERE user_id = :id LIMIT 1');
+  $stmt->execute([':id' => (int) $_SESSION['user_id']]);
+  $user = $stmt->fetch() ?: [];
+  $stmt->closeCursor();
+
+  $stmt = $pdo->prepare('SELECT service_id, service_name, price FROM vw_active_services');
+  $stmt->execute();
+  $services = $stmt->fetchAll();
+  $stmt->closeCursor();
+
+  $stmt = $pdo->prepare('SELECT package_id, package_name, base_price, description FROM vw_active_event_packages');
+  $stmt->execute();
+  $packages = $stmt->fetchAll();
+  $stmt->closeCursor();
+
+  $stmt = $pdo->prepare('SELECT add_on_id, category, name, description, price FROM vw_active_add_ons');
+  $stmt->execute();
+  $addOns = $stmt->fetchAll();
+  $stmt->closeCursor();
+
+  $stmt = $pdo->prepare('SELECT zone_id, zone_name FROM dining_zones ORDER BY zone_name');
+  $stmt->execute();
+  $zones = $stmt->fetchAll();
+  $stmt->closeCursor();
+
+  $stmt = $pdo->prepare('SELECT table_id, table_number, capacity, zone_id, zone_name FROM vw_available_tables');
+  $stmt->execute();
+  $tables = $stmt->fetchAll();
+  $stmt->closeCursor();
+} catch (PDOException $e) {
+  $bookingError = safe_error_message($e);
+}
+
 include '../includes/header.php';
 include '../includes/nav.php';
 ?>
@@ -25,6 +96,14 @@ include '../includes/nav.php';
       <p>Complete in just a few steps. We'll confirm your booking by email.</p>
     </div>
   </section>
+
+  <?php if ($bookingError): ?>
+    <div class="container" style="margin-top: var(--space-4);">
+      <div class="auth-alert">
+        <span><?= e($bookingError) ?></span>
+      </div>
+    </div>
+  <?php endif; ?>
 
   <!-- ===== WIZARD PROGRESS BAR (sticky) ===== -->
   <div class="wizard-progress">
@@ -67,7 +146,19 @@ include '../includes/nav.php';
   </div>
 
   <!-- ===== WIZARD BODY ===== -->
-  <div class="wizard-body" id="booking-wizard">
+  <form id="booking-form" method="post" action="<?= $basePath ?>actions/process_booking.php" class="wizard-body" novalidate>
+    <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+    <input type="hidden" name="service_id" id="service-id">
+    <input type="hidden" name="event_package_id" id="event-package-id">
+    <input type="hidden" name="zone_id" id="zone-id">
+    <input type="hidden" name="table_id" id="table-id">
+    <input type="hidden" name="appointment_date" id="appointment-date">
+    <input type="hidden" name="start_time" id="start-time">
+    <input type="hidden" name="party_size" id="party-size">
+    <input type="hidden" name="special_requests" id="special-requests">
+    <input type="hidden" name="zone_label" id="zone-label">
+    <input type="hidden" name="date_label" id="date-label">
+    <input type="hidden" name="time_label" id="time-label">
 
     <!-- ── LEFT: Step Panels ── -->
     <div class="wizard-main">
@@ -85,32 +176,32 @@ include '../includes/nav.php';
 
           <!-- Name row -->
           <div class="guest-form-row">
-            <div class="form-group">
-              <label for="guest-firstname" class="form-label">First Name <span style="color:var(--clr-destructive)">*</span></label>
-              <input type="text" id="guest-firstname" class="form-input" placeholder="Jane" autocomplete="given-name" required>
+          <div class="form-group">
+            <label for="guest-firstname" class="form-label">First Name <span style="color:var(--clr-destructive)">*</span></label>
+              <input type="text" id="guest-firstname" name="first_name" class="form-input" placeholder="Jane" autocomplete="given-name" required value="<?= e($user['first_name'] ?? '') ?>" readonly>
             </div>
             <div class="form-group">
               <label for="guest-lastname" class="form-label">Last Name <span style="color:var(--clr-destructive)">*</span></label>
-              <input type="text" id="guest-lastname" class="form-input" placeholder="Doe" autocomplete="family-name" required>
+              <input type="text" id="guest-lastname" name="last_name" class="form-input" placeholder="Doe" autocomplete="family-name" required value="<?= e($user['last_name'] ?? '') ?>" readonly>
             </div>
           </div>
 
           <!-- Email -->
           <div class="form-group">
             <label for="guest-email" class="form-label">Email Address <span style="color:var(--clr-destructive)">*</span></label>
-            <input type="email" id="guest-email" class="form-input" placeholder="you@example.com" autocomplete="email" required>
+            <input type="email" id="guest-email" name="email" class="form-input" placeholder="you@example.com" autocomplete="email" required value="<?= e($user['email'] ?? '') ?>" readonly>
           </div>
 
           <!-- Phone -->
           <div class="form-group">
             <label for="guest-phone" class="form-label">Phone <span style="font-weight:400; color:var(--clr-muted-fg)">(optional)</span></label>
-            <input type="tel" id="guest-phone" class="form-input" placeholder="+1 (555) 000-0000" autocomplete="tel">
+            <input type="tel" id="guest-phone" name="phone" class="form-input" placeholder="+1 (555) 000-0000" autocomplete="tel" value="<?= e($user['phone'] ?? '') ?>">
           </div>
 
           <!-- Party size -->
           <div class="form-group">
             <label for="guest-count" class="form-label">Number of Guests <span style="color:var(--clr-destructive)">*</span></label>
-            <select id="guest-count" class="form-select" required>
+            <select id="guest-count" name="party_size" class="form-select" required>
               <option value="">Select party size</option>
               <option value="1">1 guest</option>
               <option value="2">2 guests</option>
@@ -138,6 +229,33 @@ include '../includes/nav.php';
             </select>
           </div>
 
+          <div class="form-group">
+            <label for="service-select" class="form-label">Service <span style="color:var(--clr-destructive)">*</span></label>
+            <select id="service-select" class="form-select">
+              <option value="">Select a service</option>
+              <?php foreach ($services as $service): ?>
+                <option value="<?= e($service['service_id']) ?>">
+                  <?= e($service['service_name']) ?> (<?= e(number_format((float) $service['price'], 2)) ?>)
+                </option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="package-select" class="form-label">Event Package (optional)</label>
+            <select id="package-select" class="form-select">
+              <option value="">No package</option>
+              <?php foreach ($packages as $package): ?>
+                <option value="<?= e($package['package_id']) ?>">
+                  <?= e($package['package_name']) ?> (<?= e(number_format((float) $package['base_price'], 2)) ?>)
+                </option>
+              <?php endforeach; ?>
+            </select>
+            <p class="text-muted text-sm" style="margin-top: var(--space-2);">
+              Choose either a service or a package, not both.
+            </p>
+          </div>
+
           <!-- Note -->
           <div class="guest-note">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
@@ -149,13 +267,13 @@ include '../includes/nav.php';
         <!-- Navigation -->
         <div class="wizard-nav">
           <div class="wizard-nav-left">
-            <button class="btn btn-outline" id="btn-prev" disabled>
+            <button type="button" class="btn btn-outline" id="btn-prev" disabled>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
               Back
             </button>
             <span class="wizard-step-count" id="step-count">Step 1 of 4</span>
           </div>
-          <button class="btn btn-primary btn-lg" id="btn-next">
+          <button type="button" class="btn btn-primary btn-lg" id="btn-next">
             Continue
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
           </button>
@@ -173,78 +291,35 @@ include '../includes/nav.php';
         </div>
 
         <div class="zone-cards-grid">
-
-          <!-- Patio -->
-          <div class="zone-select-card" data-zone="patio" data-label="The Patio" tabindex="0" role="button" aria-label="Select The Patio dining zone">
-            <img src="<?= $basePath ?>assets/images/zones/zone-patio.jpg" alt="The Patio" class="zone-select-card-img">
-            <div class="zone-select-card-body">
-              <h3 class="zone-select-card-title">The Patio</h3>
-              <p class="zone-select-card-desc">An enchanting garden courtyard with al-fresco dining beneath open skies and fragrant flora.</p>
-              <div class="zone-select-card-meta">
-                <span>
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                  Up to 40 guests
-                </span>
-                <span>
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2"/></svg>
-                  Al fresco
-                </span>
+          <?php foreach ($zones as $zone): ?>
+            <?php
+              $zoneName = $zone['zone_name'];
+              $meta = $zoneMeta[$zoneName] ?? $zoneMeta['Main Dining Room'];
+              $slug = $meta['slug'] ?? strtolower(preg_replace('/[^a-z0-9]+/i', '-', $zoneName));
+            ?>
+            <div class="zone-select-card" data-zone="<?= e($slug) ?>" data-zone-id="<?= e($zone['zone_id']) ?>" data-label="<?= e($zoneName) ?>" tabindex="0" role="button" aria-label="Select <?= e($zoneName) ?> dining zone">
+              <img src="<?= $basePath . e($meta['image']) ?>" alt="<?= e($zoneName) ?>" class="zone-select-card-img">
+              <div class="zone-select-card-body">
+                <h3 class="zone-select-card-title"><?= e($zoneName) ?></h3>
+                <p class="zone-select-card-desc"><?= e($meta['desc']) ?></p>
+                <div class="zone-select-card-meta">
+                  <span>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    <?= e($meta['capacity']) ?>
+                  </span>
+                  <span>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2"/></svg>
+                    <?= e($meta['tag']) ?>
+                  </span>
+                </div>
+              </div>
+              <div class="zone-select-card-check">
+                <div class="zone-check-circle">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                </div>
               </div>
             </div>
-            <div class="zone-select-card-check">
-              <div class="zone-check-circle">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
-              </div>
-            </div>
-          </div>
-
-          <!-- Dining Room -->
-          <div class="zone-select-card" data-zone="dining-room" data-label="The Dining Room" tabindex="0" role="button" aria-label="Select The Dining Room zone">
-            <img src="<?= $basePath ?>assets/images/zones/zone-dining.jpg" alt="The Dining Room" class="zone-select-card-img">
-            <div class="zone-select-card-body">
-              <h3 class="zone-select-card-title">The Dining Room</h3>
-              <p class="zone-select-card-desc">Our signature indoor space — warm oak panels, candlelit tables, and impeccable service.</p>
-              <div class="zone-select-card-meta">
-                <span>
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                  Up to 80 guests
-                </span>
-                <span>
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
-                  Indoor
-                </span>
-              </div>
-            </div>
-            <div class="zone-select-card-check">
-              <div class="zone-check-circle">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
-              </div>
-            </div>
-          </div>
-
-          <!-- The Bar -->
-          <div class="zone-select-card" data-zone="bar" data-label="The Bar" tabindex="0" role="button" aria-label="Select The Bar dining zone">
-            <img src="<?= $basePath ?>assets/images/zones/zone-bar.jpg" alt="The Bar" class="zone-select-card-img">
-            <div class="zone-select-card-body">
-              <h3 class="zone-select-card-title">The Bar</h3>
-              <p class="zone-select-card-desc">A sophisticated cocktail lounge crafted for conversation — curated spirits and creative small plates.</p>
-              <div class="zone-select-card-meta">
-                <span>
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                  Up to 30 guests
-                </span>
-                <span>
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 22h8M12 11V3L7 8M12 11l5-5"/><path d="M20 16H4l2-5h12l2 5Z"/></svg>
-                  Lounge
-                </span>
-              </div>
-            </div>
-            <div class="zone-select-card-check">
-              <div class="zone-check-circle">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
-              </div>
-            </div>
-          </div>
+          <?php endforeach; ?>
 
         </div><!-- /zone-cards-grid -->
 
@@ -256,19 +331,33 @@ include '../includes/nav.php';
             <div class="seating-spot-pills" id="seating-spot-pills">
               <!-- Pills injected by book.js based on selected zone -->
             </div>
+            <div class="form-group" style="margin-top: var(--space-4);">
+              <label for="table-select" class="form-label">Select a Table (optional)</label>
+              <select id="table-select" class="form-select">
+                <option value="">No specific table</option>
+                <?php foreach ($tables as $table): ?>
+                  <option value="<?= e($table['table_id']) ?>" data-zone-id="<?= e($table['zone_id']) ?>">
+                    <?= e($table['zone_name']) ?> — <?= e($table['table_number']) ?> (<?= e((string) $table['capacity']) ?> seats)
+                  </option>
+                <?php endforeach; ?>
+              </select>
+              <p class="text-muted text-sm" style="margin-top: var(--space-2);">
+                Table options update based on your zone selection.
+              </p>
+            </div>
           </div>
         </div>
 
 
         <div class="wizard-nav">
           <div class="wizard-nav-left">
-            <button class="btn btn-outline" id="btn-prev">
+            <button type="button" class="btn btn-outline" id="btn-prev">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
               Back
             </button>
             <span class="wizard-step-count" id="step-count">Step 2 of 4</span>
           </div>
-          <button class="btn btn-primary btn-lg" id="btn-next">
+          <button type="button" class="btn btn-primary btn-lg" id="btn-next">
             Continue
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
           </button>
@@ -302,17 +391,17 @@ include '../includes/nav.php';
           <div class="datetime-section">
             <h3>Available Times</h3>
             <div class="time-grid">
-              <button type="button" class="time-slot">5:00 PM</button>
-              <button type="button" class="time-slot">5:30 PM</button>
-              <button type="button" class="time-slot unavailable">6:00 PM</button>
-              <button type="button" class="time-slot">6:30 PM</button>
-              <button type="button" class="time-slot">7:00 PM</button>
-              <button type="button" class="time-slot unavailable">7:30 PM</button>
-              <button type="button" class="time-slot">8:00 PM</button>
-              <button type="button" class="time-slot">8:30 PM</button>
-              <button type="button" class="time-slot">9:00 PM</button>
-              <button type="button" class="time-slot">9:30 PM</button>
-              <button type="button" class="time-slot unavailable">10:00 PM</button>
+              <button type="button" class="time-slot" data-time="17:00">5:00 PM</button>
+              <button type="button" class="time-slot" data-time="17:30">5:30 PM</button>
+              <button type="button" class="time-slot unavailable" data-time="18:00">6:00 PM</button>
+              <button type="button" class="time-slot" data-time="18:30">6:30 PM</button>
+              <button type="button" class="time-slot" data-time="19:00">7:00 PM</button>
+              <button type="button" class="time-slot unavailable" data-time="19:30">7:30 PM</button>
+              <button type="button" class="time-slot" data-time="20:00">8:00 PM</button>
+              <button type="button" class="time-slot" data-time="20:30">8:30 PM</button>
+              <button type="button" class="time-slot" data-time="21:00">9:00 PM</button>
+              <button type="button" class="time-slot" data-time="21:30">9:30 PM</button>
+              <button type="button" class="time-slot unavailable" data-time="22:00">10:00 PM</button>
             </div>
             <p class="date-picker-note" style="margin-top:var(--space-2);">
               <span style="opacity:0.5; text-decoration:line-through; margin-right:4px">Strikethrough</span> = unavailable
@@ -327,17 +416,38 @@ include '../includes/nav.php';
             <label for="guest-requests" class="form-label">Special Requests <span style="font-weight:400; color:var(--clr-muted-fg)">(optional)</span></label>
             <textarea id="guest-requests" class="form-textarea" placeholder="Dietary restrictions, accessibility needs, seating preferences, special setups…" rows="3"></textarea>
           </div>
+          <div class="form-group">
+            <label class="form-label">Add-ons (optional)</label>
+            <div class="checkbox-group">
+              <?php foreach ($addOns as $addOn): ?>
+                <label class="checkbox-item">
+                  <input type="checkbox" name="add_on_ids[]" value="<?= e($addOn['add_on_id']) ?>">
+                  <span><?= e($addOn['category']) ?> — <?= e($addOn['name']) ?> (<?= e(number_format((float) $addOn['price'], 2)) ?>)</span>
+                  <input
+                    type="number"
+                    name="add_on_qty[<?= e($addOn['add_on_id']) ?>]"
+                    class="form-input"
+                    value="1"
+                    min="1"
+                    max="20"
+                    style="max-width: 90px; margin-left: var(--space-3);"
+                    aria-label="Quantity for <?= e($addOn['name']) ?>"
+                  >
+                </label>
+              <?php endforeach; ?>
+            </div>
+          </div>
         </div>
 
         <div class="wizard-nav">
           <div class="wizard-nav-left">
-            <button class="btn btn-outline" id="btn-prev">
+            <button type="button" class="btn btn-outline" id="btn-prev">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
               Back
             </button>
             <span class="wizard-step-count" id="step-count">Step 3 of 4</span>
           </div>
-          <button class="btn btn-primary btn-lg" id="btn-next">
+          <button type="button" class="btn btn-primary btn-lg" id="btn-next">
             Review Reservation
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
           </button>
@@ -418,13 +528,13 @@ include '../includes/nav.php';
 
         <div class="wizard-nav">
           <div class="wizard-nav-left">
-            <button class="btn btn-outline" id="btn-prev">
+            <button type="button" class="btn btn-outline" id="btn-prev">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
               Back
             </button>
             <span class="wizard-step-count" id="step-count">Step 4 of 4</span>
           </div>
-          <button class="btn btn-primary btn-lg" id="btn-next">
+          <button type="button" class="btn btn-primary btn-lg" id="btn-next">
             Confirm Reservation
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
           </button>
@@ -520,7 +630,7 @@ include '../includes/nav.php';
       </div><!-- /summary-card -->
     </aside>
 
-  </div><!-- /wizard-body -->
+  </form><!-- /wizard-body -->
 
 </div><!-- /book-page -->
 

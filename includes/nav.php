@@ -8,9 +8,16 @@
  *   $basePath    — relative path prefix set by header.php
  */
 
+require_once __DIR__ . '/security.php';
+start_secure_session();
+
 $currentPage = $currentPage ?? '';
 $navStyle    = $navStyle ?? 'transparent';
 $navClass    = ($navStyle === 'solid') ? 'site-nav solid' : 'site-nav';
+
+$isLoggedIn = !empty($_SESSION['user_id']);
+$roleName = $_SESSION['role_name'] ?? 'guest';
+$firstName = $_SESSION['first_name'] ?? '';
 ?>
 
 <nav class="<?= $navClass ?>" id="site-nav">
@@ -23,12 +30,26 @@ $navClass    = ($navStyle === 'solid') ? 'site-nav solid' : 'site-nav';
       <a href="<?= $basePath ?>index.php" class="nav-link <?= $currentPage === 'home' ? 'active' : '' ?>">Home</a>
       <a href="<?= $basePath ?>pages/about.php" class="nav-link <?= $currentPage === 'about' ? 'active' : '' ?>">About</a>
       <a href="<?= $basePath ?>pages/dining-zones/index.php" class="nav-link <?= $currentPage === 'dining-zones' ? 'active' : '' ?>">Dining</a>
+      <?php if ($isLoggedIn): ?>
+        <a href="<?= $basePath ?>pages/dashboard/index.php" class="nav-link <?= $currentPage === 'dashboard' ? 'active' : '' ?>">Dashboard</a>
+      <?php endif; ?>
+      <?php if ($roleName === 'admin'): ?>
+        <a href="<?= $basePath ?>pages/admin/index.php" class="nav-link">Admin</a>
+      <?php endif; ?>
     </div>
 
     <!-- Desktop actions -->
     <div class="nav-actions">
-      <a href="<?= $basePath ?>pages/login.php" class="btn btn-ghost btn-sm <?= $currentPage === 'login' ? 'active' : '' ?>">Sign In</a>
-      <a href="<?= $basePath ?>pages/book.php" class="btn btn-primary btn-sm">Reserve a Table</a>
+      <?php if ($isLoggedIn): ?>
+        <span class="nav-welcome">Hi, <?= e($firstName) ?></span>
+        <form method="post" action="<?= $basePath ?>actions/logout.php" style="display:inline;">
+          <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+          <button type="submit" class="btn btn-ghost btn-sm">Logout</button>
+        </form>
+      <?php else: ?>
+        <a href="<?= $basePath ?>pages/login.php" class="btn btn-ghost btn-sm <?= $currentPage === 'login' ? 'active' : '' ?>">Sign In</a>
+        <a href="<?= $basePath ?>pages/book.php" class="btn btn-primary btn-sm">Reserve a Table</a>
+      <?php endif; ?>
     </div>
 
     <!-- Mobile toggle -->
@@ -59,10 +80,23 @@ $navClass    = ($navStyle === 'solid') ? 'site-nav solid' : 'site-nav';
     <a href="<?= $basePath ?>pages/about.php" class="mobile-menu-link <?= $currentPage === 'about' ? 'active' : '' ?>">About</a>
     <a href="<?= $basePath ?>pages/dining-zones/index.php" class="mobile-menu-link <?= $currentPage === 'dining-zones' ? 'active' : '' ?>">Dining Zones</a>
     <a href="<?= $basePath ?>pages/book.php" class="mobile-menu-link <?= $currentPage === 'book' ? 'active' : '' ?>">Reservations</a>
+    <?php if ($isLoggedIn): ?>
+      <a href="<?= $basePath ?>pages/dashboard/index.php" class="mobile-menu-link">Dashboard</a>
+    <?php endif; ?>
+    <?php if ($roleName === 'admin'): ?>
+      <a href="<?= $basePath ?>pages/admin/index.php" class="mobile-menu-link">Admin</a>
+    <?php endif; ?>
   </div>
 
   <div class="mobile-menu-actions">
-    <a href="<?= $basePath ?>pages/login.php" class="btn btn-outline btn-block">Sign In</a>
-    <a href="<?= $basePath ?>pages/book.php" class="btn btn-primary btn-block">Reserve a Table</a>
+    <?php if ($isLoggedIn): ?>
+      <form method="post" action="<?= $basePath ?>actions/logout.php">
+        <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+        <button type="submit" class="btn btn-outline btn-block">Logout</button>
+      </form>
+    <?php else: ?>
+      <a href="<?= $basePath ?>pages/login.php" class="btn btn-outline btn-block">Sign In</a>
+      <a href="<?= $basePath ?>pages/book.php" class="btn btn-primary btn-block">Reserve a Table</a>
+    <?php endif; ?>
   </div>
 </div>

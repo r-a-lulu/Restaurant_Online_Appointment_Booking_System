@@ -10,6 +10,10 @@ $currentPage = 'register';
 $navStyle    = 'solid';
 $basePath    = '../';
 
+require_once '../includes/security.php';
+start_secure_session();
+$authError = get_flash('auth_error');
+
 include '../includes/header.php';
 ?>
 
@@ -59,8 +63,15 @@ include '../includes/header.php';
         <p>Register today for seamless reservations and a personalized dining experience.</p>
       </div>
 
+      <?php if ($authError): ?>
+        <div class="auth-alert">
+          <span><?= e($authError) ?></span>
+        </div>
+      <?php endif; ?>
+
       <!-- Register Form -->
-      <form class="auth-form" id="register-form" novalidate>
+      <form class="auth-form" id="register-form" method="post" action="<?= $basePath ?>actions/process_register.php" novalidate>
+        <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
 
         <!-- First Name + Last Name -->
         <div class="auth-form-row">
@@ -233,7 +244,6 @@ include '../includes/header.php';
 </div>
 
 <script>
-  // ──── Password Show/Hide Toggles ────
   function makeToggle(btnId, inputId, eyeOpenId, eyeClosedId) {
     var btn = document.getElementById(btnId);
     var input = document.getElementById(inputId);
@@ -250,7 +260,6 @@ include '../includes/header.php';
   makeToggle('toggle-reg-password', 'reg-password',  'reg-eye-open',  'reg-eye-closed');
   makeToggle('toggle-reg-confirm',  'reg-confirm',   'conf-eye-open', 'conf-eye-closed');
 
-  // ──── Password Strength Meter ────
   (function () {
     var input      = document.getElementById('reg-password');
     var meter      = document.getElementById('password-strength');
@@ -270,7 +279,7 @@ include '../includes/header.php';
       if (/[A-Z]/.test(pw)) score++;
       if (/[0-9]/.test(pw)) score++;
       if (/[^A-Za-z0-9]/.test(pw)) score++;
-      return score; // 0–4
+      return score;
     }
 
     if (!input) return;
@@ -283,7 +292,7 @@ include '../includes/header.php';
       }
       meter.style.display = 'flex';
       var score = getScore(val);
-      if (score === 0) score = 1; // at least 1 bar if typing
+      if (score === 0) score = 1;
 
       bars.forEach(function (bar, i) {
         bar.className = 'strength-bar';
@@ -291,71 +300,6 @@ include '../includes/header.php';
       });
 
       label.textContent = 'Strength: ' + levels[score - 1];
-    });
-  })();
-
-  // ──── Form Validation & Submit ────
-  (function () {
-    var form = document.getElementById('register-form');
-    var btn  = document.getElementById('register-btn');
-    if (!form) return;
-
-    function showAlert(msg) {
-      var existing = form.querySelector('.auth-alert');
-      if (existing) existing.remove();
-      var alert = document.createElement('div');
-      alert.className = 'auth-alert';
-      alert.innerHTML =
-        '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>' +
-        '<span>' + msg + '</span>';
-      form.insertBefore(alert, form.firstChild);
-    }
-
-    form.addEventListener('submit', function (e) {
-      e.preventDefault();
-
-      var firstName = document.getElementById('reg-firstname').value.trim();
-      var lastName  = document.getElementById('reg-lastname').value.trim();
-      var email     = document.getElementById('reg-email').value.trim();
-      var password  = document.getElementById('reg-password').value;
-      var confirm   = document.getElementById('reg-confirm').value;
-      var terms     = document.getElementById('reg-terms').checked;
-
-      // Remove existing alert
-      var existing = form.querySelector('.auth-alert');
-      if (existing) existing.remove();
-
-      if (!firstName || !lastName || !email || !password || !confirm) {
-        showAlert('Please fill in all required fields.'); return;
-      }
-
-      var emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRe.test(email)) {
-        showAlert('Please enter a valid email address.'); return;
-      }
-
-      if (password.length < 8) {
-        showAlert('Password must be at least 8 characters long.'); return;
-      }
-
-      if (password !== confirm) {
-        showAlert('Passwords do not match.'); return;
-      }
-
-      if (!terms) {
-        showAlert('You must agree to the Terms of Service to continue.'); return;
-      }
-
-      // Loading state
-      btn.disabled = true;
-      btn.textContent = 'Creating account…';
-
-      // Simulate API delay (replace with real PHP form action later)
-      setTimeout(function () {
-        btn.disabled = false;
-        btn.textContent = 'Create Account';
-        alert('Registration functionality will connect to the PHP backend in a future phase. Welcome, ' + firstName + '!');
-      }, 1400);
     });
   })();
 </script>

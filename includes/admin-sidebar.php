@@ -25,6 +25,11 @@ $navLinks = [
         'href'  => 'floor.php',
         'icon'  => '<rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/>',
     ],
+    'master-data'  => [
+        'label' => 'Master Data',
+        'href'  => 'master-data.php',
+        'icon'  => '<path d="M4 4h16v6H4z"/><path d="M4 14h16v6H4z"/><path d="M8 10v4"/><path d="M16 10v4"/>',
+    ],
     'guests'       => [
         'label' => 'Guests',
         'href'  => 'users.php',

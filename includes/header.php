@@ -16,6 +16,9 @@ $navStyle  = $navStyle ?? 'transparent';
 
 /* Explicitly use the $basePath provided by the page, or default to current directory */
 $basePath = $basePath ?? './';
+
+require_once __DIR__ . '/security.php';
+start_secure_session();
 ?>
 <!DOCTYPE html>
 <html lang="en">

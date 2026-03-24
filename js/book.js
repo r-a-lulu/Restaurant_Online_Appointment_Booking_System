@@ -18,14 +18,20 @@
     guests:      '',
     occasion:    '',
     requests:    '',
+    serviceId:   '',
+    packageId:   '',
     // Step 2 – Zone & Spot
     zone:        '',       // 'patio' | 'dining-room' | 'bar'
     zoneLabel:   '',
+    zoneId:      '',
     spot:        '',       // e.g. 'Garden Terrace'
+    tableId:     '',
     // Step 3 – Date & Time
     date:        '',
     dateLabel:   '',
     time:        '',
+    timeValue:   '',
+    timeLabel:   '',
   };
 
   // ─── Seating spots per zone ───────────────────────────────────────────────
@@ -103,15 +109,24 @@
       state.guests    = gs.value;
       state.occasion  = ($('#guest-occasion') || {}).value || '';
       state.requests  = ($('#guest-requests') || {}).value || '';
+
+      var serviceSel = $('#service-select');
+      var packageSel = $('#package-select');
+      var serviceVal = serviceSel ? serviceSel.value : '';
+      var packageVal = packageSel ? packageSel.value : '';
+      if (!serviceVal && !packageVal) { showStepError('Please select a service or a package.', serviceSel || packageSel); return false; }
+      if (serviceVal && packageVal) { showStepError('Please choose either a service or a package, not both.', serviceSel || packageSel); return false; }
+      state.serviceId = serviceVal;
+      state.packageId = packageVal;
     }
     if (n === 2) {
-      if (!state.zone) { showStepError('Please select a dining zone to continue.', null); return false; }
+      if (!state.zone || !state.zoneId) { showStepError('Please select a dining zone to continue.', null); return false; }
       if (!state.spot) { showStepError('Please select a seating preference to continue.', null); return false; }
     }
     if (n === 3) {
       var dateEl = $('#book-date');
       if (!dateEl || !dateEl.value) { showStepError('Please choose a reservation date.', dateEl); return false; }
-      if (!state.time) { showStepError('Please select a time slot.', null); return false; }
+      if (!state.timeValue) { showStepError('Please select a time slot.', null); return false; }
       state.date = dateEl.value;
       state.dateLabel = formatDate(dateEl.value);
     }
@@ -148,7 +163,7 @@
     setVal('#sum-zone',   state.zoneLabel || null);
     setVal('#sum-spot',   state.spot || null);
     setVal('#sum-date',   state.dateLabel || null);
-    setVal('#sum-time',   state.time || null);
+    setVal('#sum-time',   state.timeLabel || null);
     setVal('#sum-occasion', state.occasion || null);
   }
 
@@ -172,9 +187,13 @@
         card.classList.add('selected');
         state.zone      = card.dataset.zone;
         state.zoneLabel = card.dataset.label;
+        state.zoneId    = card.dataset.zoneId;
         state.spot      = '';   // reset spot when zone changes
+        state.tableId   = '';
+        resetTableSelection(state.zoneId);
         revealSpotPills(state.zone);
         updateSummary();
+        fetchAvailability();
       });
     });
   }
@@ -215,7 +234,8 @@
       slot.addEventListener('click', function () {
         $$('.time-slot').forEach(function (s) { s.classList.remove('selected'); });
         slot.classList.add('selected');
-        state.time = slot.textContent.trim();
+        state.timeLabel = slot.textContent.trim();
+        state.timeValue = slot.dataset.time || '';
         updateSummary();
       });
     });
@@ -237,6 +257,7 @@
       state.date      = dateEl.value;
       state.dateLabel = formatDate(dateEl.value);
       updateSummary();
+      fetchAvailability();
     });
   }
 
@@ -249,7 +270,7 @@
 
   // ─── Live summary from Step 1 fields ─────────────────────────────────────
   function initGuestFieldListeners() {
-    ['guest-firstname', 'guest-lastname', 'guest-email', 'guest-phone', 'guest-count', 'guest-occasion'].forEach(function (id) {
+    ['guest-firstname', 'guest-lastname', 'guest-email', 'guest-phone', 'guest-count', 'guest-occasion', 'service-select', 'package-select'].forEach(function (id) {
       var el = $('#' + id);
       if (!el) return;
       el.addEventListener('input', function () {
@@ -259,8 +280,82 @@
         state.phone     = ($('#guest-phone')     || {}).value || '';
         state.guests    = ($('#guest-count')     || {}).value || '';
         state.occasion  = ($('#guest-occasion')  || {}).value || '';
+        state.serviceId = ($('#service-select')  || {}).value || '';
+        state.packageId = ($('#package-select')  || {}).value || '';
         updateSummary();
       });
+    });
+  }
+
+  function initTableSelect() {
+    var tableSelect = $('#table-select');
+    if (!tableSelect) return;
+    tableSelect.addEventListener('change', function () {
+      state.tableId = tableSelect.value || '';
+      fetchAvailability();
+    });
+  }
+
+  function resetTableSelection(zoneId) {
+    var tableSelect = $('#table-select');
+    if (!tableSelect) return;
+    var hasZone = !!zoneId;
+    Array.prototype.forEach.call(tableSelect.options, function (opt) {
+      if (!opt.value) return;
+      var optZone = opt.getAttribute('data-zone-id');
+      var match = hasZone && optZone === String(zoneId);
+      opt.disabled = !match;
+      if (!match && opt.selected) opt.selected = false;
+    });
+    tableSelect.value = '';
+  }
+
+  function fetchAvailability() {
+    if (!state.date || (!state.zoneId && !state.tableId)) return;
+
+    var form = document.getElementById('booking-form');
+    var csrfEl = form ? form.querySelector('input[name="csrf_token"]') : null;
+    var csrf = csrfEl ? csrfEl.value : '';
+
+    var body = new URLSearchParams();
+    body.set('csrf_token', csrf);
+    body.set('appointment_date', state.date);
+    if (state.tableId) {
+      body.set('table_id', state.tableId);
+    } else {
+      body.set('zone_id', state.zoneId);
+    }
+
+    fetch('../actions/check_availability.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: body.toString(),
+    })
+      .then(function (res) { return res.json(); })
+      .then(function (data) {
+        if (!data || !data.availability) return;
+        updateTimeSlots(data.availability);
+      })
+      .catch(function () {});
+  }
+
+  function updateTimeSlots(availability) {
+    $$('.time-slot').forEach(function (slot) {
+      var time = slot.dataset.time;
+      if (!time) return;
+      var isAvailable = availability[time];
+      slot.classList.remove('unavailable');
+      slot.disabled = false;
+      if (!isAvailable) {
+        slot.classList.add('unavailable');
+        slot.disabled = true;
+        slot.classList.remove('selected');
+        if (state.timeValue === time) {
+          state.timeValue = '';
+          state.timeLabel = '';
+          updateSummary();
+        }
+      }
     });
   }
 
@@ -274,7 +369,7 @@
       '#rev-zone':     state.zoneLabel,
       '#rev-spot':     state.spot || '—',
       '#rev-date':     state.dateLabel,
-      '#rev-time':     state.time,
+      '#rev-time':     state.timeLabel,
       '#rev-occasion': state.occasion || '—',
       '#rev-requests': state.requests || '—',
     };
@@ -286,7 +381,7 @@
 
   // ─── Navigation buttons (event delegation — handles all step panels) ─────
   function initNavButtons() {
-    var wizard = $('#booking-wizard');
+    var wizard = $('#booking-form');
     if (!wizard) return;
 
     wizard.addEventListener('click', function (e) {
@@ -304,19 +399,21 @@
         if (!validateStep(state.currentStep)) return;
 
         if (state.currentStep === state.totalSteps) {
-          // Final submission — navigate to confirmation page
-          var params = new URLSearchParams({
-            name:    state.firstName + ' ' + state.lastName,
-            email:   state.email,
-            guests:  state.guests,
-            zone:    state.zoneLabel,
-            spot:    state.spot,
-            date:    state.dateLabel,
-            time:    state.time,
-            occasion: state.occasion,
-            ref:     generateRef(),
-          });
-          window.location.href = 'book-confirmation.php?' + params.toString();
+          // Final submission — send to server
+          var form = document.getElementById('booking-form');
+          if (!form) return;
+          setHiddenValue('service-id', state.serviceId);
+          setHiddenValue('event-package-id', state.packageId);
+          setHiddenValue('zone-id', state.zoneId);
+          setHiddenValue('table-id', state.tableId || '');
+          setHiddenValue('appointment-date', state.date);
+          setHiddenValue('start-time', state.timeValue);
+          setHiddenValue('party-size', state.guests);
+          setHiddenValue('special-requests', state.requests || '');
+          setHiddenValue('zone-label', state.zoneLabel || '');
+          setHiddenValue('date-label', state.dateLabel || '');
+          setHiddenValue('time-label', state.timeLabel || '');
+          form.submit();
         } else {
           // Save special requests from step 3 before moving to review
           var reqEl = $('#guest-requests');
@@ -339,6 +436,11 @@
     var ref   = 'EUD-';
     for (var i = 0; i < 8; i++) ref += chars[Math.floor(Math.random() * chars.length)];
     return ref;
+  }
+
+  function setHiddenValue(id, val) {
+    var el = document.getElementById(id);
+    if (el) el.value = val;
   }
 
   // ─── Confirmation page: read URL params ──────────────────────────────────
@@ -364,12 +466,14 @@
   // ─── Init ─────────────────────────────────────────────────────────────────
   document.addEventListener('DOMContentLoaded', function () {
     // Booking wizard page
-    if ($('#booking-wizard')) {
+    if ($('#booking-form')) {
       goToStep(1);
       initZoneCards();
       initTimeSlots();
       initDateInput();
       initGuestFieldListeners();
+      initTableSelect();
+      resetTableSelection('');
       initNavButtons();
       updateSummary();
     }

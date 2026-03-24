@@ -2,7 +2,7 @@
 -- Restaurant Online Appointment Booking System
 -- Triggers Script (MariaDB/MySQL compatible — XAMPP + SQLyog)
 -- Database: restaurant_booking_v1
--- Total triggers: 41
+-- Total triggers: 43
 -- =========================================================
 
 USE restaurant_booking_v1;
@@ -395,7 +395,7 @@ END$$
 
 
 -- ---------------------------------------------------------
--- CATEGORY 4: BUSINESS RULE ENFORCEMENT TRIGGERS (6 triggers)
+-- CATEGORY 4: BUSINESS RULE ENFORCEMENT TRIGGERS (8 triggers)
 -- Enforce data integrity rules at the database level
 -- ---------------------------------------------------------
 
@@ -514,12 +514,40 @@ BEGIN
   END IF;
 END$$
 
+-- Trigger #33: Enforce service/package exclusivity on INSERT
+DROP TRIGGER IF EXISTS trg_appointments_before_insert_service_package$$
+CREATE TRIGGER trg_appointments_before_insert_service_package
+BEFORE INSERT ON appointments
+FOR EACH ROW
+BEGIN
+  IF (NEW.service_id IS NULL AND NEW.event_package_id IS NULL)
+     OR (NEW.service_id IS NOT NULL AND NEW.event_package_id IS NOT NULL)
+  THEN
+    SIGNAL SQLSTATE '45000'
+      SET MESSAGE_TEXT = 'Select either a service or an event package (not both).';
+  END IF;
+END$$
+
+-- Trigger #34: Enforce service/package exclusivity on UPDATE
+DROP TRIGGER IF EXISTS trg_appointments_before_update_service_package$$
+CREATE TRIGGER trg_appointments_before_update_service_package
+BEFORE UPDATE ON appointments
+FOR EACH ROW
+BEGIN
+  IF (NEW.service_id IS NULL AND NEW.event_package_id IS NULL)
+     OR (NEW.service_id IS NOT NULL AND NEW.event_package_id IS NOT NULL)
+  THEN
+    SIGNAL SQLSTATE '45000'
+      SET MESSAGE_TEXT = 'Select either a service or an event package (not both).';
+  END IF;
+END$$
+
 
 -- ---------------------------------------------------------
 -- CATEGORY 5: USER LIFECYCLE TRIGGER (1 trigger)
 -- ---------------------------------------------------------
 
--- Trigger #33: Track last_login changes
+-- Trigger #35: Track last_login changes
 DROP TRIGGER IF EXISTS trg_users_before_update_login$$
 CREATE TRIGGER trg_users_before_update_login
 BEFORE UPDATE ON users
@@ -540,7 +568,7 @@ END$$
 -- into general_audit_logs
 -- ---------------------------------------------------------
 
--- Trigger #34: Log add-on attachment to appointment
+-- Trigger #36: Log add-on attachment to appointment
 DROP TRIGGER IF EXISTS trg_appt_add_ons_after_insert$$
 CREATE TRIGGER trg_appt_add_ons_after_insert
 AFTER INSERT ON appointment_add_ons
@@ -551,7 +579,7 @@ BEGIN
     JSON_OBJECT('appointment_id', NEW.appointment_id, 'add_on_id', NEW.add_on_id, 'quantity', NEW.quantity));
 END$$
 
--- Trigger #35: Log add-on quantity change on appointment
+-- Trigger #37: Log add-on quantity change on appointment
 DROP TRIGGER IF EXISTS trg_appt_add_ons_after_update$$
 CREATE TRIGGER trg_appt_add_ons_after_update
 AFTER UPDATE ON appointment_add_ons
@@ -563,7 +591,7 @@ BEGIN
     JSON_OBJECT('appointment_id', NEW.appointment_id, 'add_on_id', NEW.add_on_id, 'quantity', NEW.quantity));
 END$$
 
--- Trigger #36: Log add-on removal from appointment
+-- Trigger #38: Log add-on removal from appointment
 DROP TRIGGER IF EXISTS trg_appt_add_ons_after_delete$$
 CREATE TRIGGER trg_appt_add_ons_after_delete
 AFTER DELETE ON appointment_add_ons
@@ -580,7 +608,7 @@ END$$
 -- State machine, add-on guards, and delete protection
 -- ---------------------------------------------------------
 
--- Trigger #37: Enforce valid appointment status transitions
+-- Trigger #39: Enforce valid appointment status transitions
 -- Valid flows:
 --   pending   -> confirmed | cancelled
 --   confirmed -> completed | cancelled | no_show
@@ -601,7 +629,7 @@ BEGIN
   END IF;
 END$$
 
--- Trigger #38: Prevent adding add-ons to cancelled/completed/no_show appointments
+-- Trigger #40: Prevent adding add-ons to cancelled/completed/no_show appointments
 DROP TRIGGER IF EXISTS trg_appt_add_ons_before_insert_status_check$$
 CREATE TRIGGER trg_appt_add_ons_before_insert_status_check
 BEFORE INSERT ON appointment_add_ons
@@ -619,7 +647,7 @@ BEGIN
   END IF;
 END$$
 
--- Trigger #39: Prevent deleting confirmed appointments (must cancel first)
+-- Trigger #41: Prevent deleting confirmed appointments (must cancel first)
 DROP TRIGGER IF EXISTS trg_appointments_before_delete_guard$$
 CREATE TRIGGER trg_appointments_before_delete_guard
 BEFORE DELETE ON appointments
@@ -639,7 +667,7 @@ END$$
 -- Adjust @v_max_active below to change the limit.
 -- ---------------------------------------------------------
 
--- Trigger #40: Enforce max active bookings on INSERT
+-- Trigger #42: Enforce max active bookings on INSERT
 DROP TRIGGER IF EXISTS trg_appointments_before_insert_max_active$$
 CREATE TRIGGER trg_appointments_before_insert_max_active
 BEFORE INSERT ON appointments
@@ -653,7 +681,7 @@ BEGIN
   END IF;
 END$$
 
--- Trigger #41: Enforce max active bookings on UPDATE (when user_id or status changes)
+-- Trigger #43: Enforce max active bookings on UPDATE (when user_id or status changes)
 DROP TRIGGER IF EXISTS trg_appointments_before_update_max_active$$
 CREATE TRIGGER trg_appointments_before_update_max_active
 BEFORE UPDATE ON appointments
@@ -678,7 +706,7 @@ DELIMITER ;
 
 -- =========================================================
 -- VERIFICATION QUERY
--- Run this after executing the script to confirm all 41
+-- Run this after executing the script to confirm all 43
 -- triggers were created successfully.
 -- =========================================================
 
@@ -694,3 +722,4 @@ ORDER BY EVENT_OBJECT_TABLE, ACTION_TIMING, EVENT_MANIPULATION;
 SELECT COUNT(*) AS total_triggers
 FROM information_schema.triggers
 WHERE TRIGGER_SCHEMA = 'restaurant_booking_v1';
+

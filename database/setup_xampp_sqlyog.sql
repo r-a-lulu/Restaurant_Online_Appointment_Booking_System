@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS users (
   first_name VARCHAR(100) NOT NULL,
   last_name VARCHAR(100) NOT NULL,
   email VARCHAR(255) NOT NULL,
+  phone VARCHAR(30) NULL,
   password_hash VARCHAR(255) NOT NULL,
   is_active BOOLEAN NOT NULL DEFAULT TRUE,
   created_by INT NULL,

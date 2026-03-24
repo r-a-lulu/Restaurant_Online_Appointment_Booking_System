@@ -1,16 +1,16 @@
 # Stored Procedures - `restaurant_booking_v1`
 
-**Total: 35 procedures** | **Script:** [`procedures.sql`](procedures.sql)
+**Total: 36 procedures** | **Script:** [`procedures.sql`](procedures.sql)
 
 ---
 
 ## Category 1: Users and Auth (6 procedures)
 
 **Procedure #1:** `sp_user_create`
-- Creates a user and returns the new `user_id`.
+- Creates a user (includes phone) and returns the new `user_id`.
 
 **Procedure #2:** `sp_user_update`
-- Updates user profile fields and returns affected rows.
+- Updates user profile fields (including phone) and returns affected rows.
 
 **Procedure #3:** `sp_user_deactivate`
 - Sets `is_active = FALSE` for a user.
@@ -94,7 +94,7 @@
 ## Category 7: Appointments (6 procedures)
 
 **Procedure #22:** `sp_appointment_create`
-- Creates an appointment (triggers enforce capacity, overlap, status flow).
+- Creates an appointment (includes special requests; triggers enforce capacity, overlap, status flow).
 
 **Procedure #23:** `sp_appointment_update`
 - Updates appointment fields (triggers re-validate rules).
@@ -139,13 +139,16 @@
 
 ---
 
-## Category 10: Status Utilities (2 procedures)
+## Category 10: Status Utilities (3 procedures)
 
 **Procedure #34:** `sp_status_list`
 - Lists available appointment statuses.
 
 **Procedure #35:** `sp_seed_default_statuses`
 - Inserts default statuses if missing.
+
+**Procedure #36:** `sp_update_appointment_status`
+- Updates an appointment's status by status name (validated).
 
 ---
 
@@ -165,4 +168,5 @@ FROM information_schema.routines
 WHERE routine_schema = 'restaurant_booking_v1'
   AND routine_type = 'PROCEDURE';
 -- Expected: 35
+-- Expected: 36
 ```

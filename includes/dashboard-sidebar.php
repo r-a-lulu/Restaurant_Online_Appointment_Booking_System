@@ -9,6 +9,20 @@
 
 $currentDashPage = $currentDashPage ?? 'overview';
 
+require_once __DIR__ . '/security.php';
+start_secure_session();
+
+$userName = trim(($_SESSION['first_name'] ?? '') . ' ' . ($_SESSION['last_name'] ?? ''));
+$userEmail = $_SESSION['email'] ?? '';
+$initials = '';
+if ($userName !== '') {
+    $parts = preg_split('/\s+/', $userName);
+    $initials = strtoupper(substr($parts[0] ?? '', 0, 1) . substr($parts[1] ?? '', 0, 1));
+}
+if ($initials === '') {
+    $initials = 'U';
+}
+
 $navLinks = [
     'overview'     => ['label' => 'Overview',          'href' => 'index.php',        'icon' => '<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>'],
     'book'         => ['label' => 'Book Reservation',  'href' => 'book.php',         'icon' => '<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/>'],
@@ -68,10 +82,10 @@ $navLinks = [
 
   <!-- User -->
   <div class="sidebar-user">
-    <div class="sidebar-avatar">JD</div>
+    <div class="sidebar-avatar"><?= e($initials) ?></div>
     <div class="sidebar-user-info">
-      <p class="sidebar-user-name">John Doe</p>
-      <p class="sidebar-user-email">john@example.com</p>
+      <p class="sidebar-user-name"><?= e($userName ?: 'Guest') ?></p>
+      <p class="sidebar-user-email"><?= e($userEmail) ?></p>
     </div>
   </div>
 
@@ -84,13 +98,16 @@ $navLinks = [
       </svg>
       <span>Settings</span>
     </a>
-    <a href="<?= $basePath ?>pages/login.php" class="sidebar-footer-link sidebar-logout">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-        <polyline points="16 17 21 12 16 7"/>
-        <line x1="21" y1="12" x2="9" y2="12"/>
-      </svg>
-      <span>Sign Out</span>
-    </a>
+    <form method="post" action="<?= $basePath ?>actions/logout.php" class="sidebar-footer-link sidebar-logout" style="margin: 0; padding: 0;">
+      <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+      <button type="submit" style="all:unset; cursor:pointer; display:flex; align-items:center; gap:10px; color:inherit; width: 100%; padding: var(--spacing-sm) var(--spacing-md);">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+          <polyline points="16 17 21 12 16 7"/>
+          <line x1="21" y1="12" x2="9" y2="12"/>
+        </svg>
+        <span>Sign Out</span>
+      </button>
+    </form>
   </div>
 </aside>

@@ -12,7 +12,8 @@ INSERT INTO roles (role_name, permissions_description)
 VALUES
   ('admin', 'Full access to system administration and management'),
   ('staff', 'Manage reservations and customer details'),
-  ('guest', 'Customer account access')
+  ('guest', 'Customer account access'),
+  ('customer', 'Customer account access')
 ON DUPLICATE KEY UPDATE permissions_description = VALUES(permissions_description);
 
 -- =========================================================

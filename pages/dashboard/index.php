@@ -1,12 +1,58 @@
 <?php
 /**
- * Dashboard Overview â€” pages/dashboard/index.php
+ * Dashboard Overview — pages/dashboard/index.php
  */
+
+require_once '../../includes/security.php';
+start_secure_session();
+require_login();
 
 $pageTitle       = 'My Dashboard';
 $pageCSS         = ['dashboard.css'];
 $currentDashPage = 'overview';
 $basePath        = '../../';
+
+$dashError = get_flash('dash_error');
+$dashSuccess = get_flash('dash_success');
+
+$stats = [
+  'total' => 0,
+  'upcoming' => 0,
+  'completed' => 0,
+  'favorite_zone' => '—',
+];
+$upcoming = [];
+
+try {
+  $pdo = db();
+
+  $stmt = $pdo->prepare('SELECT COUNT(*) FROM appointments WHERE user_id = :uid');
+  $stmt->execute([':uid' => (int) $_SESSION['user_id']]);
+  $stats['total'] = (int) $stmt->fetchColumn();
+  $stmt->closeCursor();
+
+  $stmt = $pdo->prepare("SELECT COUNT(*) FROM appointments a JOIN appointment_status s ON s.status_id = a.status_id WHERE a.user_id = :uid AND s.status_name = 'confirmed' AND a.appointment_date >= CURDATE()");
+  $stmt->execute([':uid' => (int) $_SESSION['user_id']]);
+  $stats['upcoming'] = (int) $stmt->fetchColumn();
+  $stmt->closeCursor();
+
+  $stmt = $pdo->prepare("SELECT COUNT(*) FROM appointments a JOIN appointment_status s ON s.status_id = a.status_id WHERE a.user_id = :uid AND s.status_name = 'completed'");
+  $stmt->execute([':uid' => (int) $_SESSION['user_id']]);
+  $stats['completed'] = (int) $stmt->fetchColumn();
+  $stmt->closeCursor();
+
+  $stmt = $pdo->prepare("SELECT dz.zone_name, COUNT(*) AS cnt FROM appointments a LEFT JOIN `tables` t ON t.table_id = a.table_id JOIN dining_zones dz ON dz.zone_id = COALESCE(a.zone_id, t.zone_id) WHERE a.user_id = :uid GROUP BY dz.zone_id ORDER BY cnt DESC LIMIT 1");
+  $stmt->execute([':uid' => (int) $_SESSION['user_id']]);
+  $stats['favorite_zone'] = $stmt->fetchColumn() ?: '—';
+  $stmt->closeCursor();
+
+  $stmt = $pdo->prepare("SELECT appointment_id, zone_name, appointment_date, start_time, party_size, status_name FROM vw_appointments_detail WHERE user_id = :uid AND status_name IN ('pending','confirmed') AND appointment_date >= CURDATE() ORDER BY appointment_date ASC, start_time ASC LIMIT 5");
+  $stmt->execute([':uid' => (int) $_SESSION['user_id']]);
+  $upcoming = $stmt->fetchAll() ?: [];
+  $stmt->closeCursor();
+} catch (PDOException $e) {
+  $dashError = safe_error_message($e);
+}
 
 include '../../includes/header.php';
 ?>
@@ -15,15 +61,19 @@ include '../../includes/header.php';
 
   <?php include '../../includes/dashboard-sidebar.php'; ?>
 
-  <!-- Main Content -->
   <main class="dashboard-main">
     <div class="dashboard-content">
 
-      <!-- Header -->
+      <?php if ($dashError): ?>
+        <div class="auth-alert"><span><?= e($dashError) ?></span></div>
+      <?php elseif ($dashSuccess): ?>
+        <div class="auth-alert" style="border-color: var(--clr-success, #2e7d32); color: var(--clr-success, #2e7d32);"><span><?= e($dashSuccess) ?></span></div>
+      <?php endif; ?>
+
       <header class="dashboard-header">
         <div class="dashboard-header-row">
           <div>
-            <h1 class="dashboard-page-title">Welcome back, Jane!</h1>
+            <h1 class="dashboard-page-title">Welcome back, <?= e($_SESSION['first_name'] ?? 'Guest') ?>!</h1>
             <p class="dashboard-page-subtitle">Here's an overview of your dining activity.</p>
           </div>
           <a href="book.php" class="btn btn-primary">
@@ -33,7 +83,6 @@ include '../../includes/header.php';
         </div>
       </header>
 
-      <!-- Stat Cards -->
       <div class="stat-cards">
         <div class="stat-card">
           <div class="icon-circle">
@@ -41,7 +90,7 @@ include '../../includes/header.php';
           </div>
           <div class="stat-card-body">
             <p class="stat-card-label">Total Reservations</p>
-            <p class="stat-card-value">12</p>
+            <p class="stat-card-value"><?= e((string) $stats['total']) ?></p>
             <p class="stat-card-sub">All time</p>
           </div>
         </div>
@@ -51,7 +100,7 @@ include '../../includes/header.php';
           </div>
           <div class="stat-card-body">
             <p class="stat-card-label">Upcoming</p>
-            <p class="stat-card-value">2</p>
+            <p class="stat-card-value"><?= e((string) $stats['upcoming']) ?></p>
             <p class="stat-card-sub">Confirmed</p>
           </div>
         </div>
@@ -61,7 +110,7 @@ include '../../includes/header.php';
           </div>
           <div class="stat-card-body">
             <p class="stat-card-label">Completed</p>
-            <p class="stat-card-value">9</p>
+            <p class="stat-card-value"><?= e((string) $stats['completed']) ?></p>
             <p class="stat-card-sub">Visits</p>
           </div>
         </div>
@@ -71,54 +120,40 @@ include '../../includes/header.php';
           </div>
           <div class="stat-card-body">
             <p class="stat-card-label">Favourite Zone</p>
-            <p class="stat-card-value" style="font-size: var(--text-xl);">Patio</p>
+            <p class="stat-card-value" style="font-size: var(--text-xl);"><?= e($stats['favorite_zone']) ?></p>
             <p class="stat-card-sub">Most visited</p>
           </div>
         </div>
       </div>
 
-      <!-- Upcoming Reservations -->
       <div class="dash-section">
         <div class="dash-section-header">
           <h2 class="dash-section-title">Upcoming Reservations</h2>
           <a href="reservations.php" class="btn btn-outline btn-sm">View All</a>
         </div>
         <div class="reservation-list">
-
+          <?php foreach ($upcoming as $row): ?>
           <div class="reservation-row">
             <div class="reservation-date-block">
-              <span class="reservation-date-day">24</span>
-              <span class="reservation-date-month">Mar</span>
+              <span class="reservation-date-day"><?= e(date('d', strtotime($row['appointment_date']))) ?></span>
+              <span class="reservation-date-month"><?= e(date('M', strtotime($row['appointment_date']))) ?></span>
             </div>
             <div class="reservation-info">
-              <p class="reservation-zone">Patio â€” Outdoor Seating</p>
-              <p class="reservation-meta">7:00 PM &nbsp;Â·&nbsp; 2 Guests &nbsp;Â·&nbsp; Reservation #EU-2024-089</p>
+              <p class="reservation-zone"><?= e($row['zone_name'] ?? '—') ?></p>
+              <p class="reservation-meta"><?= e(date('g:i A', strtotime($row['start_time']))) ?> · <?= e((string) $row['party_size']) ?> Guests · #<?= e((string) $row['appointment_id']) ?></p>
             </div>
-            <span class="badge badge-confirmed">Confirmed</span>
+            <span class="badge badge-<?= $row['status_name'] === 'confirmed' ? 'confirmed' : 'pending' ?>"><?= e(ucfirst($row['status_name'])) ?></span>
             <div class="reservation-actions">
               <a href="reservations.php" class="btn btn-outline btn-sm">Details</a>
             </div>
           </div>
-
-          <div class="reservation-row">
-            <div class="reservation-date-block">
-              <span class="reservation-date-day">01</span>
-              <span class="reservation-date-month">Apr</span>
-            </div>
-            <div class="reservation-info">
-              <p class="reservation-zone">Dining Room â€” Private Table</p>
-              <p class="reservation-meta">8:30 PM &nbsp;Â·&nbsp; 4 Guests &nbsp;Â·&nbsp; Reservation #EU-2024-091</p>
-            </div>
-            <span class="badge badge-pending">Pending</span>
-            <div class="reservation-actions">
-              <a href="reservations.php" class="btn btn-outline btn-sm">Details</a>
-            </div>
-          </div>
-
+          <?php endforeach; ?>
+          <?php if (empty($upcoming)): ?>
+          <div class="reservation-row"><div class="reservation-info"><p class="reservation-zone">No upcoming reservations.</p></div></div>
+          <?php endif; ?>
         </div>
       </div>
 
-      <!-- Quick Actions -->
       <div class="dash-section">
         <div class="dash-section-header">
           <h2 class="dash-section-title">Quick Actions</h2>
@@ -147,11 +182,12 @@ include '../../includes/header.php';
         </div>
       </div>
 
-    </div><!-- /.dashboard-content -->
+    </div>
   </main>
 
-</div><!-- /.dashboard-layout -->
+</div>
 
 <script src="<?= $basePath ?>js/dashboard.js"></script>
 </body>
 </html>
+

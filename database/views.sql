@@ -8,6 +8,10 @@
 -- View #1:  vw_appointments_detail
 -- View #2:  vw_upcoming_appointments
 -- View #3:  vw_admin_appointments
+-- View #4:  vw_active_services
+-- View #5:  vw_available_tables
+-- View #6:  vw_active_event_packages
+-- View #7:  vw_active_add_ons
 
 USE restaurant_booking_v1;
 
@@ -24,7 +28,7 @@ SELECT
   s.service_name,
   a.event_package_id,
   ep.package_name,
-  a.zone_id,
+  COALESCE(a.zone_id, t.zone_id) AS zone_id,
   dz.zone_name,
   a.table_id,
   t.table_number,
@@ -42,8 +46,8 @@ FROM appointments a
 JOIN users u ON u.user_id = a.user_id
 LEFT JOIN services s ON s.service_id = a.service_id
 LEFT JOIN event_packages ep ON ep.package_id = a.event_package_id
-LEFT JOIN dining_zones dz ON dz.zone_id = a.zone_id
-LEFT JOIN `tables` t ON t.table_id = a.table_id;
+LEFT JOIN `tables` t ON t.table_id = a.table_id
+LEFT JOIN dining_zones dz ON dz.zone_id = COALESCE(a.zone_id, t.zone_id);
 
 -- ---------------------------------------------------------
 -- View #2: Upcoming appointments (non-terminal)
@@ -61,3 +65,41 @@ CREATE OR REPLACE VIEW vw_admin_appointments AS
 SELECT *
 FROM vw_appointments_detail
 ORDER BY appointment_date DESC, start_time DESC;
+
+-- ---------------------------------------------------------
+-- View #4: Active services (no soft delete in schema)
+-- ---------------------------------------------------------
+CREATE OR REPLACE VIEW vw_active_services AS
+SELECT service_id, service_name, price
+FROM services
+ORDER BY service_name;
+
+-- ---------------------------------------------------------
+-- View #5: Available tables (static list; availability enforced by triggers)
+-- ---------------------------------------------------------
+CREATE OR REPLACE VIEW vw_available_tables AS
+SELECT
+  t.table_id,
+  t.table_number,
+  t.capacity,
+  dz.zone_id,
+  dz.zone_name
+FROM `tables` t
+JOIN dining_zones dz ON dz.zone_id = t.zone_id
+ORDER BY dz.zone_name, t.table_number;
+
+-- ---------------------------------------------------------
+-- View #6: Active event packages
+-- ---------------------------------------------------------
+CREATE OR REPLACE VIEW vw_active_event_packages AS
+SELECT package_id, package_name, base_price, description
+FROM event_packages
+ORDER BY package_name;
+
+-- ---------------------------------------------------------
+-- View #7: Active add-ons
+-- ---------------------------------------------------------
+CREATE OR REPLACE VIEW vw_active_add_ons AS
+SELECT add_on_id, category, name, description, price
+FROM add_ons
+ORDER BY category, name;

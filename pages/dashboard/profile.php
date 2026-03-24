@@ -1,12 +1,29 @@
 <?php
 /**
- * Dashboard My Profile — pages/dashboard/profile.php
+ * Dashboard My Profile � pages/dashboard/profile.php
  */
+
+require_once '../../includes/security.php';
+start_secure_session();
+require_login();
 
 $pageTitle       = 'My Profile';
 $pageCSS         = ['dashboard.css'];
 $currentDashPage = 'profile';
 $basePath        = '../../';
+
+$dashError = get_flash('dash_error');
+$user = [];
+
+try {
+  $pdo = db();
+  $stmt = $pdo->prepare('SELECT first_name, last_name, email, phone FROM users WHERE user_id = :uid LIMIT 1');
+  $stmt->execute([':uid' => (int) $_SESSION['user_id']]);
+  $user = $stmt->fetch() ?: [];
+  $stmt->closeCursor();
+} catch (PDOException $e) {
+  $dashError = safe_error_message($e);
+}
 
 include '../../includes/header.php';
 ?>
@@ -17,6 +34,10 @@ include '../../includes/header.php';
 
   <main class="dashboard-main">
     <div class="dashboard-content">
+
+      <?php if ($dashError): ?>
+        <div class="auth-alert"><span><?= e($dashError) ?></span></div>
+      <?php endif; ?>
 
       <header class="dashboard-header">
         <div class="dashboard-header-row">
@@ -29,7 +50,6 @@ include '../../includes/header.php';
 
       <div class="profile-sections">
 
-        <!-- Personal Information -->
         <div class="profile-section">
           <div class="profile-section-header">
             <h2 class="profile-section-title">Personal Information</h2>
@@ -40,72 +60,27 @@ include '../../includes/header.php';
               <div class="form-row" style="margin-bottom: var(--space-4);">
                 <div class="form-group">
                   <label for="firstName" class="form-label">First Name</label>
-                  <input type="text" id="firstName" class="form-input" value="Jane">
+                  <input type="text" id="firstName" class="form-input" value="<?= e($user['first_name'] ?? '') ?>" readonly>
                 </div>
                 <div class="form-group">
                   <label for="lastName" class="form-label">Last Name</label>
-                  <input type="text" id="lastName" class="form-input" value="Doe">
+                  <input type="text" id="lastName" class="form-input" value="<?= e($user['last_name'] ?? '') ?>" readonly>
                 </div>
               </div>
               <div class="form-row" style="margin-bottom: var(--space-6);">
                 <div class="form-group">
                   <label for="email" class="form-label">Email Address</label>
-                  <input type="email" id="email" class="form-input" value="jane.doe@email.com">
+                  <input type="email" id="email" class="form-input" value="<?= e($user['email'] ?? '') ?>" readonly>
                 </div>
                 <div class="form-group">
                   <label for="phone" class="form-label">Phone Number</label>
-                  <input type="tel" id="phone" class="form-input" value="+1 (555) 012-3456">
+                  <input type="tel" id="phone" class="form-input" value="<?= e($user['phone'] ?? '') ?>" readonly>
                 </div>
-              </div>
-              <div style="display: flex; justify-content: flex-end;">
-                <button type="submit" class="btn btn-primary">Save Changes</button>
               </div>
             </form>
           </div>
         </div>
 
-        <!-- Dining Preferences -->
-        <div class="profile-section">
-          <div class="profile-section-header">
-            <h2 class="profile-section-title">Dining Preferences</h2>
-            <p class="profile-section-desc">Help us personalise your experience.</p>
-          </div>
-          <div class="profile-section-body">
-            <form>
-              <div class="form-group" style="margin-bottom: var(--space-4);">
-                <label for="favZone" class="form-label">Favourite Dining Zone</label>
-                <select id="favZone" class="form-select">
-                  <option value="">No preference</option>
-                  <option value="patio" selected>Patio</option>
-                  <option value="bar">Bar</option>
-                  <option value="dining-room">Dining Room</option>
-                </select>
-              </div>
-              <div class="form-group" style="margin-bottom: var(--space-4);">
-                <label class="form-label">Dietary Restrictions</label>
-                <div style="display: flex; flex-direction: column; gap: var(--space-2); margin-top: var(--space-2);">
-                  <?php
-                  $restrictions = ['Vegetarian', 'Vegan', 'Gluten-free', 'Nut allergy', 'Dairy-free', 'Halal'];
-                  foreach ($restrictions as $r):
-                  ?>
-                  <label style="display: flex; align-items: center; gap: var(--space-2); font-size: var(--text-sm); cursor: pointer;">
-                    <input type="checkbox" class="form-checkbox"><?= $r ?>
-                  </label>
-                  <?php endforeach; ?>
-                </div>
-              </div>
-              <div class="form-group" style="margin-bottom: var(--space-6);">
-                <label for="specialNotes" class="form-label">Special Notes</label>
-                <textarea id="specialNotes" class="form-textarea" placeholder="Anything our team should know about your dining needs…" rows="2"></textarea>
-              </div>
-              <div style="display: flex; justify-content: flex-end;">
-                <button type="submit" class="btn btn-primary">Save Preferences</button>
-              </div>
-            </form>
-          </div>
-        </div>
-
-        <!-- Notifications -->
         <div class="profile-section">
           <div class="profile-section-header">
             <h2 class="profile-section-title">Notifications</h2>
@@ -122,80 +97,17 @@ include '../../includes/header.php';
                 <span class="switch-slider"></span>
               </label>
             </div>
-            <div class="notification-row">
-              <div class="notification-info">
-                <p class="notification-label">SMS Reminders</p>
-                <p class="notification-desc">Get a text message 24 hours before your reservation.</p>
-              </div>
-              <label class="switch" aria-label="SMS reminders">
-                <input type="checkbox" checked>
-                <span class="switch-slider"></span>
-              </label>
-            </div>
-            <div class="notification-row">
-              <div class="notification-info">
-                <p class="notification-label">Promotional Offers</p>
-                <p class="notification-desc">Hear about special events, menus, and exclusive offers.</p>
-              </div>
-              <label class="switch" aria-label="Promotional offers">
-                <input type="checkbox">
-                <span class="switch-slider"></span>
-              </label>
-            </div>
           </div>
         </div>
 
-        <!-- Security -->
-        <div class="profile-section">
-          <div class="profile-section-header">
-            <h2 class="profile-section-title">Security</h2>
-            <p class="profile-section-desc">Update your password to keep your account secure.</p>
-          </div>
-          <div class="profile-section-body">
-            <form>
-              <div class="form-group" style="margin-bottom: var(--space-4);">
-                <label for="currentPassword" class="form-label">Current Password</label>
-                <div class="input-password-wrap">
-                  <input type="password" id="currentPassword" class="form-input" placeholder="Enter current password">
-                  <span class="input-password-toggle" onclick="this.previousElementSibling.type = this.previousElementSibling.type === 'password' ? 'text' : 'password'">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                  </span>
-                </div>
-              </div>
-              <div class="form-row" style="margin-bottom: var(--space-6);">
-                <div class="form-group">
-                  <label for="newPassword" class="form-label">New Password</label>
-                  <div class="input-password-wrap">
-                    <input type="password" id="newPassword" class="form-input" placeholder="New password">
-                    <span class="input-password-toggle" onclick="this.previousElementSibling.type = this.previousElementSibling.type === 'password' ? 'text' : 'password'">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                    </span>
-                  </div>
-                </div>
-                <div class="form-group">
-                  <label for="confirmPassword" class="form-label">Confirm Password</label>
-                  <div class="input-password-wrap">
-                    <input type="password" id="confirmPassword" class="form-input" placeholder="Confirm new password">
-                    <span class="input-password-toggle" onclick="this.previousElementSibling.type = this.previousElementSibling.type === 'password' ? 'text' : 'password'">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                    </span>
-                  </div>
-                </div>
-              </div>
-              <div style="display: flex; justify-content: flex-end;">
-                <button type="submit" class="btn btn-primary">Update Password</button>
-              </div>
-            </form>
-          </div>
-        </div>
+      </div>
 
-      </div><!-- /.profile-sections -->
-
-    </div><!-- /.dashboard-content -->
+    </div>
   </main>
 
-</div><!-- /.dashboard-layout -->
+</div>
 
 <script src="<?= $basePath ?>js/dashboard.js"></script>
 </body>
 </html>
+
