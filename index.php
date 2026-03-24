@@ -17,7 +17,7 @@ include 'includes/nav.php';
 <!-- Hero Section -->
 <section class="hero">
   <div class="hero-bg">
-    <img src="assets/images/hero-restaurant.jpg" alt="Eudaimonia restaurant interior" class="img-cover">
+    <img src="assets/images/hero/hero-restaurant.jpg" alt="Interior of Eudaimonia restaurant" class="img-cover">
   </div>
   <div class="hero-overlay"></div>
   <div class="hero-content container">
@@ -25,18 +25,20 @@ include 'includes/nav.php';
     <h1 class="hero-title">Eudaimonia</h1>
     <p class="hero-subtitle">An exquisite dining experience where every detail is crafted to create moments of pure joy and connection.</p>
     <div class="hero-actions">
-      <a href="#" onclick="alert('This page will be built in Phase 4'); return false;" class="btn btn-hero">Reserve a Table</a>
-      <a href="#" onclick="alert('This page will be built in Phase 2'); return false;" class="btn btn-outline-light btn-lg">Our Story</a>
+      <a href="pages/book.php" class="btn btn-hero">Reserve a Table</a>
+      <a href="pages/about.php" class="btn btn-outline-light btn-lg">Our Story</a>
+      <a href="pages/dashboard/index.php" class="btn btn-outline-light btn-lg" style="border-color: var(--clr-accent); color: var(--clr-accent);">Guest Dashboard (Demo)</a>
+      <a href="pages/admin/index.php" class="btn btn-outline-light btn-lg" style="border-color: #aaa; color: #ddd;">Admin Panel (Demo)</a>
     </div>
   </div>
 </section>
 
 <!-- Philosophy Section -->
 <section class="section-lg">
-  <div class="container" style="max-width: 48rem; text-align: center;">
+  <div class="container philosophy-inner">
     <h4 class="section-label">Our Philosophy</h4>
     <h2>The Art of Dining</h2>
-    <p class="text-muted" style="margin-top: var(--space-6); font-size: var(--text-lg);">
+    <p class="text-muted">
       At Eudaimonia, we believe that dining is more than just a meal — it's an experience 
       that nourishes the soul. Every dish is crafted with passion, every moment designed 
       to create lasting memories.
@@ -45,21 +47,21 @@ include 'includes/nav.php';
 </section>
 
 <!-- Dining Zones Section -->
-<section class="section" style="background-color: var(--clr-muted);">
+<section class="section zones-section">
   <div class="container">
-    <div style="text-align: center;" class="mb-12">
+    <div class="zones-header mb-12">
       <h4 class="section-label">Explore Our Spaces</h4>
       <h2>Dining Zones</h2>
-      <p class="text-muted" style="margin-top: var(--space-4); max-width: 36rem; margin-inline: auto;">
+      <p class="text-muted">
         Three distinctive environments, each offering a unique atmosphere for your perfect dining experience.
       </p>
     </div>
 
     <div class="zones-grid">
       <!-- The Patio -->
-      <a href="#" onclick="alert('This page will be built in Phase 2'); return false;" class="zone-card">
+      <a href="pages/dining-zones/patio.php" class="zone-card">
         <div class="zone-card-img">
-          <img src="assets/images/zone-patio.jpg" alt="The Patio dining zone" class="img-cover">
+          <img src="assets/images/zones/zone-patio.jpg" alt="The Patio dining zone" class="img-cover">
         </div>
         <div class="zone-card-overlay"></div>
         <div class="zone-card-content">
@@ -69,9 +71,9 @@ include 'includes/nav.php';
       </a>
 
       <!-- Main Dining Room -->
-      <a href="#" onclick="alert('This page will be built in Phase 2'); return false;" class="zone-card">
+      <a href="pages/dining-zones/dining-room.php" class="zone-card">
         <div class="zone-card-img">
-          <img src="assets/images/zone-dining.jpg" alt="Main Dining Room" class="img-cover">
+          <img src="assets/images/zones/zone-dining.jpg" alt="Main Dining Room" class="img-cover">
         </div>
         <div class="zone-card-overlay"></div>
         <div class="zone-card-content">
@@ -81,9 +83,9 @@ include 'includes/nav.php';
       </a>
 
       <!-- The Bar -->
-      <a href="#" onclick="alert('This page will be built in Phase 2'); return false;" class="zone-card">
+      <a href="pages/dining-zones/bar.php" class="zone-card">
         <div class="zone-card-img">
-          <img src="assets/images/zone-bar.jpg" alt="The Bar lounge area" class="img-cover">
+          <img src="assets/images/zones/zone-bar.jpg" alt="The Bar lounge area" class="img-cover">
         </div>
         <div class="zone-card-overlay"></div>
         <div class="zone-card-content">
@@ -98,7 +100,7 @@ include 'includes/nav.php';
 <!-- Features Section -->
 <section class="section-lg">
   <div class="container">
-    <div style="text-align: center;" class="mb-12">
+    <div class="features-header mb-12">
       <h4 class="section-label">Why Eudaimonia</h4>
       <h2>An Unparalleled Experience</h2>
     </div>
@@ -141,15 +143,15 @@ include 'includes/nav.php';
 
 <!-- CTA Section -->
 <section class="cta-section">
-  <div class="container" style="text-align: center;">
-    <h4 class="section-label" style="color: rgba(255,255,255,0.7);">Begin Your Journey</h4>
-    <h2 style="color: #fff;">Ready for an Unforgettable Evening?</h2>
-    <p style="color: rgba(255,255,255,0.7); margin-top: var(--space-4); max-width: 32rem; margin-inline: auto;">
+  <div class="container cta-inner">
+    <h4 class="section-label">Begin Your Journey</h4>
+    <h2>Ready for an Unforgettable Evening?</h2>
+    <p>
       Reserve your table today and discover why Eudaimonia is the city's most sought-after dining destination.
     </p>
-    <div style="margin-top: var(--space-8); display: flex; gap: var(--space-4); justify-content: center; flex-wrap: wrap;">
-      <a href="#" onclick="alert('This page will be built in Phase 4'); return false;" class="btn btn-hero">Reserve a Table</a>
-      <a href="#" onclick="alert('This page will be built in Phase 2'); return false;" class="btn btn-outline-light btn-lg">Explore Dining Zones</a>
+    <div class="cta-actions">
+      <a href="pages/book.php" class="btn btn-hero">Reserve a Table</a>
+      <a href="pages/dining-zones/index.php" class="btn btn-outline-light btn-lg">Explore Dining Zones</a>
     </div>
   </div>
 </section>

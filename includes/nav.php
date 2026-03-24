@@ -21,14 +21,14 @@ $navClass    = ($navStyle === 'solid') ? 'site-nav solid' : 'site-nav';
     <!-- Desktop links -->
     <div class="nav-links">
       <a href="<?= $basePath ?>index.php" class="nav-link <?= $currentPage === 'home' ? 'active' : '' ?>">Home</a>
-      <a href="#" onclick="alert('This page will be built in Phase 2'); return false;" class="nav-link <?= $currentPage === 'about' ? 'active' : '' ?>">About</a>
-      <a href="#" onclick="alert('This page will be built in Phase 2'); return false;" class="nav-link <?= $currentPage === 'dining' ? 'active' : '' ?>">Dining</a>
+      <a href="<?= $basePath ?>pages/about.php" class="nav-link <?= $currentPage === 'about' ? 'active' : '' ?>">About</a>
+      <a href="<?= $basePath ?>pages/dining-zones/index.php" class="nav-link <?= $currentPage === 'dining-zones' ? 'active' : '' ?>">Dining</a>
     </div>
 
     <!-- Desktop actions -->
     <div class="nav-actions">
-      <a href="#" onclick="alert('This page will be built in Phase 3'); return false;" class="btn btn-ghost btn-sm">Sign In</a>
-      <a href="#" onclick="alert('This page will be built in Phase 4'); return false;" class="btn btn-primary btn-sm">Reserve a Table</a>
+      <a href="<?= $basePath ?>pages/login.php" class="btn btn-ghost btn-sm <?= $currentPage === 'login' ? 'active' : '' ?>">Sign In</a>
+      <a href="<?= $basePath ?>pages/book.php" class="btn btn-primary btn-sm">Reserve a Table</a>
     </div>
 
     <!-- Mobile toggle -->
@@ -56,13 +56,13 @@ $navClass    = ($navStyle === 'solid') ? 'site-nav solid' : 'site-nav';
 
   <div class="mobile-menu-links">
     <a href="<?= $basePath ?>index.php" class="mobile-menu-link <?= $currentPage === 'home' ? 'active' : '' ?>">Home</a>
-    <a href="#" onclick="alert('This page will be built in Phase 2'); return false;" class="mobile-menu-link <?= $currentPage === 'about' ? 'active' : '' ?>">About</a>
-    <a href="#" onclick="alert('This page will be built in Phase 2'); return false;" class="mobile-menu-link <?= $currentPage === 'dining' ? 'active' : '' ?>">Dining Zones</a>
-    <a href="#" onclick="alert('This page will be built in Phase 4'); return false;" class="mobile-menu-link <?= $currentPage === 'book' ? 'active' : '' ?>">Reservations</a>
+    <a href="<?= $basePath ?>pages/about.php" class="mobile-menu-link <?= $currentPage === 'about' ? 'active' : '' ?>">About</a>
+    <a href="<?= $basePath ?>pages/dining-zones/index.php" class="mobile-menu-link <?= $currentPage === 'dining-zones' ? 'active' : '' ?>">Dining Zones</a>
+    <a href="<?= $basePath ?>pages/book.php" class="mobile-menu-link <?= $currentPage === 'book' ? 'active' : '' ?>">Reservations</a>
   </div>
 
   <div class="mobile-menu-actions">
-    <a href="#" onclick="alert('This page will be built in Phase 3'); return false;" class="btn btn-outline btn-block">Sign In</a>
-    <a href="#" onclick="alert('This page will be built in Phase 4'); return false;" class="btn btn-primary btn-block">Reserve a Table</a>
+    <a href="<?= $basePath ?>pages/login.php" class="btn btn-outline btn-block">Sign In</a>
+    <a href="<?= $basePath ?>pages/book.php" class="btn btn-primary btn-block">Reserve a Table</a>
   </div>
 </div>
