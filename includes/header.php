@@ -33,17 +33,17 @@ $basePath = $basePath ?? './';
   <link rel="icon" type="image/svg+xml" href="<?= $basePath ?>assets/images/icons/icon.svg">
 
   <!-- Core CSS (order matters) -->
-  <link rel="stylesheet" href="<?= $basePath ?>css/variables.css">
-  <link rel="stylesheet" href="<?= $basePath ?>css/reset.css">
-  <link rel="stylesheet" href="<?= $basePath ?>css/typography.css">
-  <link rel="stylesheet" href="<?= $basePath ?>css/base.css">
-  <link rel="stylesheet" href="<?= $basePath ?>css/components.css">
-  <link rel="stylesheet" href="<?= $basePath ?>css/nav.css">
-  <link rel="stylesheet" href="<?= $basePath ?>css/footer.css">
+  <link rel="stylesheet" href="<?= $basePath ?>css/core/variables.css">
+  <link rel="stylesheet" href="<?= $basePath ?>css/core/reset.css">
+  <link rel="stylesheet" href="<?= $basePath ?>css/core/typography.css">
+  <link rel="stylesheet" href="<?= $basePath ?>css/core/base.css">
+  <link rel="stylesheet" href="<?= $basePath ?>css/components/components.css">
+  <link rel="stylesheet" href="<?= $basePath ?>css/components/nav.css">
+  <link rel="stylesheet" href="<?= $basePath ?>css/components/footer.css">
 
   <!-- Page-specific CSS -->
   <?php foreach ($pageCSS as $cssFile): ?>
-  <link rel="stylesheet" href="<?= $basePath ?>css/<?= htmlspecialchars($cssFile) ?>">
+  <link rel="stylesheet" href="<?= $basePath ?>css/pages/<?= htmlspecialchars($cssFile) ?>">
   <?php endforeach; ?>
 </head>
 <body>

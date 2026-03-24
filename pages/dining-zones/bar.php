@@ -150,6 +150,7 @@ include '../../includes/nav.php';
         </div>
       </div>
       <div class="zone-table-card">
+        <img src="<?= $basePath ?>assets/images/tables/lounge_booths.png" alt="Lounge Booths" class="zone-table-card-img">
         <div class="zone-table-card-body">
           <div class="zone-table-card-header">
             <h3>Lounge Booths</h3>
@@ -159,6 +160,7 @@ include '../../includes/nav.php';
         </div>
       </div>
       <div class="zone-table-card">
+        <img src="<?= $basePath ?>assets/images/tables/high_tops.png" alt="High Tops" class="zone-table-card-img">
         <div class="zone-table-card-body">
           <div class="zone-table-card-header">
             <h3>High Tops</h3>
@@ -168,6 +170,7 @@ include '../../includes/nav.php';
         </div>
       </div>
       <div class="zone-table-card">
+        <img src="<?= $basePath ?>assets/images/tables/corner_sofa.png" alt="Corner Sofa" class="zone-table-card-img">
         <div class="zone-table-card-body">
           <div class="zone-table-card-header">
             <h3>Corner Sofa</h3>

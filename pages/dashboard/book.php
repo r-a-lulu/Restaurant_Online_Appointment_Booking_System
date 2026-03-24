@@ -44,7 +44,7 @@ include '../../includes/header.php';
               <div class="zone-cards-grid">
                 
                 <div class="zone-card-select custom-selected" data-zone="The Patio" tabindex="0" role="button" aria-pressed="true">
-                  <img src="<?= $basePath ?>assets/images/zones/patio-hero.jpg" alt="Patio Outdoor Seating" class="zone-card-img">
+                  <img src="<?= $basePath ?>assets/images/zones/zone-patio.jpg" alt="Patio Outdoor Seating" class="zone-card-img">
                   <div class="zone-card-overlay">
                     <p class="zone-card-name">The Patio</p>
                     <p class="zone-card-cap">2-8 guests</p>
@@ -53,7 +53,7 @@ include '../../includes/header.php';
                 </div>
 
                 <div class="zone-card-select" data-zone="Main Dining Room" tabindex="0" role="button" aria-pressed="false">
-                  <img src="<?= $basePath ?>assets/images/zones/dining-room-hero.jpg" alt="Dining Room" class="zone-card-img">
+                  <img src="<?= $basePath ?>assets/images/zones/zone-dining.jpg" alt="Dining Room" class="zone-card-img">
                   <div class="zone-card-overlay">
                     <p class="zone-card-name">Main Dining Room</p>
                     <p class="zone-card-cap">2-8 guests</p>
@@ -62,7 +62,7 @@ include '../../includes/header.php';
                 </div>
 
                 <div class="zone-card-select" data-zone="The Bar" tabindex="0" role="button" aria-pressed="false">
-                  <img src="<?= $basePath ?>assets/images/zones/bar-hero.jpg" alt="Bar &amp; Cocktail Lounge" class="zone-card-img">
+                  <img src="<?= $basePath ?>assets/images/zones/zone-bar.jpg" alt="Bar &amp; Cocktail Lounge" class="zone-card-img">
                   <div class="zone-card-overlay">
                     <p class="zone-card-name">The Bar</p>
                     <p class="zone-card-cap">1-6 guests</p>
