@@ -1,6 +1,6 @@
 /**
  * dashboard.js — Guest Dashboard Interactions
- * Handles: mobile sidebar, tabs, cancel modal, zone selection, time slots, star ratings
+ * Handles: mobile sidebar, tabs, cancel modal, zone selection, time slots, star ratings, and booking form via DB data
  */
 
 (function () {
@@ -35,7 +35,6 @@
       const tabId = trigger.getAttribute('data-tab');
       const parent = trigger.closest('.tabs-container') || document;
 
-      /* Deactivate all triggers and contents within same container */
       parent.querySelectorAll('.tab-trigger').forEach(function (t) {
         t.classList.remove('active');
         t.setAttribute('aria-selected', 'false');
@@ -44,7 +43,6 @@
         c.classList.remove('active');
       });
 
-      /* Activate selected */
       trigger.classList.add('active');
       trigger.setAttribute('aria-selected', 'true');
       const content = parent.querySelector('[data-tab-content="' + tabId + '"]');
@@ -77,7 +75,6 @@
   });
 
   cancelConfirm && cancelConfirm.addEventListener('click', function () {
-    /* Mock: just close modal, would trigger PHP/AJAX in real app */
     closeCancelModal();
   });
 
@@ -85,191 +82,270 @@
     if (e.target === cancelModal) closeCancelModal();
   });
 
-  /* ─── Seating Spots Data ─── */
-  // Names match the zone detail pages (patio.php, dining-room.php, bar.php)
-  var SEATING_SPOTS = {
-    'The Patio':       { title: 'in the Patio',       spots: ['Garden View', 'Fountain Side', 'Pergola', 'Corner Alcove', 'Olive Grove'] },
-    'The Bar':         { title: 'at the Bar',          spots: ['Bar Counter', 'Lounge Booths', 'High Tops', 'Corner Sofa'] },
-    'Main Dining Room': { title: 'in the Dining Room',  spots: ['Chef\'s View', 'Window Table', 'Banquette', 'Fireplace', 'Private Alcove', 'Chandelier'] },
-  };
-
-  /* ─── Zone Card Selection (Book page) ─── */
-  var zoneCards = document.querySelectorAll('.zone-card-select');
-
-  zoneCards.forEach(function (card) {
-    card.addEventListener('click', function () {
-      zoneCards.forEach(function (c) { c.classList.remove('selected'); });
-      card.classList.add('selected');
-
-      var zoneName = card.getAttribute('data-zone');
-      var zoneEl   = document.getElementById('summaryZone');
-      zoneEl && (zoneEl.textContent = zoneName || '—');
-
-      // Reset spot summary
-      var spotEl = document.getElementById('summarySpot');
-      spotEl && (spotEl.textContent = '—');
-
-      // Reveal seating spot pills
-      revealSpotPills(zoneName);
-    });
-  });
-
-  // Automatically initialize seating pill visibility for the default selected card
-  var defaultSelectedZone = document.querySelector('.zone-card-select.selected');
-  if (defaultSelectedZone) {
-    revealSpotPills(defaultSelectedZone.getAttribute('data-zone'));
-  }
-
-  function revealSpotPills(zone) {
-    var reveal   = document.getElementById('seatingReveal');
-    var pillsEl  = document.getElementById('seatingSpotPills');
-    var titleEl  = document.getElementById('seatingRevealTitle');
-    if (!reveal || !pillsEl) return;
-
-    var data = SEATING_SPOTS[zone];
-    if (!data) { reveal.classList.remove('visible'); return; }
-
-    pillsEl.innerHTML = '';
-    if (titleEl) titleEl.textContent = 'Select your spot ' + data.title;
-
-    data.spots.forEach(function (spot) {
-      var pill = document.createElement('button');
-      pill.type = 'button';
-      pill.className = 'seating-spot-pill';
-      pill.textContent = spot;
-      pill.addEventListener('click', function () {
-        pillsEl.querySelectorAll('.seating-spot-pill').forEach(function (p) { p.classList.remove('selected'); });
-        pill.classList.add('selected');
-        var spotEl = document.getElementById('summarySpot');
-        spotEl && (spotEl.textContent = spot);
-      });
-      pillsEl.appendChild(pill);
-    });
-
-    reveal.classList.add('visible');
-}
-
-  /* ─── Time Slot Selection (Book page) ─── */
-  const timeSlots = document.querySelectorAll('.time-slot');
-
-  timeSlots.forEach(function (slot) {
-    slot.addEventListener('click', function () {
-      if (slot.classList.contains('unavailable')) return;
-      timeSlots.forEach(function (s) { s.classList.remove('selected'); });
-      slot.classList.add('selected');
-
-      /* Update summary sidebar */
-      const timeEl = document.getElementById('summaryTime');
-      timeEl && (timeEl.textContent = slot.textContent.trim());
-    });
-  });
-
-  /* ─── Date Picker → Summary (Book page) ─── */
-  const datePicker = document.getElementById('bookDate');
-  if (datePicker) {
-    datePicker.addEventListener('change', function () {
-      const dateEl = document.getElementById('summaryDate');
-      if (!dateEl) return;
-      const d = new Date(datePicker.value + 'T00:00:00');
-      dateEl.textContent = d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-    });
-  }
-
-  /* ─── Guest Count → Summary (Book page) ─── */
-  const guestInput = document.getElementById('bookGuests');
-  if (guestInput) {
-    guestInput.addEventListener('input', function () {
-      const guestsEl = document.getElementById('summaryGuests');
-      guestsEl && (guestsEl.textContent = guestInput.value + (guestInput.value === '1' ? ' Guest' : ' Guests'));
-    });
-  }
-
   /* ─── Interactive Star Rating (History page) ─── */
   const ratingGroups = document.querySelectorAll('.rating-interactive');
-
   ratingGroups.forEach(function (group) {
     const stars = group.querySelectorAll('.rating-star');
-
     stars.forEach(function (star, index) {
       star.addEventListener('mouseover', function () {
-        stars.forEach(function (s, i) {
-          s.classList.toggle('hovered', i <= index);
-        });
+        stars.forEach(function (s, i) { s.classList.toggle('hovered', i <= index); });
       });
-
       star.addEventListener('mouseout', function () {
         stars.forEach(function (s) { s.classList.remove('hovered'); });
       });
-
       star.addEventListener('click', function () {
-        stars.forEach(function (s, i) {
-          s.classList.toggle('selected', i <= index);
-        });
+        stars.forEach(function (s, i) { s.classList.toggle('selected', i <= index); });
       });
     });
   });
 
-  /* ─── Magic Fill (Book page) ─── */
-  const magicBtn = document.getElementById('magicFillBook');
-  if (magicBtn) {
-    magicBtn.addEventListener('click', function() {
-      // 1. Select the first Zone (Patio)
-      const zoneCards = document.querySelectorAll('.zone-card-select');
-      if (zoneCards.length > 0) {
-        zoneCards[0].click(); 
+  /* ─── BOOKING PAGE LOGIC ─── */
+  const bookingForm = document.getElementById('dashboardBookingForm');
+  if (bookingForm) {
+
+    // Dynamic state
+    const state = {
+      zoneId: '',
+      zoneLabel: '',
+      tableId: '',
+      tableLabel: '',
+      date: '',
+      timeVal: '',
+      partySize: 2
+    };
+
+    const zoneCards = document.querySelectorAll('.zone-card-select');
+    const guestInput = document.getElementById('bookGuests');
+    const datePicker = document.getElementById('bookDate');
+    const notesInput = document.getElementById('bookNotes');
+    
+    // Summary Els
+    const sumGuests = document.getElementById('summaryGuests');
+    const sumZone   = document.getElementById('summaryZone');
+    const sumSpot   = document.getElementById('summarySpot');
+    const sumDate   = document.getElementById('summaryDate');
+    const sumTime   = document.getElementById('summaryTime');
+    const errorMsg  = document.getElementById('formReviewError');
+
+    function updateSummary() {
+      if (sumGuests) sumGuests.textContent = state.partySize + (state.partySize === 1 ? ' Guest' : ' Guests');
+      if (sumZone) sumZone.textContent = state.zoneLabel || '—';
+      if (sumSpot) sumSpot.textContent = state.tableLabel || '—';
+      
+      if (sumDate && state.date) {
+        const d = new Date(state.date + 'T00:00:00');
+        sumDate.textContent = d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+      } else if (sumDate) {
+        sumDate.textContent = '—';
       }
       
-      // 2. Schedule for 3 days from now
-      const datePicker = document.getElementById('bookDate');
-      if (datePicker) {
-        const d = new Date();
-        d.setDate(d.getDate() + 3);
-        const iso = d.toISOString().split('T')[0];
-        datePicker.value = iso;
-        datePicker.dispatchEvent(new Event('change'));
-      }
-      
-      // 3. Set Guests
-      const guestInput = document.getElementById('bookGuests');
-      if (guestInput) {
-        guestInput.value = '2';
-        guestInput.dispatchEvent(new Event('input'));
-      }
+      if (sumTime) sumTime.textContent = state.timeVal ? formatTime(state.timeVal) : '—';
+    }
 
-      // 4. Set Notes
-      const notes = document.getElementById('bookNotes');
-      if (notes) {
-        notes.value = "We're celebrating our anniversary, please arrange a romantic setup!";
-      }
-
-      // 5. Select Time Slot and Seating Preference
-      // (Using setTimeout to wait for the DOM updates triggered by the zone click)
-      setTimeout(() => {
-        const timeSlots = document.querySelectorAll('.time-slot:not(.unavailable)');
-        if (timeSlots.length > 2) {
-          timeSlots[2].click(); // Select an available time slot
-        }
-
-        const spotPills = document.querySelectorAll('.seating-spot-pill');
-        if (spotPills.length > 0) {
-          spotPills[0].click(); // Select the first available seating spot
-        }
-      }, 50);
-
-      // Flashing effect for visual feedback
-      const originalText = magicBtn.textContent;
-      magicBtn.textContent = "✨ Filled!";
-      magicBtn.style.backgroundColor = 'var(--clr-primary)';
-      magicBtn.style.color = 'var(--clr-primary-fg)';
-      magicBtn.style.borderColor = 'var(--clr-primary)';
-      
-      setTimeout(() => {
-        magicBtn.textContent = originalText;
-        magicBtn.style.backgroundColor = '';
-        magicBtn.style.color = '';
-        magicBtn.style.borderColor = '';
-      }, 1000);
+    /* 1. Zone Selection */
+    zoneCards.forEach(function(card) {
+      card.addEventListener('click', function() {
+        zoneCards.forEach(c => c.classList.remove('selected'));
+        card.classList.add('selected');
+        state.zoneId = card.getAttribute('data-zone-id');
+        state.zoneLabel = card.getAttribute('data-zone');
+        state.tableId = '';
+        state.tableLabel = '';
+        state.timeVal = '';
+        renderTablePills();
+        updateSummary();
+        fetchAvailability();
+      });
     });
+
+    /* 2. Table/Spot Selection */
+    function renderTablePills() {
+      const reveal = document.getElementById('seatingReveal');
+      const pillsEl = document.getElementById('seatingSpotPills');
+      if (!reveal || !pillsEl) return;
+      if (!state.zoneId) { reveal.classList.remove('visible'); return; }
+
+      // Filter DB_TABLES (passed from PHP via window.DB_TABLES)
+      const tables = (window.DB_TABLES || []).filter(t => String(t.zone_id) === String(state.zoneId) && parseInt(t.capacity, 10) >= state.partySize);
+      pillsEl.innerHTML = '';
+      
+      if (tables.length === 0) {
+        pillsEl.innerHTML = '<p style="color:var(--clr-muted-fg); font-size:0.875rem;">No tables big enough for your party in this zone.</p>';
+      } else {
+        tables.forEach(t => {
+          const pill = document.createElement('button');
+          pill.type = 'button';
+          pill.className = 'seating-spot-pill';
+          pill.textContent = t.table_number + " (" + t.capacity + " seats)";
+          pill.addEventListener('click', function() {
+            pillsEl.querySelectorAll('.seating-spot-pill').forEach(p => p.classList.remove('selected'));
+            pill.classList.add('selected');
+            state.tableId = t.table_id;
+            state.tableLabel = t.table_number;
+            state.timeVal = ''; // Reset time on table change
+            updateSummary();
+            fetchAvailability();
+          });
+          pillsEl.appendChild(pill);
+        });
+      }
+      reveal.classList.add('visible');
+    }
+
+    /* 3. Guests & Date */
+    if (guestInput) {
+      guestInput.addEventListener('input', function() {
+        state.partySize = parseInt(guestInput.value, 10) || 1;
+        state.tableId = ''; 
+        state.tableLabel = '';
+        renderTablePills();
+        updateSummary();
+        fetchAvailability();
+      });
+      state.partySize = parseInt(guestInput.value, 10) || 2;
+    }
+
+    if (datePicker) {
+      datePicker.addEventListener('change', function() {
+        state.date = datePicker.value;
+        state.timeVal = '';
+        updateSummary();
+        fetchAvailability();
+      });
+    }
+
+    /* 4. Fetch Availability Ajax */
+    function fetchAvailability() {
+      const timeContainer = document.getElementById('timeSlotContainer');
+      if (!timeContainer) return;
+
+      if (!state.date || !state.zoneId) {
+        timeContainer.innerHTML = '<p style="color:var(--clr-muted-fg); font-size:0.875rem;">Please select a zone and date to view available times.</p>';
+        return;
+      }
+      
+      const isMonday = new Date(state.date + 'T00:00:00').getDay() === 1;
+      if (isMonday) {
+        timeContainer.innerHTML = '<p style="color:var(--clr-destructive); font-size:0.875rem;">We are closed on Mondays. Please choose another date.</p>';
+        return;
+      }
+
+      timeContainer.innerHTML = '<p style="color:var(--clr-muted-fg); font-size:0.875rem;">Loading available times...</p>';
+
+      const csrf = document.querySelector('input[name="csrf_token"]').value;
+      const actionToken = document.getElementById('dash-check-availability-token').value;
+      
+      const body = new URLSearchParams();
+      body.set('csrf_token', csrf);
+      body.set('action_token', actionToken);
+      body.set('appointment_date', state.date);
+      if (state.tableId) {
+        body.set('table_id', state.tableId);
+      } else {
+        body.set('zone_id', state.zoneId);
+      }
+
+      fetch('../../actions.php?action=check_availability', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: body.toString()
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (!data || !data.availability) {
+          timeContainer.innerHTML = '<p style="color:var(--clr-destructive); font-size:0.875rem;">Error loading times.</p>';
+          return;
+        }
+        renderTimeSlots(data.availability);
+      })
+      .catch(err => {
+        timeContainer.innerHTML = '<p style="color:var(--clr-destructive); font-size:0.875rem;">Error communicating with server.</p>';
+      });
+    }
+
+    function renderTimeSlots(availabilityMap) {
+      const timeContainer = document.getElementById('timeSlotContainer');
+      timeContainer.innerHTML = '';
+      
+      const sortedTimes = Object.keys(availabilityMap).sort();
+      if (sortedTimes.length === 0) {
+        timeContainer.innerHTML = '<p style="color:var(--clr-muted-fg); font-size:0.875rem;">No times available.</p>';
+        return;
+      }
+
+      sortedTimes.forEach(function(time) {
+        const t = document.createElement('div');
+        t.className = 'time-slot';
+        t.textContent = formatTime(time);
+        
+        if (!availabilityMap[time]) {
+          t.classList.add('unavailable');
+          t.setAttribute('disabled', 'true');
+        } else {
+          t.addEventListener('click', function() {
+            timeContainer.querySelectorAll('.time-slot').forEach(function(s) {
+              s.classList.remove('selected');
+            });
+            t.classList.add('selected');
+            state.timeVal = time;
+            updateSummary();
+          });
+        }
+        timeContainer.appendChild(t);
+      });
+      
+      if (timeContainer.innerHTML === '') {
+          timeContainer.innerHTML = '<p style="color:var(--clr-muted-fg); font-size:0.875rem;">No times available for this selection.</p>';
+      }
+    }
+
+    function formatTime(time24) {
+      if (!time24) return '';
+      const parts = time24.split(':');
+      let h = parseInt(parts[0], 10);
+      const m = parts[1];
+      const ampm = h >= 12 ? 'PM' : 'AM';
+      if (h > 12) h -= 12;
+      if (h === 0) h = 12;
+      return h + ':' + m + ' ' + ampm;
+    }
+
+    /* 5. Submit Handling */
+    const submitBtn = document.getElementById('btnConfirmReservation');
+    if (submitBtn) {
+      submitBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        
+        // Validation check
+        if (!state.zoneId || !state.date || !state.timeVal || !state.tableId) {
+          if (errorMsg) {
+            errorMsg.style.display = 'block';
+            setTimeout(() => { errorMsg.style.display = 'none'; }, 4000);
+          }
+          return;
+        }
+
+        // Fill hidden inputs
+        document.getElementById('zone-id').value = state.zoneId;
+        document.getElementById('table-id').value = state.tableId;
+        document.getElementById('start-time').value = state.timeVal;
+        document.getElementById('zone-label').value = state.zoneLabel;
+        document.getElementById('date-label').value = state.date;
+        document.getElementById('time-label').value = formatTime(state.timeVal);
+        document.getElementById('hidden-party-size').value = state.partySize;
+        document.getElementById('hidden-appointment-date').value = state.date;
+        
+        let reqNotes = notesInput ? notesInput.value.trim() : '';
+        document.getElementById('hidden-special-requests').value = reqNotes;
+
+        bookingForm.submit();
+      });
+    }
+
+    // Initialize defaults 
+    errorMsg && (errorMsg.style.display = 'none');
+    updateSummary();
+
   }
 
 })();

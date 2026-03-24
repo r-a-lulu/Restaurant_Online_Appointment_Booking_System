@@ -13,9 +13,11 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 $csrf = $_POST['csrf_token'] ?? '';
+$source = $_POST['source'] ?? '';
+$errorRedirect = $source === 'dashboard' ? '../pages/dashboard/book.php' : '../pages/book.php';
 if (!verify_csrf($csrf)) {
     set_flash('booking_error', 'Invalid security token. Please try again.');
-    redirect('../pages/book.php');
+    redirect($errorRedirect);
 }
 
 $serviceId = isset($_POST['service_id']) && $_POST['service_id'] !== '' ? (int) $_POST['service_id'] : null;
@@ -31,44 +33,44 @@ $addOnQty = $_POST['add_on_qty'] ?? [];
 
 if (($serviceId && $packageId) || (!$serviceId && !$packageId)) {
     set_flash('booking_error', 'Please choose either a service or a package.');
-    redirect('../pages/book.php');
+    redirect($errorRedirect);
 }
 
 if (!$tableId) {
     set_flash('booking_error', 'Please select a table.');
-    redirect('../pages/book.php');
+    redirect($errorRedirect);
 }
 
 if (!$appointmentDate || !$startTime || $partySize <= 0) {
     set_flash('booking_error', 'Please complete all required booking details.');
-    redirect('../pages/book.php');
+    redirect($errorRedirect);
 }
 
 if ($partySize > 8) {
     set_flash('booking_error', 'Party size must be between 1 and 8 guests. For larger groups, please contact us directly.');
-    redirect('../pages/book.php');
+    redirect($errorRedirect);
 }
 
 $dateObj = DateTime::createFromFormat('Y-m-d', $appointmentDate);
 if (!$dateObj) {
     set_flash('booking_error', 'Invalid reservation date.');
-    redirect('../pages/book.php');
+    redirect($errorRedirect);
 }
 $minDate = new DateTime('today');
 $minDate->modify('+1 day');
 if ($dateObj < $minDate) {
     set_flash('booking_error', 'Reservations must be made at least 24 hours in advance.');
-    redirect('../pages/book.php');
+    redirect($errorRedirect);
 }
 if ((int) $dateObj->format('N') === 1) {
     set_flash('booking_error', 'We are closed on Mondays. Please choose another date.');
-    redirect('../pages/book.php');
+    redirect($errorRedirect);
 }
 
 $startDt = DateTime::createFromFormat('H:i', $startTime);
 if (!$startDt) {
     set_flash('booking_error', 'Invalid start time selected.');
-    redirect('../pages/book.php');
+    redirect($errorRedirect);
 }
 
 $endDt = clone $startDt;
@@ -86,7 +88,7 @@ try {
 
     if (!$statusId) {
         set_flash('booking_error', 'Unable to determine default status. Please contact support.');
-        redirect('../pages/book.php');
+        redirect($errorRedirect);
     }
 
     $proc = $pdo->prepare('CALL sp_appointment_create(:user_id, :service_id, :table_id, :zone_id, :event_package_id, :appointment_date, :start_time, :end_time, :party_size, :status_id, :special_requests)');
@@ -158,11 +160,14 @@ try {
         'total' => number_format((float) $totalAmount, 2, '.', ''),
     ]);
 
-    redirect('../pages/book-confirmation.php?' . $params);
-    // After confirmation, set flash message for dashboard
-    set_flash('dash_success', 'Reservation created successfully! View it in "My Reservations" below.');
+    if ($source === 'dashboard') {
+        set_flash('dash_success', 'Reservation created successfully! View it in "My Reservations" below.');
+        redirect('../pages/dashboard/book.php');
+    } else {
+        redirect('../pages/book-confirmation.php?' . $params);
+    }
 } catch (PDOException $e) {
     set_flash('booking_error', safe_error_message($e));
-    redirect('../pages/book.php');
+    redirect($errorRedirect);
 }
 
