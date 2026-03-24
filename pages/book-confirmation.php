@@ -1,7 +1,8 @@
 <?php
 /**
  * Booking Confirmation — Eudaimonia Restaurant
- * Success state with mock reservation details passed via URL params.
+ * Success state with reservation details passed via URL params.
+ * Allows guests to view their reservation in the dashboard.
  */
 
 $pageTitle   = 'Reservation Confirmed';
@@ -9,6 +10,14 @@ $pageCSS     = ['book.css'];
 $currentPage = 'book';
 $navStyle    = 'solid';
 $basePath    = '../';
+
+require_once '../includes/security.php';
+start_secure_session();
+
+// Redirect to login if not authenticated
+if (!isset($_SESSION['user_id'])) {
+  redirect('/pages/login.php');
+}
 
 include '../includes/header.php';
 include '../includes/nav.php';
@@ -98,17 +107,27 @@ include '../includes/nav.php';
             </div>
           </div>
 
+          <div class="confirm-detail-row">
+            <div class="confirm-detail-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="M6 8h12M6 12h12M6 16h6"/></svg>
+            </div>
+            <div class="confirm-detail-text">
+              <span class="confirm-detail-label">Total</span>
+              <span class="confirm-detail-value" id="conf-total">—</span>
+            </div>
+          </div>
+
         </div><!-- /confirm-details -->
 
         <!-- Actions -->
         <div class="confirm-actions">
-          <a href="<?= $basePath ?>index.php" class="btn btn-primary btn-lg btn-block" id="conf-home-btn">
+          <a href="<?= $basePath ?>pages/dashboard/reservations.php" class="btn btn-primary btn-lg btn-block" id="conf-dashboard-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            View My Reservations
+          </a>
+          <a href="<?= $basePath ?>index.php" class="btn btn-outline btn-lg btn-block" id="conf-home-btn">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
             Return to Home
-          </a>
-          <a href="<?= $basePath ?>pages/register.php" class="btn btn-outline btn-block" id="conf-register-btn">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
-            Create an Account to Manage Reservations
           </a>
         </div>
 

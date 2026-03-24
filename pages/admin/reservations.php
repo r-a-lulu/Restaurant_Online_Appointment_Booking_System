@@ -17,7 +17,7 @@ $adminSuccess = get_flash('admin_success');
 
 try {
     $pdo = db();
-    $stmt = $pdo->prepare('SELECT appointment_id, customer_name, customer_email, zone_name, table_number, appointment_date, start_time, party_size, status_name FROM vw_admin_appointments');
+    $stmt = $pdo->prepare("SELECT v.appointment_id, v.customer_name, v.customer_email, v.zone_name, v.table_number, v.appointment_date, v.start_time, v.party_size, v.status_name, a.user_id, (SELECT COUNT(*) FROM appointments a2 WHERE a2.user_id = a.user_id AND a2.appointment_id <> v.appointment_id AND a2.status_id IN (SELECT status_id FROM appointment_status WHERE status_name IN ('pending','confirmed'))) AS active_count FROM vw_admin_appointments v JOIN appointments a ON a.appointment_id = v.appointment_id");
     $stmt->execute();
     $reservations = $stmt->fetchAll();
     $stmt->closeCursor();
@@ -94,6 +94,8 @@ include '../../includes/header.php';
               <tbody>
                 <?php foreach ($rows as $r):
                   $badgeClass = $status === 'confirmed' ? 'badge-confirmed' : ($status === 'pending' ? 'badge-pending' : ($status === 'completed' ? 'badge-completed' : 'badge-cancelled'));
+                  $activeCount = (int) ($r['active_count'] ?? 0);
+                  $canApprove = ($status === 'pending') && ($activeCount < 5);
                 ?>
                 <tr>
                   <td style="font-size:var(--text-xs);color:var(--clr-muted-fg)">#<?= e($r['appointment_id']) ?></td>
@@ -109,24 +111,31 @@ include '../../includes/header.php';
                   <td><span class="badge <?= $badgeClass ?>"><?= e(ucfirst($status)) ?></span></td>
                   <td class="admin-row-actions">
                     <?php if ($status === 'pending'): ?>
-                      <form method="post" action="<?= $basePath ?>actions/admin_update_status.php" style="display:inline;">
+                      <form method="post" action="<?= $basePath ?>actions.php?action=admin_update_status" style="display:inline;">
                         <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+                      <input type="hidden" name="action_token" value="<?= e(action_token('admin_update_status')) ?>">
                         <input type="hidden" name="appointment_id" value="<?= e($r['appointment_id']) ?>">
-                        <button class="btn btn-primary btn-sm" name="action" value="approve">Approve</button>
+                        <button class="btn btn-primary btn-sm" name="action" value="approve" <?php echo $canApprove ? '' : 'disabled title="User has reached the 5 active bookings limit."'; ?>>Approve</button>
                       </form>
-                      <form method="post" action="<?= $basePath ?>actions/admin_update_status.php" style="display:inline;">
+                      <form method="post" action="<?= $basePath ?>actions.php?action=admin_update_status" style="display:inline;">
                         <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+                      <input type="hidden" name="action_token" value="<?= e(action_token('admin_update_status')) ?>">
                         <input type="hidden" name="appointment_id" value="<?= e($r['appointment_id']) ?>">
                         <button class="btn btn-outline btn-sm" style="color:var(--clr-destructive);border-color:var(--clr-destructive);" name="action" value="reject">Reject</button>
                       </form>
+                    <?php if ($status === 'pending' && !$canApprove): ?>
+                      <span style="display:inline-block;margin-top:6px;font-size:var(--text-xs);color:var(--clr-muted-fg);">Limit reached</span>
+                    <?php endif; ?>
                     <?php elseif ($status === 'confirmed'): ?>
-                      <form method="post" action="<?= $basePath ?>actions/admin_update_status.php" style="display:inline;">
+                      <form method="post" action="<?= $basePath ?>actions.php?action=admin_update_status" style="display:inline;">
                         <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+                      <input type="hidden" name="action_token" value="<?= e(action_token('admin_update_status')) ?>">
                         <input type="hidden" name="appointment_id" value="<?= e($r['appointment_id']) ?>">
                         <button class="btn btn-outline btn-sm" name="action" value="complete">Complete</button>
                       </form>
-                      <form method="post" action="<?= $basePath ?>actions/admin_update_status.php" style="display:inline;">
+                      <form method="post" action="<?= $basePath ?>actions.php?action=admin_update_status" style="display:inline;">
                         <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+                      <input type="hidden" name="action_token" value="<?= e(action_token('admin_update_status')) ?>">
                         <input type="hidden" name="appointment_id" value="<?= e($r['appointment_id']) ?>">
                         <button class="btn btn-outline btn-sm" style="color:var(--clr-destructive);border-color:var(--clr-destructive);" name="action" value="cancel">Cancel</button>
                       </form>

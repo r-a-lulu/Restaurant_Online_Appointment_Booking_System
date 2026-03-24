@@ -12,7 +12,7 @@ $basePath    = '../';
 
 require_once '../includes/security.php';
 start_secure_session();
-$authError = get_flash('auth_error');
+$authError = get_flash('error');
 
 include '../includes/header.php';
 ?>
@@ -70,8 +70,9 @@ include '../includes/header.php';
       <?php endif; ?>
 
       <!-- Register Form -->
-      <form class="auth-form" id="register-form" method="post" action="<?= $basePath ?>actions/process_register.php" novalidate>
+      <form class="auth-form" id="register-form" method="post" action="<?= $basePath ?>actions.php?action=register" novalidate>
         <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+        <input type="hidden" name="action_token" value="<?= e(action_token('register')) ?>">
 
         <!-- First Name + Last Name -->
         <div class="auth-form-row">

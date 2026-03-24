@@ -17,7 +17,7 @@ $history = [];
 
 try {
   $pdo = db();
-  $stmt = $pdo->prepare("SELECT appointment_id, zone_name, appointment_date, start_time, party_size FROM vw_appointments_detail WHERE user_id = :uid AND status_name = 'completed' ORDER BY appointment_date DESC, start_time DESC");
+  $stmt = $pdo->prepare("SELECT appointment_id, zone_name, appointment_date, start_time, party_size FROM vw_appointments_detail WHERE user_id = :uid AND status_id = (SELECT status_id FROM appointment_status WHERE status_name = 'completed' LIMIT 1) ORDER BY appointment_date DESC, start_time DESC");
   $stmt->execute([':uid' => (int) $_SESSION['user_id']]);
   $history = $stmt->fetchAll() ?: [];
   $stmt->closeCursor();

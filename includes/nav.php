@@ -42,8 +42,9 @@ $firstName = $_SESSION['first_name'] ?? '';
     <div class="nav-actions">
       <?php if ($isLoggedIn): ?>
         <span class="nav-welcome">Hi, <?= e($firstName) ?></span>
-        <form method="post" action="<?= $basePath ?>actions/logout.php" style="display:inline;">
+        <form method="post" action="<?= $basePath ?>actions.php?action=logout" style="display:inline;">
           <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+          <input type="hidden" name="action_token" value="<?= e(action_token('logout')) ?>">
           <button type="submit" class="btn btn-ghost btn-sm">Logout</button>
         </form>
       <?php else: ?>
@@ -90,8 +91,9 @@ $firstName = $_SESSION['first_name'] ?? '';
 
   <div class="mobile-menu-actions">
     <?php if ($isLoggedIn): ?>
-      <form method="post" action="<?= $basePath ?>actions/logout.php">
+      <form method="post" action="<?= $basePath ?>actions.php?action=logout">
         <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+        <input type="hidden" name="action_token" value="<?= e(action_token('logout')) ?>">
         <button type="submit" class="btn btn-outline btn-block">Logout</button>
       </form>
     <?php else: ?>

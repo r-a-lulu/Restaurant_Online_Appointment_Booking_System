@@ -1,6 +1,6 @@
 <?php
 /**
- * Dashboard Reservations — pages/dashboard/reservations.php
+ * Dashboard Reservations ï¿½ pages/dashboard/reservations.php
  */
 
 require_once '../../includes/security.php';
@@ -86,13 +86,14 @@ include '../../includes/header.php';
                 <span class="reservation-date-month"><?= e(date('M', strtotime($row['appointment_date']))) ?></span>
               </div>
               <div class="reservation-info">
-                <p class="reservation-zone"><?= e($row['zone_name'] ?? '—') ?></p>
-                <p class="reservation-meta"><?= e(date('g:i A', strtotime($row['start_time']))) ?> · <?= e((string) $row['party_size']) ?> Guests · #<?= e((string) $row['appointment_id']) ?></p>
+                <p class="reservation-zone"><?= e($row['zone_name'] ?? 'ï¿½') ?></p>
+                <p class="reservation-meta"><?= e(date('g:i A', strtotime($row['start_time']))) ?> ï¿½ <?= e((string) $row['party_size']) ?> Guests ï¿½ #<?= e((string) $row['appointment_id']) ?></p>
               </div>
               <span class="badge badge-confirmed">Confirmed</span>
               <div class="reservation-actions">
-                <form method="post" action="<?= $basePath ?>actions/user_cancel_booking.php">
+                <form method="post" action="<?= $basePath ?>actions.php?action=user_cancel_booking">
                   <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+                  <input type="hidden" name="action_token" value="<?= e(action_token('user_cancel_booking')) ?>">
                   <input type="hidden" name="appointment_id" value="<?= e($row['appointment_id']) ?>">
                   <button class="btn btn-outline btn-sm" type="submit">Cancel</button>
                 </form>
@@ -114,13 +115,14 @@ include '../../includes/header.php';
                 <span class="reservation-date-month"><?= e(date('M', strtotime($row['appointment_date']))) ?></span>
               </div>
               <div class="reservation-info">
-                <p class="reservation-zone"><?= e($row['zone_name'] ?? '—') ?></p>
-                <p class="reservation-meta"><?= e(date('g:i A', strtotime($row['start_time']))) ?> · <?= e((string) $row['party_size']) ?> Guests · #<?= e((string) $row['appointment_id']) ?></p>
+                <p class="reservation-zone"><?= e($row['zone_name'] ?? 'ï¿½') ?></p>
+                <p class="reservation-meta"><?= e(date('g:i A', strtotime($row['start_time']))) ?> ï¿½ <?= e((string) $row['party_size']) ?> Guests ï¿½ #<?= e((string) $row['appointment_id']) ?></p>
               </div>
               <span class="badge badge-pending">Pending</span>
               <div class="reservation-actions">
-                <form method="post" action="<?= $basePath ?>actions/user_cancel_booking.php">
+                <form method="post" action="<?= $basePath ?>actions.php?action=user_cancel_booking">
                   <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+                  <input type="hidden" name="action_token" value="<?= e(action_token('user_cancel_booking')) ?>">
                   <input type="hidden" name="appointment_id" value="<?= e($row['appointment_id']) ?>">
                   <button class="btn btn-ghost btn-sm" type="submit">Cancel</button>
                 </form>
@@ -142,8 +144,8 @@ include '../../includes/header.php';
                 <span class="reservation-date-month"><?= e(date('M', strtotime($row['appointment_date']))) ?></span>
               </div>
               <div class="reservation-info">
-                <p class="reservation-zone"><?= e($row['zone_name'] ?? '—') ?></p>
-                <p class="reservation-meta"><?= e(date('g:i A', strtotime($row['start_time']))) ?> · <?= e((string) $row['party_size']) ?> Guests · #<?= e((string) $row['appointment_id']) ?></p>
+                <p class="reservation-zone"><?= e($row['zone_name'] ?? 'ï¿½') ?></p>
+                <p class="reservation-meta"><?= e(date('g:i A', strtotime($row['start_time']))) ?> ï¿½ <?= e((string) $row['party_size']) ?> Guests ï¿½ #<?= e((string) $row['appointment_id']) ?></p>
               </div>
               <span class="badge badge-cancelled">Cancelled</span>
               <div class="reservation-actions"></div>

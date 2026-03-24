@@ -492,6 +492,61 @@
   gap: var(--space-4);
 }
 
+.add-on-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.add-on-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-lg);
+  background-color: var(--clr-card);
+}
+
+.add-on-main {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  flex: 1;
+}
+
+.add-on-main input[type="checkbox"] {
+  margin-top: 4px;
+}
+
+.add-on-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.add-on-name {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--clr-fg);
+}
+
+.add-on-price {
+  font-size: var(--text-xs);
+  color: var(--clr-muted-fg);
+}
+
+.add-on-qty {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.add-on-qty .form-input {
+  max-width: 90px;
+}
+
 /* ===== STEP 4: Review ===== */
 .review-card {
   border: 1px solid var(--clr-border);
@@ -814,6 +869,49 @@
   line-height: var(--leading-relaxed);
 }
 
+/* ===== CHECKBOX GROUP (Add-ons) ===== */
+.checkbox-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-lg);
+  background-color: var(--clr-card);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.checkbox-item:hover {
+  border-color: var(--clr-primary-light);
+  background-color: var(--clr-muted);
+}
+
+.checkbox-item input[type="checkbox"] {
+  flex-shrink: 0;
+  width: 1.25rem;
+  height: 1.25rem;
+  cursor: pointer;
+  accent-color: var(--clr-primary);
+}
+
+.checkbox-item span {
+  flex: 1;
+  font-size: var(--text-sm);
+  color: var(--clr-fg);
+}
+
+.checkbox-item input[type="number"] {
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
 /* ===== RESPONSIVE ===== */
 @media (max-width: 1024px) {
   .wizard-body {
@@ -854,6 +952,15 @@
 
   .wizard-body {
     padding: var(--space-6) var(--space-4);
+  }
+
+  .add-on-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .add-on-qty .form-input {
+    max-width: 100%;
   }
 }
 

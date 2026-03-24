@@ -122,6 +122,7 @@
     if (n === 2) {
       if (!state.zone || !state.zoneId) { showStepError('Please select a dining zone to continue.', null); return false; }
       if (!state.spot) { showStepError('Please select a seating preference to continue.', null); return false; }
+      if (!state.tableId) { showStepError('Please select a table to continue.', null); return false; }
     }
     if (n === 3) {
       var dateEl = $('#book-date');
@@ -246,14 +247,37 @@
     var dateEl = $('#book-date');
     if (!dateEl) return;
 
-    // Set min date to today
-    var today = new Date();
-    var yyyy  = today.getFullYear();
-    var mm    = String(today.getMonth() + 1).padStart(2, '0');
-    var dd    = String(today.getDate()).padStart(2, '0');
+    // Set min date to tomorrow (24h lead time)
+    var minDate = new Date();
+    minDate.setDate(minDate.getDate() + 1);
+    var yyyy  = minDate.getFullYear();
+    var mm    = String(minDate.getMonth() + 1).padStart(2, '0');
+    var dd    = String(minDate.getDate()).padStart(2, '0');
     dateEl.min = yyyy + '-' + mm + '-' + dd;
 
     dateEl.addEventListener('change', function () {
+      if (!dateEl.value) return;
+      var selected = new Date(dateEl.value + 'T00:00:00');
+      var isMonday = selected.getDay() === 1;
+      var tooSoon = selected < minDate;
+      if (isMonday) {
+        showStepError('We are closed on Mondays. Please choose another date.', dateEl);
+        dateEl.value = '';
+        state.date = '';
+        state.dateLabel = '';
+        updateSummary();
+        return;
+      }
+      if (tooSoon) {
+        showStepError('Please book at least 24 hours in advance.', dateEl);
+        dateEl.value = '';
+        state.date = '';
+        state.dateLabel = '';
+        updateSummary();
+        return;
+      }
+
+      clearStepError();
       state.date      = dateEl.value;
       state.dateLabel = formatDate(dateEl.value);
       updateSummary();
@@ -317,8 +341,11 @@
     var csrfEl = form ? form.querySelector('input[name="csrf_token"]') : null;
     var csrf = csrfEl ? csrfEl.value : '';
 
+    var actionTokenEl = form ? document.getElementById('check-availability-token') : null;
+    var actionToken = actionTokenEl ? actionTokenEl.value : '';
     var body = new URLSearchParams();
     body.set('csrf_token', csrf);
+    body.set('action_token', actionToken);
     body.set('appointment_date', state.date);
     if (state.tableId) {
       body.set('table_id', state.tableId);
@@ -326,7 +353,7 @@
       body.set('zone_id', state.zoneId);
     }
 
-    fetch('../actions/check_availability.php', {
+    fetch('../actions.php?action=check_availability', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: body.toString(),
@@ -377,6 +404,7 @@
       var el = $(sel);
       if (el) el.textContent = fields[sel];
     }
+
   }
 
   // ─── Navigation buttons (event delegation — handles all step panels) ─────
@@ -404,7 +432,7 @@
           if (!form) return;
           setHiddenValue('service-id', state.serviceId);
           setHiddenValue('event-package-id', state.packageId);
-          setHiddenValue('zone-id', state.zoneId);
+          setHiddenValue('zone-id', state.tableId ? '' : (state.zoneId || ''));
           setHiddenValue('table-id', state.tableId || '');
           setHiddenValue('appointment-date', state.date);
           setHiddenValue('start-time', state.timeValue);
@@ -455,6 +483,7 @@
       '#conf-email':   'email',
       '#conf-occasion':'occasion',
       '#conf-ref':     'ref',
+      '#conf-total':   'total',
     };
     for (var sel in map) {
       var el = $(sel);

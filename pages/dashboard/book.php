@@ -1,18 +1,12 @@
 <?php
 /**
- * Dashboard Book a Table — pages/dashboard/book.php
+ * Dashboard Book a Table â€” Redirect to main booking form
+ * pages/dashboard/book.php
  */
 
-require_once '../../includes/security.php';
-start_secure_session();
-require_login();
-
-$pageTitle       = 'Book a Table';
-$pageCSS         = ['dashboard.css'];
-$currentDashPage = 'book';
-$basePath        = '../../';
-
-include '../../includes/header.php';
+// Redirect to the main booking wizard
+header('Location: ../book.php');
+exit;
 ?>
 <body>
 <div class="dashboard-layout" id="dashboardLayout">

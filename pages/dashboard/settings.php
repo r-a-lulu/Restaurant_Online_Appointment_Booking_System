@@ -8,6 +8,10 @@ $pageCSS         = ['dashboard.css'];
 $currentDashPage = 'settings';
 $basePath        = '../../';
 
+require_once '../../includes/security.php';
+start_secure_session();
+require_login();
+
 include '../../includes/header.php';
 ?>
 <body>

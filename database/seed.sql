@@ -34,16 +34,17 @@ ON DUPLICATE KEY UPDATE status_name = VALUES(status_name);
 -- Passwords are placeholder hashes; replace with real bcrypt hashes.
 -- =========================================================
 
-INSERT INTO users (role_id, first_name, last_name, email, password_hash, is_active)
+INSERT INTO users (role_id, first_name, last_name, email, phone, password_hash, is_active)
 VALUES
-  ((SELECT role_id FROM roles WHERE role_name = 'admin' LIMIT 1), 'System', 'Admin', 'admin@eudaimonia.com', '$2y$10$REPLACE_WITH_BCRYPT_HASH_ADMIN', TRUE),
-  ((SELECT role_id FROM roles WHERE role_name = 'guest' LIMIT 1), 'Liam', 'Cruz', 'liam.cruz@example.com', '$2y$10$REPLACE_WITH_BCRYPT_HASH_CUST1', TRUE),
-  ((SELECT role_id FROM roles WHERE role_name = 'guest' LIMIT 1), 'Mia', 'Santos', 'mia.santos@example.com', '$2y$10$REPLACE_WITH_BCRYPT_HASH_CUST2', TRUE),
-  ((SELECT role_id FROM roles WHERE role_name = 'guest' LIMIT 1), 'Noah', 'Reyes', 'noah.reyes@example.com', '$2y$10$REPLACE_WITH_BCRYPT_HASH_CUST3', TRUE)
+  ((SELECT role_id FROM roles WHERE role_name = 'admin' LIMIT 1), 'System', 'Admin', 'admin@eudaimonia.com', '0912-345-6789', '$2y$10$.BRPXTux9KN4ETwkCyjIauKPvM2atTbjZEdo2ZhPAYVx6Nfd8kjg6', TRUE),
+  ((SELECT role_id FROM roles WHERE role_name = 'guest' LIMIT 1), 'Liam', 'Cruz', 'liam.cruz@example.com', '0913-456-7890', '$2y$10$C9xPahEsgo4vGWOxA9H5AeDwIHOoDD5LtJP/zy8k5a8uk8ESnKfxu', TRUE),
+  ((SELECT role_id FROM roles WHERE role_name = 'guest' LIMIT 1), 'Mia', 'Santos', 'mia.santos@example.com', '0914-567-8901', '$2y$10$b/NO7SE82wW5BZDXnt3qy.AgAJ5piuDTaWShlew/dHsV.CKw7fbja', TRUE),
+  ((SELECT role_id FROM roles WHERE role_name = 'guest' LIMIT 1), 'Noah', 'Reyes', 'noah.reyes@example.com', '0915-678-9012', '$2y$10$gUZNd2JRMePwGcH0ErPr4uMgLIK83V5rhdXV.x9Qu9NNgEa/FE0MC', TRUE)
 ON DUPLICATE KEY UPDATE
   role_id = VALUES(role_id),
   first_name = VALUES(first_name),
   last_name = VALUES(last_name),
+  phone = VALUES(phone),
   password_hash = VALUES(password_hash),
   is_active = VALUES(is_active);
 

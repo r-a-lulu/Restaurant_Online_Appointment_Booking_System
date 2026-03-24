@@ -98,8 +98,9 @@ $navLinks = [
       </svg>
       <span>Settings</span>
     </a>
-    <form method="post" action="<?= $basePath ?>actions/logout.php" class="sidebar-footer-link sidebar-logout" style="margin: 0; padding: 0;">
+    <form method="post" action="<?= $basePath ?>actions.php?action=logout" class="sidebar-footer-link sidebar-logout" style="margin: 0; padding: 0;">
       <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+      <input type="hidden" name="action_token" value="<?= e(action_token('logout')) ?>">
       <button type="submit" style="all:unset; cursor:pointer; display:flex; align-items:center; gap:10px; color:inherit; width: 100%; padding: var(--spacing-sm) var(--spacing-md);">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>

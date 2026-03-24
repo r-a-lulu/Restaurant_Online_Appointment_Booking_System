@@ -12,8 +12,8 @@ $basePath    = '../';
 
 require_once '../includes/security.php';
 start_secure_session();
-$authError = get_flash('auth_error');
-$authSuccess = get_flash('auth_success');
+$authError = get_flash('error');
+$authSuccess = get_flash('success');
 
 include '../includes/header.php';
 ?>
@@ -71,8 +71,9 @@ include '../includes/header.php';
       <?php endif; ?>
 
       <!-- Login Form -->
-      <form class="auth-form" id="login-form" method="post" action="<?= $basePath ?>actions/process_login.php" novalidate>
+      <form class="auth-form" id="login-form" method="post" action="<?= $basePath ?>actions.php?action=login" novalidate>
         <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+        <input type="hidden" name="action_token" value="<?= e(action_token('login')) ?>">
 
         <!-- Email -->
         <div class="form-group">
@@ -133,18 +134,6 @@ include '../includes/header.php';
         </div>
 
       </form>
-
-      <!-- Divider -->
-      <div class="auth-separator">or</div>
-
-      <!-- Admin Portal Link -->
-      <a href="#" onclick="alert('Admin portal — Phase 6'); return false;" class="auth-admin-link" id="admin-portal-link">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <rect width="18" height="18" x="3" y="3" rx="2"/>
-          <path d="M9 9h6M9 12h6M9 15h4"/>
-        </svg>
-        Access Admin Portal
-      </a>
 
       <!-- Switch to Register -->
       <p class="auth-switch">

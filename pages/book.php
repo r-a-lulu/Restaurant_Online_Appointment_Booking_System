@@ -146,8 +146,10 @@ include '../includes/nav.php';
   </div>
 
   <!-- ===== WIZARD BODY ===== -->
-  <form id="booking-form" method="post" action="<?= $basePath ?>actions/process_booking.php" class="wizard-body" novalidate>
+  <form id="booking-form" method="post" action="<?= $basePath ?>actions.php?action=process_booking" class="wizard-body" novalidate>
     <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+    <input type="hidden" name="action_token" value="<?= e(action_token('process_booking')) ?>">
+    <input type="hidden" id="check-availability-token" value="<?= e(action_token('check_availability')) ?>">
     <input type="hidden" name="service_id" id="service-id">
     <input type="hidden" name="event_package_id" id="event-package-id">
     <input type="hidden" name="zone_id" id="zone-id">
@@ -195,7 +197,7 @@ include '../includes/nav.php';
           <!-- Phone -->
           <div class="form-group">
             <label for="guest-phone" class="form-label">Phone <span style="font-weight:400; color:var(--clr-muted-fg)">(optional)</span></label>
-            <input type="tel" id="guest-phone" name="phone" class="form-input" placeholder="+1 (555) 000-0000" autocomplete="tel" value="<?= e($user['phone'] ?? '') ?>">
+            <input type="tel" id="guest-phone" name="phone" class="form-input" placeholder="+1 (555) 000-0000" autocomplete="tel" inputmode="tel" maxlength="30" pattern="[0-9+()\-\s]{6,30}" value="<?= e($user['phone'] ?? '') ?>">
           </div>
 
           <!-- Party size -->
@@ -211,7 +213,7 @@ include '../includes/nav.php';
               <option value="6">6 guests</option>
               <option value="7">7 guests</option>
               <option value="8">8 guests</option>
-              <option value="8+">More than 8 (we'll contact you)</option>
+              <option value="8">8 guests</option>
             </select>
           </div>
 
@@ -234,7 +236,7 @@ include '../includes/nav.php';
             <select id="service-select" class="form-select">
               <option value="">Select a service</option>
               <?php foreach ($services as $service): ?>
-                <option value="<?= e($service['service_id']) ?>">
+                <option value="<?= e($service['service_id']) ?>" data-price="<?= e(number_format((float) $service['price'], 2)) ?>">
                   <?= e($service['service_name']) ?> (<?= e(number_format((float) $service['price'], 2)) ?>)
                 </option>
               <?php endforeach; ?>
@@ -246,7 +248,7 @@ include '../includes/nav.php';
             <select id="package-select" class="form-select">
               <option value="">No package</option>
               <?php foreach ($packages as $package): ?>
-                <option value="<?= e($package['package_id']) ?>">
+                <option value="<?= e($package['package_id']) ?>" data-price="<?= e(number_format((float) $package['base_price'], 2)) ?>">
                   <?= e($package['package_name']) ?> (<?= e(number_format((float) $package['base_price'], 2)) ?>)
                 </option>
               <?php endforeach; ?>
@@ -332,9 +334,8 @@ include '../includes/nav.php';
               <!-- Pills injected by book.js based on selected zone -->
             </div>
             <div class="form-group" style="margin-top: var(--space-4);">
-              <label for="table-select" class="form-label">Select a Table (optional)</label>
-              <select id="table-select" class="form-select">
-                <option value="">No specific table</option>
+              <label for="table-select" class="form-label">Select a Table <span style="color:var(--clr-destructive)">*</span></label>
+              <select id="table-select" class="form-select" required>
                 <?php foreach ($tables as $table): ?>
                   <option value="<?= e($table['table_id']) ?>" data-zone-id="<?= e($table['zone_id']) ?>">
                     <?= e($table['zone_name']) ?> — <?= e($table['table_number']) ?> (<?= e((string) $table['capacity']) ?> seats)
@@ -393,15 +394,15 @@ include '../includes/nav.php';
             <div class="time-grid">
               <button type="button" class="time-slot" data-time="17:00">5:00 PM</button>
               <button type="button" class="time-slot" data-time="17:30">5:30 PM</button>
-              <button type="button" class="time-slot unavailable" data-time="18:00">6:00 PM</button>
+              <button type="button" class="time-slot" data-time="18:00">6:00 PM</button>
               <button type="button" class="time-slot" data-time="18:30">6:30 PM</button>
               <button type="button" class="time-slot" data-time="19:00">7:00 PM</button>
-              <button type="button" class="time-slot unavailable" data-time="19:30">7:30 PM</button>
+              <button type="button" class="time-slot" data-time="19:30">7:30 PM</button>
               <button type="button" class="time-slot" data-time="20:00">8:00 PM</button>
               <button type="button" class="time-slot" data-time="20:30">8:30 PM</button>
               <button type="button" class="time-slot" data-time="21:00">9:00 PM</button>
               <button type="button" class="time-slot" data-time="21:30">9:30 PM</button>
-              <button type="button" class="time-slot unavailable" data-time="22:00">10:00 PM</button>
+              <button type="button" class="time-slot" data-time="22:00">10:00 PM</button>
             </div>
             <p class="date-picker-note" style="margin-top:var(--space-2);">
               <span style="opacity:0.5; text-decoration:line-through; margin-right:4px">Strikethrough</span> = unavailable
@@ -414,14 +415,14 @@ include '../includes/nav.php';
         <div class="extras-section">
           <div class="form-group">
             <label for="guest-requests" class="form-label">Special Requests <span style="font-weight:400; color:var(--clr-muted-fg)">(optional)</span></label>
-            <textarea id="guest-requests" class="form-textarea" placeholder="Dietary restrictions, accessibility needs, seating preferences, special setups…" rows="3"></textarea>
+            <textarea id="guest-requests" class="form-textarea" placeholder="Dietary restrictions, accessibility needs, seating preferences, special setups…" rows="3" maxlength="500"></textarea>
           </div>
           <div class="form-group">
             <label class="form-label">Add-ons (optional)</label>
             <div class="checkbox-group">
               <?php foreach ($addOns as $addOn): ?>
                 <label class="checkbox-item">
-                  <input type="checkbox" name="add_on_ids[]" value="<?= e($addOn['add_on_id']) ?>">
+                  <input type="checkbox" name="add_on_ids[]" value="<?= e($addOn['add_on_id']) ?>" data-price="<?= e(number_format((float) $addOn['price'], 2)) ?>">
                   <span><?= e($addOn['category']) ?> — <?= e($addOn['name']) ?> (<?= e(number_format((float) $addOn['price'], 2)) ?>)</span>
                   <input
                     type="number"
@@ -510,6 +511,10 @@ include '../includes/nav.php';
               <div class="review-row">
                 <span class="review-row-key">Occasion</span>
                 <span class="review-row-val" id="rev-occasion">—</span>
+              </div>
+              <div class="review-row">
+                <span class="review-row-key">Estimated Total</span>
+                <span class="review-row-val" id="rev-total">—</span>
               </div>
             </div>
           </div>
