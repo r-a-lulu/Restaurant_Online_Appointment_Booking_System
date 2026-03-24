@@ -29,24 +29,21 @@ start_secure_session();
   <title><?= htmlspecialchars($pageTitle) ?> | Eudaimonia</title>
 
   <!-- Favicon -->
+  <link rel="apple-touch-icon" href="<?= $basePath ?>assets/images/apple-icon.png">
   <link rel="icon" href="<?= $basePath ?>assets/images/icon.svg" type="image/svg+xml">
-  <link rel="apple-touch-icon" sizes="180x180" href="<?= $basePath ?>assets/images/icons/apple-icon.png">
-  <link rel="icon" type="image/png" sizes="32x32" href="<?= $basePath ?>assets/images/icons/icon-light-32x32.png" media="(prefers-color-scheme: light)">
-  <link rel="icon" type="image/png" sizes="32x32" href="<?= $basePath ?>assets/images/icons/icon-dark-32x32.png" media="(prefers-color-scheme: dark)">
-  <link rel="icon" type="image/svg+xml" href="<?= $basePath ?>assets/images/icons/icon.svg">
 
   <!-- Core CSS (order matters) -->
-  <link rel="stylesheet" href="<?= $basePath ?>css/core/variables.css">
-  <link rel="stylesheet" href="<?= $basePath ?>css/core/reset.css">
-  <link rel="stylesheet" href="<?= $basePath ?>css/core/typography.css">
-  <link rel="stylesheet" href="<?= $basePath ?>css/core/base.css">
-  <link rel="stylesheet" href="<?= $basePath ?>css/components/components.css">
-  <link rel="stylesheet" href="<?= $basePath ?>css/components/nav.css">
-  <link rel="stylesheet" href="<?= $basePath ?>css/components/footer.css">
+  <link rel="stylesheet" href="<?= $basePath ?>css/variables.css">
+  <link rel="stylesheet" href="<?= $basePath ?>css/reset.css">
+  <link rel="stylesheet" href="<?= $basePath ?>css/typography.css">
+  <link rel="stylesheet" href="<?= $basePath ?>css/base.css">
+  <link rel="stylesheet" href="<?= $basePath ?>css/components.css">
+  <link rel="stylesheet" href="<?= $basePath ?>css/nav.css">
+  <link rel="stylesheet" href="<?= $basePath ?>css/footer.css">
 
   <!-- Page-specific CSS -->
   <?php foreach ($pageCSS as $cssFile): ?>
-  <link rel="stylesheet" href="<?= $basePath ?>css/pages/<?= htmlspecialchars($cssFile) ?>">
+  <link rel="stylesheet" href="<?= $basePath ?>css/<?= htmlspecialchars($cssFile) ?>">
   <?php endforeach; ?>
 </head>
 <body>
