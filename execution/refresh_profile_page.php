@@ -1,4 +1,10 @@
 <?php
+/**
+ * refresh_profile_page.php
+ * Re-generates the pages/dashboard/profile.php file if needed.
+ * This is a maintenance tool for Layer 3 (Execution).
+ */
+
 $content = <<<'HTML'
 <?php
 /**
@@ -115,8 +121,9 @@ include '../../includes/header.php';
 </html>
 HTML;
 
-if (file_put_contents(__DIR__ . '/pages/dashboard/profile.php', $content) !== false) {
-    echo "SUCCESS: Wrote Profile.php";
+$targetPath = __DIR__ . '/../pages/dashboard/profile.php';
+if (file_put_contents($targetPath, $content) !== false) {
+    echo "SUCCESS: Wrote Profile.php to " . $targetPath . "\n";
 } else {
-    echo "FAILURE: Could not write Profile.php";
+    echo "FAILURE: Could not write Profile.php\n";
 }

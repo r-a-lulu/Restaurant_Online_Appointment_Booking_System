@@ -187,7 +187,19 @@ Static content pages using the includes and design system.
 
 ---
 
-### Phase 6: Admin Panel
+### Phase 7: File Organization & Dissection
+
+Maintenance and cleanup of temporary scripts into the 3-layer architecture.
+
+#### [MODIFY] [update_profile_file.php](file:///c:/xampp/htdocs/Restaurant_Online_Appointment_Booking_System/update_profile_file.php) -> [refresh_profile_page.php](file:///c:/xampp/htdocs/Restaurant_Online_Appointment_Booking_System/execution/refresh_profile_page.php)
+Move the profile page generator script to the `execution/` folder to maintain Layer 3 separation.
+
+#### [MODIFY] [update_seating.php](file:///c:/xampp/htdocs/Restaurant_Online_Appointment_Booking_System/update_seating.php) -> [update_seating_migration.php](file:///c:/xampp/htdocs/Restaurant_Online_Appointment_Booking_System/database/update_seating_migration.php)
+Move the database migration and seeding script to the `database/` folder. Ensure the SQL logic is permanently integrated into `database/seed.sql` and `database/views.sql`.
+
+---
+
+### Phase 8: Polish & Optimization
 
 #### [NEW] Admin pages + [admin.css](file:///c:/Users/ANDREI/Documents/Web%20Development/Restaurant%20Online%20Booking%20System/css/admin.css) + [admin.js](file:///c:/Users/ANDREI/Documents/Web%20Development/Restaurant%20Online%20Booking%20System/js/admin.js)
 - **Layout**: dark sidebar with admin badge, nav links, user info

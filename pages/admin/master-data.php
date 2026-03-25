@@ -28,7 +28,7 @@ try {
     $zones = $stmt->fetchAll();
     $stmt->closeCursor();
 
-    $stmt = $pdo->prepare('SELECT table_id, zone_id, table_number, capacity FROM `tables` ORDER BY table_number');
+    $stmt = $pdo->prepare('SELECT table_id, zone_id, table_number, capacity, seating_preference FROM `tables` ORDER BY table_number');
     $stmt->execute();
     $tables = $stmt->fetchAll();
     $stmt->closeCursor();
@@ -188,11 +188,12 @@ include '../../includes/header.php';
             </select>
             <input type="text" name="table_number" class="form-input" placeholder="Table number" required>
             <input type="number" name="capacity" class="form-input" placeholder="Capacity" min="1" required>
+            <input type="text" name="seating_preference" class="form-input" placeholder="Seating Pref (e.g. Window)">
             <button type="submit" class="btn btn-primary">Add Table</button>
           </div>
         </form>
         <table class="admin-table">
-          <thead><tr><th>Zone</th><th>Table</th><th>Capacity</th><th>Actions</th></tr></thead>
+          <thead><tr><th>Zone</th><th>Table</th><th>Capacity</th><th>Seating Pref</th><th>Actions</th></tr></thead>
           <tbody>
             <?php foreach ($tables as $table): ?>
               <tr>
@@ -210,6 +211,7 @@ include '../../includes/header.php';
                   </td>
                   <td><input type="text" name="table_number" class="form-input" value="<?= e($table['table_number']) ?>"></td>
                   <td><input type="number" name="capacity" class="form-input" value="<?= e((string) $table['capacity']) ?>" min="1"></td>
+                  <td><input type="text" name="seating_preference" class="form-input" value="<?= e($table['seating_preference'] ?? '') ?>" placeholder="None"></td>
                   <td>
                     <button type="submit" name="action" value="update" class="btn btn-outline btn-sm">Update</button>
                     <button type="submit" name="action" value="delete" class="btn btn-outline btn-sm" style="color:var(--clr-destructive);border-color:var(--clr-destructive);">Delete</button>

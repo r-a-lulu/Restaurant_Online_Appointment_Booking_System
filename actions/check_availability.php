@@ -37,58 +37,29 @@ $timeSlots = [
 
 try {
     $pdo = db();
+    
+    // Call the stored procedure to get availability for all slots at once
+    $stmt = $pdo->prepare('CALL sp_get_available_slots(:date, :zone_id, :party_size, :seating_pref)');
+    $stmt->execute([
+        ':date' => $appointmentDate,
+        ':zone_id' => $zoneId,
+        ':party_size' => $partySize,
+        ':seating_pref' => $seatingPref
+    ]);
+    
+    $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $stmt->closeCursor();
+
     $availability = [];
-
-    // Find all matching tables in the zone with enough capacity
-    $possibleTables = [];
-    if ($zoneId) {
-        if ($seatingPref) {
-            $stmt = $pdo->prepare('SELECT table_id FROM `tables` WHERE zone_id = :z AND seating_preference = :sp AND capacity >= :cap');
-            $stmt->execute([':z' => $zoneId, ':sp' => $seatingPref, ':cap' => $partySize]);
-        } else {
-            $stmt = $pdo->prepare('SELECT table_id FROM `tables` WHERE zone_id = :z AND capacity >= :cap');
-            $stmt->execute([':z' => $zoneId, ':cap' => $partySize]);
-        }
-        $possibleTables = $stmt->fetchAll(PDO::FETCH_COLUMN);
-        $stmt->closeCursor();
-    } elseif ($tableId) {
-        $possibleTables = [$tableId];
-    }
-
-    foreach ($timeSlots as $time) {
-        $startDt = DateTime::createFromFormat('H:i', $time);
-        if (!$startDt) {
-            $availability[$time] = false;
-            continue;
-        }
-        $endDt = clone $startDt;
-        $endDt->modify('+2 hours');
-
-        $slotAvail = false;
-        foreach ($possibleTables as $tid) {
-            $stmt = $pdo->prepare('SELECT fn_is_slot_available(:date, :start_time, :end_time, :table_id, :zone_id, NULL) AS available');
-            $stmt->execute([
-                ':date' => $appointmentDate,
-                ':start_time' => $startDt->format('H:i:s'),
-                ':end_time' => $endDt->format('H:i:s'),
-                ':table_id' => $tid,
-                ':zone_id' => null, // fn requires explicit table evaluation
-            ]);
-            $row = $stmt->fetch();
-            $stmt->closeCursor();
-
-            if (isset($row['available']) && (int) $row['available'] === 1) {
-                $slotAvail = $tid; // Return the specific table_id that is available
-                break;
-            }
-        }
-        
-        $availability[$time] = $slotAvail;
+    foreach ($results as $row) {
+        $time = substr($row['slot_time'], 0, 5); // Format 17:00:00 to 17:00
+        $availability[$time] = (int)$row['is_available'] === 1;
     }
 
     header('Content-Type: application/json');
     echo json_encode(['availability' => $availability]);
 } catch (PDOException $e) {
+
     header('Content-Type: application/json');
     echo json_encode(['error' => safe_error_message($e)]);
 }

@@ -108,16 +108,29 @@ try {
             $zoneId = (int) ($_POST['zone_id'] ?? 0);
             $tableNumber = clean_string($_POST['table_number'] ?? '');
             $capacity = (int) ($_POST['capacity'] ?? 0);
-            $stmt = $pdo->prepare('CALL sp_tables_create(:zone_id, :table_number, :capacity)');
-            $stmt->execute([':zone_id' => $zoneId, ':table_number' => $tableNumber, ':capacity' => $capacity]);
+            $seatingPreference = clean_string($_POST['seating_preference'] ?? '');
+            $stmt = $pdo->prepare('CALL sp_tables_create(:zone_id, :table_number, :capacity, :seating_pref)');
+            $stmt->execute([
+                ':zone_id' => $zoneId,
+                ':table_number' => $tableNumber,
+                ':capacity' => $capacity,
+                ':seating_pref' => $seatingPreference !== '' ? $seatingPreference : null
+            ]);
             $stmt->closeCursor();
         } elseif ($action === 'update') {
             $id = (int) ($_POST['table_id'] ?? 0);
             $zoneId = (int) ($_POST['zone_id'] ?? 0);
             $tableNumber = clean_string($_POST['table_number'] ?? '');
             $capacity = (int) ($_POST['capacity'] ?? 0);
-            $stmt = $pdo->prepare('CALL sp_tables_update(:id, :zone_id, :table_number, :capacity)');
-            $stmt->execute([':id' => $id, ':zone_id' => $zoneId, ':table_number' => $tableNumber, ':capacity' => $capacity]);
+            $seatingPreference = clean_string($_POST['seating_preference'] ?? '');
+            $stmt = $pdo->prepare('CALL sp_tables_update(:id, :zone_id, :table_number, :capacity, :seating_pref)');
+            $stmt->execute([
+                ':id' => $id,
+                ':zone_id' => $zoneId,
+                ':table_number' => $tableNumber,
+                ':capacity' => $capacity,
+                ':seating_pref' => $seatingPreference !== '' ? $seatingPreference : null
+            ]);
             $stmt->closeCursor();
         } elseif ($action === 'delete') {
             $id = (int) ($_POST['table_id'] ?? 0);
