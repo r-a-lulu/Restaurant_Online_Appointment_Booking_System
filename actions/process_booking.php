@@ -14,7 +14,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 $csrf = $_POST['csrf_token'] ?? '';
 $source = $_POST['source'] ?? '';
-$errorRedirect = $source === 'dashboard' ? '../pages/dashboard/book.php' : '../pages/book.php';
+$errorRedirect = '../pages/book.php';
 if (!verify_csrf($csrf)) {
     set_flash('booking_error', 'Invalid security token. Please try again.');
     redirect($errorRedirect);

@@ -74,7 +74,7 @@ try {
   $zones = $stmt->fetchAll();
   $stmt->closeCursor();
 
-  $stmt = $pdo->prepare('SELECT table_id, table_number, capacity, zone_id, zone_name FROM vw_available_tables');
+  $stmt = $pdo->prepare('SELECT table_id, table_number, capacity, zone_id, zone_name, seating_preference FROM vw_available_tables');
   $stmt->execute();
   $tables = $stmt->fetchAll();
   $stmt->closeCursor();
@@ -85,6 +85,10 @@ try {
 include '../includes/header.php';
 include '../includes/nav.php';
 ?>
+
+<script>
+  window.ALL_TABLES = <?= json_encode($tables) ?>;
+</script>
 
 <div class="book-page">
 
@@ -331,21 +335,11 @@ include '../includes/nav.php';
             <p class="seating-reveal-label">Seating Preference</p>
             <p class="seating-reveal-title" id="seating-reveal-title">Choose your preferred spot</p>
             <div class="seating-spot-pills" id="seating-spot-pills">
-              <!-- Pills injected by book.js based on selected zone -->
+              <!-- Pills injected by book.js based on selected zone and capacity -->
             </div>
-            <div class="form-group" style="margin-top: var(--space-4);">
-              <label for="table-select" class="form-label">Select a Table <span style="color:var(--clr-destructive)">*</span></label>
-              <select id="table-select" class="form-select" required>
-                <?php foreach ($tables as $table): ?>
-                  <option value="<?= e($table['table_id']) ?>" data-zone-id="<?= e($table['zone_id']) ?>">
-                    <?= e($table['zone_name']) ?> — <?= e($table['table_number']) ?> (<?= e((string) $table['capacity']) ?> seats)
-                  </option>
-                <?php endforeach; ?>
-              </select>
-              <p class="text-muted text-sm" style="margin-top: var(--space-2);">
-                Table options update based on your zone selection.
-              </p>
-            </div>
+            <p class="text-muted text-sm" style="margin-top: var(--space-4);" id="seating-capacity-notice">
+              Options are strictly filtered by your party size in this zone.
+            </p>
           </div>
         </div>
 
@@ -422,7 +416,7 @@ include '../includes/nav.php';
             <div class="checkbox-group">
               <?php foreach ($addOns as $addOn): ?>
                 <label class="checkbox-item">
-                  <input type="checkbox" name="add_on_ids[]" value="<?= e($addOn['add_on_id']) ?>" data-price="<?= e(number_format((float) $addOn['price'], 2)) ?>">
+                  <input type="checkbox" name="add_on_ids[]" value="<?= e($addOn['add_on_id']) ?>" data-price="<?= e(number_format((float) $addOn['price'], 2)) ?>" data-name="<?= e($addOn['name']) ?>">
                   <span><?= e($addOn['category']) ?> — <?= e($addOn['name']) ?> (<?= e(number_format((float) $addOn['price'], 2)) ?>)</span>
                   <input
                     type="number"
@@ -511,6 +505,10 @@ include '../includes/nav.php';
               <div class="review-row">
                 <span class="review-row-key">Occasion</span>
                 <span class="review-row-val" id="rev-occasion">—</span>
+              </div>
+              <div class="review-row">
+                <span class="review-row-key">Add-ons</span>
+                <span class="review-row-val" id="rev-addon">—</span>
               </div>
               <div class="review-row">
                 <span class="review-row-key">Estimated Total</span>

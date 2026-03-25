@@ -46,7 +46,7 @@ $firstName = $_SESSION['first_name'] ?? '';
           <form method="post" action="<?= $basePath ?>actions.php?action=logout" style="display:inline;">
             <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
             <input type="hidden" name="action_token" value="<?= e(action_token('logout')) ?>">
-            <button type="submit" class="btn btn-ghost btn-sm">Logout</button>
+            <button type="submit" class="btn btn-outline btn-sm">Logout</button>
           </form>
         <?php endif; ?>
       <?php else: ?>

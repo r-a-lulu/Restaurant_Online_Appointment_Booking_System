@@ -39,18 +39,20 @@ try {
     $pdo = db();
     $availability = [];
 
-    // If seating preference is used, find all matching tables in the zone with enough capacity
+    // Find all matching tables in the zone with enough capacity
     $possibleTables = [];
-    if ($seatingPref && $zoneId) {
-        $stmt = $pdo->prepare('SELECT table_id FROM `tables` WHERE zone_id = :z AND seating_preference = :sp AND capacity >= :cap');
-        $stmt->execute([':z' => $zoneId, ':sp' => $seatingPref, ':cap' => $partySize]);
+    if ($zoneId) {
+        if ($seatingPref) {
+            $stmt = $pdo->prepare('SELECT table_id FROM `tables` WHERE zone_id = :z AND seating_preference = :sp AND capacity >= :cap');
+            $stmt->execute([':z' => $zoneId, ':sp' => $seatingPref, ':cap' => $partySize]);
+        } else {
+            $stmt = $pdo->prepare('SELECT table_id FROM `tables` WHERE zone_id = :z AND capacity >= :cap');
+            $stmt->execute([':z' => $zoneId, ':cap' => $partySize]);
+        }
         $possibleTables = $stmt->fetchAll(PDO::FETCH_COLUMN);
         $stmt->closeCursor();
     } elseif ($tableId) {
         $possibleTables = [$tableId];
-    } else {
-        // If neither, we just return false for everything
-        $possibleTables = [];
     }
 
     foreach ($timeSlots as $time) {

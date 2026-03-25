@@ -36,9 +36,11 @@
 .hero-content {
   position: relative;
   z-index: 1;
-  text-align: center;
+  text-align: left;
   color: #fff;
-  max-width: 48rem;
+  width: 100%;
+  padding-left: var(--space-8);
+  animation: heroFadeIn 1s ease-out;
 }
 
 .hero-label {
@@ -57,6 +59,18 @@
   font-weight: 500;
   line-height: var(--leading-tight);
   margin-bottom: var(--space-6);
+  max-width: 56rem;
+}
+
+@keyframes heroFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @media (min-width: 768px) {
@@ -70,8 +84,7 @@
 .hero-subtitle {
   font-size: var(--text-lg);
   color: rgba(255, 255, 255, 0.75);
-  max-width: 36rem;
-  margin-inline: auto;
+  max-width: 32rem;
   margin-bottom: var(--space-10);
   line-height: var(--leading-relaxed);
 }
@@ -79,7 +92,7 @@
 .hero-actions {
   display: flex;
   gap: var(--space-4);
-  justify-content: center;
+  justify-content: flex-start;
   flex-wrap: wrap;
 }
 

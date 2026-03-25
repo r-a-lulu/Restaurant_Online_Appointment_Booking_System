@@ -34,14 +34,6 @@
     timeLabel:   '',
   };
 
-  // ─── Seating spots per zone ───────────────────────────────────────────────
-  // Names match the zone detail pages (patio.php, dining-room.php, bar.php)
-  var SEATING_SPOTS = {
-    'patio':       { title: 'in the Patio',       spots: ['Garden View', 'Fountain Side', 'Pergola', 'Corner Alcove', 'Olive Grove'] },
-    'dining-room': { title: 'in the Dining Room', spots: ['Chef\'s View', 'Window Table', 'Banquette', 'Fireplace', 'Private Alcove', 'Chandelier'] },
-    'bar':         { title: 'at the Bar',          spots: ['Bar Counter', 'Lounge Booths', 'High Tops', 'Corner Sofa'] },
-  };
-
   // ─── DOM helpers ──────────────────────────────────────────────────────────
   function $(sel) { return document.querySelector(sel); }
   function $$(sel) { return document.querySelectorAll(sel); }
@@ -121,8 +113,8 @@
     }
     if (n === 2) {
       if (!state.zone || !state.zoneId) { showStepError('Please select a dining zone to continue.', null); return false; }
-      if (!state.spot) { showStepError('Please select a seating preference to continue.', null); return false; }
-      if (!state.tableId) { showStepError('Please select a table to continue.', null); return false; }
+      var hasPills = $('#seating-spot-pills') && $('#seating-spot-pills').children.length > 0;
+      if (hasPills && !state.spot) { showStepError('Please select a seating preference to continue.', null); return false; }
     }
     if (n === 3) {
       var dateEl = $('#book-date');
@@ -191,7 +183,6 @@
         state.zoneId    = card.dataset.zoneId;
         state.spot      = '';   // reset spot when zone changes
         state.tableId   = '';
-        resetTableSelection(state.zoneId);
         revealSpotPills(state.zone);
         updateSummary();
         fetchAvailability();
@@ -203,15 +194,35 @@
     var container = $('#seating-reveal');
     var pillsEl   = $('#seating-spot-pills');
     var titleEl   = $('#seating-reveal-title');
+    var capacityNotice = $('#seating-capacity-notice');
     if (!container || !pillsEl) return;
 
-    var data = SEATING_SPOTS[zone];
-    if (!data) { container.classList.remove('visible'); return; }
+    if (!window.ALL_TABLES) { container.classList.remove('visible'); return; }
+
+    var partySize = parseInt(state.guests || 1, 10);
+    
+    // Find unique seating preferences for the selected zone and adequate capacity
+    var availablePrefs = [];
+    window.ALL_TABLES.forEach(function(t) {
+      if (t.zone_id == state.zoneId && parseInt(t.capacity, 10) >= partySize) {
+        if (t.seating_preference && availablePrefs.indexOf(t.seating_preference) === -1) {
+          availablePrefs.push(t.seating_preference);
+        }
+      }
+    });
+
+    if (availablePrefs.length === 0) {
+      container.classList.remove('visible');
+      if (capacityNotice) capacityNotice.textContent = 'No seating preferences found for this party size.';
+      return;
+    }
 
     // Build pills
     pillsEl.innerHTML = '';
-    if (titleEl) titleEl.textContent = 'Select your spot ' + data.title;
-    data.spots.forEach(function (spot) {
+    if (titleEl) titleEl.textContent = 'Choose your preferred spot';
+    if (capacityNotice) capacityNotice.textContent = 'Options are strictly filtered by your party size in this zone.';
+    
+    availablePrefs.forEach(function (spot) {
       var pill = document.createElement('button');
       pill.type = 'button';
       pill.className = 'seating-spot-pill';
@@ -221,6 +232,7 @@
         pill.classList.add('selected');
         state.spot = spot;
         updateSummary();
+        fetchAvailability();
       });
       pillsEl.appendChild(pill);
     });
@@ -237,6 +249,7 @@
         slot.classList.add('selected');
         state.timeLabel = slot.textContent.trim();
         state.timeValue = slot.dataset.time || '';
+        state.tableId = slot.dataset.assignedTable || '';
         updateSummary();
       });
     });
@@ -298,6 +311,7 @@
       var el = $('#' + id);
       if (!el) return;
       el.addEventListener('input', function () {
+        var oldGuests = state.guests;
         state.firstName = ($('#guest-firstname') || {}).value || '';
         state.lastName  = ($('#guest-lastname')  || {}).value || '';
         state.email     = ($('#guest-email')     || {}).value || '';
@@ -306,32 +320,15 @@
         state.occasion  = ($('#guest-occasion')  || {}).value || '';
         state.serviceId = ($('#service-select')  || {}).value || '';
         state.packageId = ($('#package-select')  || {}).value || '';
+        
+        if (id === 'guest-count' && oldGuests !== state.guests && state.zone) {
+          revealSpotPills(state.zone);
+          fetchAvailability();
+        }
+        
         updateSummary();
       });
     });
-  }
-
-  function initTableSelect() {
-    var tableSelect = $('#table-select');
-    if (!tableSelect) return;
-    tableSelect.addEventListener('change', function () {
-      state.tableId = tableSelect.value || '';
-      fetchAvailability();
-    });
-  }
-
-  function resetTableSelection(zoneId) {
-    var tableSelect = $('#table-select');
-    if (!tableSelect) return;
-    var hasZone = !!zoneId;
-    Array.prototype.forEach.call(tableSelect.options, function (opt) {
-      if (!opt.value) return;
-      var optZone = opt.getAttribute('data-zone-id');
-      var match = hasZone && optZone === String(zoneId);
-      opt.disabled = !match;
-      if (!match && opt.selected) opt.selected = false;
-    });
-    tableSelect.value = '';
   }
 
   function fetchAvailability() {
@@ -347,11 +344,9 @@
     body.set('csrf_token', csrf);
     body.set('action_token', actionToken);
     body.set('appointment_date', state.date);
-    if (state.tableId) {
-      body.set('table_id', state.tableId);
-    } else {
-      body.set('zone_id', state.zoneId);
-    }
+    body.set('zone_id', state.zoneId);
+    if (state.spot) body.set('seating_preference', state.spot);
+    body.set('party_size', state.guests);
 
     fetch('../actions.php?action=check_availability', {
       method: 'POST',
@@ -380,8 +375,11 @@
         if (state.timeValue === time) {
           state.timeValue = '';
           state.timeLabel = '';
+          state.tableId = '';
           updateSummary();
         }
+      } else {
+        slot.dataset.assignedTable = isAvailable;
       }
     });
   }
@@ -404,7 +402,40 @@
       var el = $(sel);
       if (el) el.textContent = fields[sel];
     }
-
+    
+    // Calculate total
+    var total = 0;
+    var serviceEl = $('#service-select');
+    if (serviceEl && serviceEl.selectedIndex > 0) {
+      total += parseFloat(serviceEl.options[serviceEl.selectedIndex].dataset.price || 0);
+    }
+    var packageEl = $('#package-select');
+    if (packageEl && packageEl.selectedIndex > 0) {
+      total += parseFloat(packageEl.options[packageEl.selectedIndex].dataset.price || 0);
+    }
+    
+    var addonNames = [];
+    $$('input[name="add_on_ids[]"]:checked').forEach(function(cb) {
+      var price = parseFloat(cb.dataset.price || 0);
+      var qtyEl = document.querySelector('input[name="add_on_qty[' + cb.value + ']"]');
+      var qty = qtyEl ? parseInt(qtyEl.value || 1, 10) : 1;
+      total += (price * qty);
+      addonNames.push(cb.dataset.name + (qty > 1 ? ' (x' + qty + ')' : ''));
+    });
+    
+    var revTotal = $('#rev-total');
+    if (revTotal) {
+      revTotal.textContent = '$' + total.toFixed(2);
+    }
+    
+    var revAddon = $('#rev-addon');
+    if (revAddon) {
+      if (addonNames.length > 0) {
+        revAddon.textContent = addonNames.join(', ');
+      } else {
+        revAddon.textContent = '—';
+      }
+    }
   }
 
   // ─── Navigation buttons (event delegation — handles all step panels) ─────
@@ -492,6 +523,26 @@
     }
   }
 
+  function initAddonCheckboxes() {
+    $$('input[name="add_on_ids[]"]').forEach(function(cb) {
+      cb.addEventListener('change', function() {
+        var qtyControls = cb.closest('.checkbox-item').querySelector('input[type="number"]');
+        if (qtyControls) {
+          if (cb.checked) {
+            qtyControls.style.display = 'inline-block';
+            if (!qtyControls.value) qtyControls.value = 1;
+          } else {
+            qtyControls.style.display = 'none';
+          }
+        }
+      });
+      // Initial state
+      var qtyControls = cb.closest('.checkbox-item').querySelector('input[type="number"]');
+      if (qtyControls) qtyControls.style.display = cb.checked ? 'inline-block' : 'none';
+      if (!cb.checked && qtyControls) qtyControls.style.display = 'none';
+    });
+  }
+
   // ─── Init ─────────────────────────────────────────────────────────────────
   document.addEventListener('DOMContentLoaded', function () {
     // Booking wizard page
@@ -501,8 +552,7 @@
       initTimeSlots();
       initDateInput();
       initGuestFieldListeners();
-      initTableSelect();
-      resetTableSelection('');
+      initAddonCheckboxes();
       initNavButtons();
       updateSummary();
     }
