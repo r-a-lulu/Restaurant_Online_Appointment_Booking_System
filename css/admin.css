@@ -1821,3 +1821,45 @@
   text-align: left;
   width: 100%;
 }
+
+/* ─── Master Data Polish [NEW] ─── */
+.admin-form-row {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  flex-wrap: wrap;
+  padding: var(--space-4) var(--space-5);
+  background-color: #f7f5f2;
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--space-6);
+}
+
+.admin-form-row .form-input,
+.admin-form-row .form-select {
+  flex: 1;
+  min-width: 120px;
+}
+
+.admin-form-row .btn {
+  flex-shrink: 0;
+  height: 2.5rem;
+  display: flex;
+  align-items: center;
+}
+
+/* Table Input Polish */
+.admin-table input.form-input {
+  padding: 0.4rem 0.6rem;
+  font-size: 0.85rem;
+  border: 1px solid transparent;
+  background-color: transparent;
+  width: 100%;
+}
+
+.admin-table input.form-input:hover,
+.admin-table input.form-input:focus {
+  border-color: var(--clr-border);
+  background-color: var(--clr-bg);
+  box-shadow: var(--shadow-sm);
+}

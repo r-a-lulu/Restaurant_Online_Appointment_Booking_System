@@ -64,13 +64,13 @@ include '../../includes/header.php';
 
       <div class="admin-section">
         <h2 class="admin-section-title">Services</h2>
-        <form method="post" action="<?= $basePath ?>actions.php?action=admin_master_data" class="admin-form" style="margin-bottom:var(--space-4);">
+        <form method="post" action="<?= $basePath ?>actions.php?action=admin_master_data" class="admin-form">
           <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
-        <input type="hidden" name="action_token" value="<?= e(action_token('admin_master_data')) ?>">
+          <input type="hidden" name="action_token" value="<?= e(action_token('admin_master_data')) ?>">
           <input type="hidden" name="type" value="service">
           <input type="hidden" name="action" value="create">
           <div class="admin-form-row">
-            <input type="text" name="service_name" class="form-input" placeholder="Service name" required>
+            <input type="text" name="service_name" class="form-input" placeholder="Service Name (e.g. Dinner)" required>
             <input type="number" name="price" class="form-input" placeholder="Price" step="0.01" min="0" required>
             <button type="submit" class="btn btn-primary">Add Service</button>
           </div>
@@ -100,14 +100,14 @@ include '../../includes/header.php';
 
       <div class="admin-section">
         <h2 class="admin-section-title">Add-ons</h2>
-        <form method="post" action="<?= $basePath ?>actions.php?action=admin_master_data" class="admin-form" style="margin-bottom:var(--space-4);">
+        <form method="post" action="<?= $basePath ?>actions.php?action=admin_master_data" class="admin-form">
           <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
-        <input type="hidden" name="action_token" value="<?= e(action_token('admin_master_data')) ?>">
+          <input type="hidden" name="action_token" value="<?= e(action_token('admin_master_data')) ?>">
           <input type="hidden" name="type" value="add_on">
           <input type="hidden" name="action" value="create">
           <div class="admin-form-row">
             <input type="text" name="category" class="form-input" placeholder="Category" required>
-            <input type="text" name="name" class="form-input" placeholder="Name" required>
+            <input type="text" name="name" class="form-input" placeholder="Add-on Name" required>
             <input type="text" name="description" class="form-input" placeholder="Description" required>
             <input type="number" name="price" class="form-input" placeholder="Price" step="0.01" min="0" required>
             <button type="submit" class="btn btn-primary">Add Add-on</button>
@@ -140,13 +140,13 @@ include '../../includes/header.php';
 
       <div class="admin-section">
         <h2 class="admin-section-title">Dining Zones</h2>
-        <form method="post" action="<?= $basePath ?>actions.php?action=admin_master_data" class="admin-form" style="margin-bottom:var(--space-4);">
+        <form method="post" action="<?= $basePath ?>actions.php?action=admin_master_data" class="admin-form">
           <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
-        <input type="hidden" name="action_token" value="<?= e(action_token('admin_master_data')) ?>">
+          <input type="hidden" name="action_token" value="<?= e(action_token('admin_master_data')) ?>">
           <input type="hidden" name="type" value="zone">
           <input type="hidden" name="action" value="create">
           <div class="admin-form-row">
-            <input type="text" name="zone_name" class="form-input" placeholder="Zone name" required>
+            <input type="text" name="zone_name" class="form-input" placeholder="Zone Name (e.g. Garden)" required>
             <button type="submit" class="btn btn-primary">Add Zone</button>
           </div>
         </form>
@@ -174,26 +174,26 @@ include '../../includes/header.php';
 
       <div class="admin-section">
         <h2 class="admin-section-title">Tables</h2>
-        <form method="post" action="<?= $basePath ?>actions.php?action=admin_master_data" class="admin-form" style="margin-bottom:var(--space-4);">
+        <form method="post" action="<?= $basePath ?>actions.php?action=admin_master_data" class="admin-form">
           <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
-        <input type="hidden" name="action_token" value="<?= e(action_token('admin_master_data')) ?>">
+          <input type="hidden" name="action_token" value="<?= e(action_token('admin_master_data')) ?>">
           <input type="hidden" name="type" value="table">
           <input type="hidden" name="action" value="create">
           <div class="admin-form-row">
             <select name="zone_id" class="form-select" required>
-              <option value="">Select zone</option>
+              <option value="">Select Zone</option>
               <?php foreach ($zones as $zone): ?>
                 <option value="<?= e($zone['zone_id']) ?>"><?= e($zone['zone_name']) ?></option>
               <?php endforeach; ?>
             </select>
-            <input type="text" name="table_number" class="form-input" placeholder="Table number" required>
-            <input type="number" name="capacity" class="form-input" placeholder="Capacity" min="1" required>
-            <input type="text" name="seating_preference" class="form-input" placeholder="Seating Pref (e.g. Window)">
+            <input type="text" name="table_number" class="form-input" placeholder="Table No." required>
+            <input type="number" name="capacity" class="form-input" placeholder="Cap" min="1" required>
+            <input type="text" name="seating_preference" class="form-input" placeholder="Preference (Window, etc.)">
             <button type="submit" class="btn btn-primary">Add Table</button>
           </div>
         </form>
         <table class="admin-table">
-          <thead><tr><th>Zone</th><th>Table</th><th>Capacity</th><th>Seating Pref</th><th>Actions</th></tr></thead>
+          <thead><tr><th>Zone</th><th>No.</th><th>Cap</th><th>Preference</th><th>Actions</th></tr></thead>
           <tbody>
             <?php foreach ($tables as $table): ?>
               <tr>
