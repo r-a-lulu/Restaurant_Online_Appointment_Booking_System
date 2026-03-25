@@ -28,6 +28,7 @@
 -- Function #21: fn_zone_booking_count(zone_id, date_from, date_to)
 -- Function #22: fn_service_booking_count(service_id, date_from, date_to)
 -- Function #23: fn_is_valid_status_transition(old_status_id, new_status_id)
+-- Function #24: fn_table_current_status(table_id)
 
 USE restaurant_booking_v1;
 
@@ -363,6 +364,47 @@ BEGIN
   END IF;
 
   RETURN 0;
+END$$
+
+DROP FUNCTION IF EXISTS fn_table_current_status$$
+CREATE FUNCTION fn_table_current_status(p_table_id INT)
+RETURNS VARCHAR(20)
+READS SQL DATA
+BEGIN
+  DECLARE v_count INT DEFAULT 0;
+
+  IF p_table_id IS NULL OR p_table_id <= 0 THEN
+    RETURN 'available';
+  END IF;
+
+  SELECT COUNT(*) INTO v_count
+  FROM appointments a
+  JOIN appointment_status s ON s.status_id = a.status_id
+  WHERE a.table_id = p_table_id
+    AND s.status_name IN ('pending', 'confirmed')
+    AND a.appointment_date = CURDATE()
+    AND a.start_time <= CURTIME()
+    AND a.end_time > CURTIME();
+
+  IF v_count > 0 THEN
+    RETURN 'occupied';
+  END IF;
+
+  SELECT COUNT(*) INTO v_count
+  FROM appointments a
+  JOIN appointment_status s ON s.status_id = a.status_id
+  WHERE a.table_id = p_table_id
+    AND s.status_name IN ('pending', 'confirmed')
+    AND (
+      a.appointment_date > CURDATE()
+      OR (a.appointment_date = CURDATE() AND a.start_time > CURTIME())
+    );
+
+  IF v_count > 0 THEN
+    RETURN 'reserved';
+  END IF;
+
+  RETURN 'available';
 END$$
 
 DELIMITER ;

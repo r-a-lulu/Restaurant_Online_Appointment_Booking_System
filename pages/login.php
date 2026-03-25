@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Login Page — Eudaimonia Restaurant
+ * Login Page — Restaurant
  * Centered two-panel auth layout with email/password form.
  */
 
@@ -15,6 +15,7 @@ require_once '../includes/security.php';
 start_secure_session();
 $authError = get_flash('error');
 $authSuccess = get_flash('success');
+$siteName = get_setting('restaurant_name', 'Eudaimonia');
 
 include '../includes/header.php';
 ?>
@@ -26,11 +27,11 @@ include '../includes/header.php';
     <div class="auth-panel-bg"></div>
 
     <div class="auth-panel-content">
-      <a href="<?= $basePath ?>index.php" class="auth-panel-logo">Eudaimonia</a>
+      <a href="<?= $basePath ?>index.php" class="auth-panel-logo"><?= e($siteName) ?></a>
 
       <div class="auth-panel-quote">
         <blockquote>"Dining is not merely eating. It is an art—a ritual of pleasure shared among souls."</blockquote>
-        <cite>— Eudaimonia Philosophy</cite>
+        <cite>— <?= e($siteName) ?> Philosophy</cite>
       </div>
 
       <div class="auth-features">
@@ -64,13 +65,29 @@ include '../includes/header.php';
       <div class="auth-heading">
         <p class="section-label">Welcome Back</p>
         <h1>Sign In to Your Account</h1>
-        <p>Enter your credentials below to access your Eudaimonia guest portal.</p>
+        <p>Enter your credentials below to access your <?= e($siteName) ?> guest portal.</p>
       </div>
 
       <?php if ($authError): ?>
-        <div class="auth-alert">
-          <span><?= e($authError) ?></span>
-        </div>
+        <?php if ($authError === 'Sign in to reserve your table and continue your booking.'): ?>
+          <div class="auth-alert auth-alert-booking">
+            <div class="auth-alert-icon" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M6 8V7a6 6 0 0 1 12 0v1"/>
+                <rect x="3" y="8" width="18" height="13" rx="2"/>
+                <path d="M12 12v3"/>
+              </svg>
+            </div>
+            <div class="auth-alert-body">
+              <strong>Sign in to reserve your table</strong>
+              <span>We’ll bring you right back to your booking after you log in.</span>
+            </div>
+          </div>
+        <?php else: ?>
+          <div class="auth-alert">
+            <span><?= e($authError) ?></span>
+          </div>
+        <?php endif; ?>
       <?php elseif ($authSuccess): ?>
         <div class="auth-alert" style="border-color: var(--clr-success, #2e7d32); color: var(--clr-success, #2e7d32);">
           <span><?= e($authSuccess) ?></span>

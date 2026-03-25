@@ -1,6 +1,6 @@
 <?php
 /**
- * Dashboard Dining History — pages/dashboard/history.php
+ * Dashboard Dining History - pages/dashboard/history.php
  */
 
 require_once '../../includes/security.php';
@@ -11,6 +11,7 @@ $pageTitle       = 'Dining History';
 $pageCSS         = ['dashboard.css'];
 $currentDashPage = 'history';
 $basePath        = '../../';
+$siteName        = get_setting('restaurant_name', 'Eudaimonia');
 
 $dashError = get_flash('dash_error');
 $history = [];
@@ -43,7 +44,7 @@ include '../../includes/header.php';
         <div class="dashboard-header-row">
           <div>
             <h1 class="dashboard-page-title">Dining History</h1>
-            <p class="dashboard-page-subtitle">A record of all your past visits at Eudaimonia.</p>
+            <p class="dashboard-page-subtitle">A record of all your past visits at <?= e($siteName) ?>. Visits are added here automatically after the reservation ends.</p>
           </div>
         </div>
       </header>
@@ -58,7 +59,7 @@ include '../../includes/header.php';
         <div class="empty-state">
           <svg class="empty-state-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
           <h3 class="empty-state-title">No dining history yet</h3>
-          <p class="empty-state-text">Your completed reservations will appear here after your first visit.</p>
+          <p class="empty-state-text">Your completed visits will appear here automatically after your reservation time ends.</p>
         </div>
         <?php else: ?>
 
@@ -70,8 +71,8 @@ include '../../includes/header.php';
               <span class="reservation-date-month"><?= e(date('M', strtotime($visit['appointment_date']))) ?></span>
             </div>
             <div class="history-body">
-              <p class="history-zone"><?= e($visit['zone_name'] ?? '—') ?></p>
-              <p class="history-meta"><?= e(date('g:i A', strtotime($visit['start_time']))) ?> · <?= e((string) $visit['party_size']) ?> Guests · #<?= e((string) $visit['appointment_id']) ?></p>
+              <p class="history-zone"><?= e($visit['zone_name'] ?? '-') ?></p>
+              <p class="history-meta"><?= e(date('g:i A', strtotime($visit['start_time']))) ?> | <?= e((string) $visit['party_size']) ?> Guests | #<?= e((string) $visit['appointment_id']) ?></p>
             </div>
             <span class="badge badge-confirmed">Completed</span>
           </div>
@@ -89,4 +90,3 @@ include '../../includes/header.php';
 <script src="<?= $basePath ?>js/dashboard.js"></script>
 </body>
 </html>
-

@@ -72,9 +72,16 @@ try {
     $stmt = $pdo->prepare("INSERT INTO system_settings (setting_key, setting_value) 
                           VALUES (?, ?) 
                           ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)");
+
+    $textareaFields = ['restaurant_description', 'maintenance_message'];
     
     foreach ($fields as $field) {
-        $value = clean_string($_POST[$field] ?? '');
+        $value = $_POST[$field] ?? '';
+        if (in_array($field, $textareaFields, true)) {
+            $value = trim(str_replace(["\r\n", "\r"], "\n", (string) $value));
+        } else {
+            $value = clean_string((string) $value);
+        }
         $stmt->execute([$field, $value]);
     }
     

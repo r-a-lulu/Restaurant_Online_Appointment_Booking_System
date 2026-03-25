@@ -662,7 +662,7 @@ END$$
 
 -- ---------------------------------------------------------
 -- CATEGORY 8: MAX ACTIVE BOOKINGS PER USER (2 triggers)
--- Limits each user to a maximum of 5 active (pending or
+-- Limits each user to a maximum of 12 active (pending or
 -- confirmed) appointments at any time.
 -- Adjust @v_max_active below to change the limit.
 -- ---------------------------------------------------------
@@ -673,7 +673,7 @@ CREATE TRIGGER trg_appointments_before_insert_max_active
 BEFORE INSERT ON appointments
 FOR EACH ROW
 BEGIN
-  DECLARE v_max_active INT DEFAULT 5;
+  DECLARE v_max_active INT DEFAULT 12;
   DECLARE v_message VARCHAR(255);
   SET v_message = CONCAT('You already have ', v_max_active, ' active reservations. Please complete or cancel one before creating a new booking.');
 
@@ -689,7 +689,7 @@ CREATE TRIGGER trg_appointments_before_update_max_active
 BEFORE UPDATE ON appointments
 FOR EACH ROW
 BEGIN
-  DECLARE v_max_active INT DEFAULT 5;
+  DECLARE v_max_active INT DEFAULT 12;
   DECLARE v_message VARCHAR(255);
   SET v_message = CONCAT('You already have ', v_max_active, ' active reservations. Please complete or cancel one before creating a new booking.');
 

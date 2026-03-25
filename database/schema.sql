@@ -60,6 +60,14 @@ CREATE TABLE IF NOT EXISTS user_audit_logs (
     ON DELETE RESTRICT
 ) ENGINE=InnoDB;
 
+CREATE TABLE IF NOT EXISTS system_settings (
+  setting_id INT AUTO_INCREMENT PRIMARY KEY,
+  setting_key VARCHAR(100) NOT NULL,
+  setting_value TEXT NULL,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  CONSTRAINT uq_system_settings_key UNIQUE (setting_key)
+) ENGINE=InnoDB;
+
 CREATE TABLE IF NOT EXISTS services (
   service_id INT AUTO_INCREMENT PRIMARY KEY,
   service_name VARCHAR(100) NOT NULL,
@@ -88,6 +96,7 @@ CREATE TABLE IF NOT EXISTS `tables` (
   zone_id INT NOT NULL,
   capacity INT NOT NULL,
   seating_preference VARCHAR(100) NOT NULL,
+  current_status ENUM('available','reserved','occupied') NOT NULL DEFAULT 'available',
   CONSTRAINT ck_tables_capacity_positive CHECK (capacity > 0),
   CONSTRAINT fk_tables_zone
     FOREIGN KEY (zone_id) REFERENCES dining_zones (zone_id)
@@ -183,6 +192,8 @@ CREATE INDEX idx_users_role_active ON users (role_id, is_active);
 CREATE INDEX idx_user_audit_logs_target_created ON user_audit_logs (target_user_id, created_at);
 CREATE INDEX idx_user_audit_logs_actor_created ON user_audit_logs (actor_user_id, created_at);
 CREATE INDEX idx_tables_zone_capacity ON `tables` (zone_id, capacity);
+CREATE INDEX idx_tables_seating_preference ON `tables` (seating_preference);
+CREATE INDEX idx_tables_current_status ON `tables` (current_status);
 CREATE INDEX idx_appointments_user_date ON appointments (user_id, appointment_date);
 CREATE INDEX idx_appointments_date_status ON appointments (appointment_date, status_id);
 CREATE INDEX idx_appointments_table_datetime ON appointments (table_id, appointment_date, start_time, end_time);

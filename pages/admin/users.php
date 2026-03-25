@@ -1,22 +1,31 @@
-<?php
+ï»¿<?php
 /**
- * Admin Users — pages/admin/users.php
+ * Admin Users - pages/admin/users.php
  */
 
 require_once '../../includes/security.php';
 start_secure_session();
 require_admin();
 
-$pageTitle        = 'Guest Directory — Admin';
+$pageTitle = 'Guest Directory - Admin';
 $pageCSS = ['dashboard.css', 'admin.css'];
 $currentAdminPage = 'users';
-$basePath         = '../../';
+$basePath = '../../';
 
 $adminError = get_flash('admin_error');
 
 try {
   $pdo = db();
-  $stmt = $pdo->prepare("SELECT u.user_id, u.first_name, u.last_name, u.email, u.phone, u.is_active, u.created_at, COUNT(a.appointment_id) AS total_res FROM users u JOIN roles r ON r.role_id = u.role_id LEFT JOIN appointments a ON a.user_id = u.user_id WHERE r.role_name IN ('guest','customer') GROUP BY u.user_id ORDER BY u.created_at DESC");
+  $stmt = $pdo->prepare(
+    "SELECT u.user_id, u.first_name, u.last_name, u.email, u.phone, u.is_active, u.created_at, u.last_login, " .
+    "CASE WHEN u.created_by IS NULL THEN 'System' ELSE CONCAT(creator.first_name, ' ', creator.last_name) END AS created_by_name, " .
+    "(SELECT COUNT(*) FROM appointments a WHERE a.user_id = u.user_id) AS total_res " .
+    "FROM users u " .
+    "JOIN roles r ON r.role_id = u.role_id " .
+    "LEFT JOIN users creator ON creator.user_id = u.created_by " .
+    "WHERE r.role_name IN ('guest','customer') " .
+    "ORDER BY u.created_at DESC"
+  );
   $stmt->execute();
   $users = $stmt->fetchAll() ?: [];
   $stmt->closeCursor();
@@ -54,6 +63,8 @@ include '../../includes/header.php';
               <th>Name</th>
               <th>Email</th>
               <th>Phone</th>
+              <th>Created By</th>
+              <th>Last Login</th>
               <th>Reservations</th>
               <th>Status</th>
             </tr>
@@ -64,7 +75,11 @@ include '../../includes/header.php';
               <tr>
                 <td style="font-weight:500;color:var(--clr-fg);"><?= e($u['first_name'] . ' ' . $u['last_name']) ?></td>
                 <td style="color:var(--clr-muted-fg);font-size:var(--text-sm)"><?= e($u['email']) ?></td>
-                <td style="color:var(--clr-muted-fg);font-size:var(--text-sm)"><?= e($u['phone'] ?? '—') ?></td>
+                <td style="color:var(--clr-muted-fg);font-size:var(--text-sm)"><?= e($u['phone'] ?? 'N/A') ?></td>
+                <td style="color:var(--clr-muted-fg);font-size:var(--text-sm)"><?= e($u['created_by_name'] ?? 'System') ?></td>
+                <td style="color:var(--clr-muted-fg);font-size:var(--text-sm)">
+                  <?= e(!empty($u['last_login']) ? date('M j, Y g:i A', strtotime((string) $u['last_login'])) : 'Never') ?>
+                </td>
                 <td style="font-size:var(--text-sm);color:var(--clr-muted-fg);"><?= e((string) $u['total_res']) ?></td>
                 <td>
                   <span class="badge badge-<?= $status === 'Active' ? 'confirmed' : 'cancelled' ?>"><?= e($status) ?></span>
@@ -72,7 +87,7 @@ include '../../includes/header.php';
               </tr>
             <?php endforeach; ?>
             <?php if (empty($users)): ?>
-              <tr><td colspan="5" style="text-align:center;color:var(--clr-muted-fg);padding:var(--space-8);">No guests found.</td></tr>
+              <tr><td colspan="7" style="text-align:center;color:var(--clr-muted-fg);padding:var(--space-8);">No guests found.</td></tr>
             <?php endif; ?>
           </tbody>
         </table>
@@ -86,8 +101,3 @@ include '../../includes/header.php';
 <script src="<?= $basePath ?>js/admin.js"></script>
 </body>
 </html>
-
-
-
-
-

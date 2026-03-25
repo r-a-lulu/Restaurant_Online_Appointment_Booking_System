@@ -1,36 +1,26 @@
 <?php
-/**
- * Navigation bar partial.
- * 
- * Expects:
- *   $currentPage — string key: 'home', 'about', 'dining', 'book', 'login'
- *   $navStyle    — 'transparent' (hero pages) or 'solid' (inner pages)
- *   $basePath    — relative path prefix set by header.php
- */
-
 require_once __DIR__ . '/security.php';
 start_secure_session();
 
 $currentPage = $currentPage ?? '';
-$navStyle    = $navStyle ?? 'transparent';
-$navClass    = ($navStyle === 'solid') ? 'site-nav solid' : 'site-nav';
+$navStyle = $navStyle ?? 'transparent';
+$navClass = ($navStyle === 'solid') ? 'site-nav solid' : 'site-nav';
 
 $isLoggedIn = !empty($_SESSION['user_id']);
 $roleName = $_SESSION['role_name'] ?? 'guest';
 $firstName = $_SESSION['first_name'] ?? '';
+$siteName = get_setting('restaurant_name', 'Eudaimonia');
 ?>
 
 <nav class="<?= $navClass ?>" id="site-nav">
   <div class="nav-inner">
-    <!-- Logo -->
-    <a href="<?= $basePath ?>index.php" class="nav-logo">Eudaimonia</a>
+    <a href="<?= $basePath ?>index.php" class="nav-logo"><?= e($siteName) ?></a>
 
-    <!-- Desktop links -->
     <div class="nav-links">
       <a href="<?= $basePath ?>index.php" class="nav-link <?= $currentPage === 'home' ? 'active' : '' ?>">Home</a>
       <a href="<?= $basePath ?>pages/about.php" class="nav-link <?= $currentPage === 'about' ? 'active' : '' ?>">About</a>
       <a href="<?= $basePath ?>pages/dining-zones/index.php" class="nav-link <?= $currentPage === 'dining-zones' ? 'active' : '' ?>">Dining Zones</a>
-      <?php if ($isLoggedIn && $currentPage !== 'book'): ?>
+      <?php if ($isLoggedIn && $roleName !== 'admin' && $currentPage !== 'book'): ?>
         <a href="<?= $basePath ?>pages/dashboard/index.php" class="nav-link <?= $currentPage === 'dashboard' ? 'active' : '' ?>">Dashboard</a>
       <?php endif; ?>
       <?php if ($roleName === 'admin'): ?>
@@ -38,7 +28,6 @@ $firstName = $_SESSION['first_name'] ?? '';
       <?php endif; ?>
     </div>
 
-    <!-- Desktop actions -->
     <div class="nav-actions">
       <?php if ($isLoggedIn): ?>
         <span class="nav-welcome">Hi, <?= e($firstName) ?></span>
@@ -55,7 +44,6 @@ $firstName = $_SESSION['first_name'] ?? '';
       <?php endif; ?>
     </div>
 
-    <!-- Mobile toggle -->
     <button class="nav-mobile-toggle" id="nav-mobile-toggle" aria-label="Open menu">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
         <line x1="3" y1="6" x2="21" y2="6"></line>
@@ -66,10 +54,8 @@ $firstName = $_SESSION['first_name'] ?? '';
   </div>
 </nav>
 
-<!-- Mobile menu overlay -->
 <div class="mobile-menu-overlay" id="mobile-menu-overlay"></div>
 
-<!-- Mobile slide-in menu -->
 <div class="mobile-menu" id="mobile-menu">
   <button class="mobile-menu-close" id="mobile-menu-close" aria-label="Close menu">
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
@@ -83,7 +69,7 @@ $firstName = $_SESSION['first_name'] ?? '';
     <a href="<?= $basePath ?>pages/about.php" class="mobile-menu-link <?= $currentPage === 'about' ? 'active' : '' ?>">About</a>
     <a href="<?= $basePath ?>pages/dining-zones/index.php" class="mobile-menu-link <?= $currentPage === 'dining-zones' ? 'active' : '' ?>">Dining Zones</a>
     <a href="<?= $basePath ?>pages/book.php" class="mobile-menu-link <?= $currentPage === 'book' ? 'active' : '' ?>">Reservations</a>
-    <?php if ($isLoggedIn && $currentPage !== 'book'): ?>
+    <?php if ($isLoggedIn && $roleName !== 'admin' && $currentPage !== 'book'): ?>
       <a href="<?= $basePath ?>pages/dashboard/index.php" class="mobile-menu-link">Dashboard</a>
     <?php endif; ?>
     <?php if ($roleName === 'admin'): ?>

@@ -68,7 +68,8 @@
   function renderNavButtons() {
     // Update ALL instances (each step panel has its own set)
     $$('#btn-prev, [data-action="prev"]').forEach(function (btn) {
-      btn.disabled = state.currentStep === 1;
+      // Keep Step 1 back buttons active so they can return to the dashboard.
+      btn.disabled = false;
     });
     $$('#btn-next, [data-action="next"]').forEach(function (btn) {
       var label = 'Continue';

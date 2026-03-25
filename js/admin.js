@@ -22,6 +22,11 @@
     if (modal) modal.classList.remove('open');
   }
 
+  const ACTIONS_BASE = '../../actions.php?action=';
+  function actionUrl(action) {
+    return ACTIONS_BASE + encodeURIComponent(action);
+  }
+
   document.querySelectorAll('[data-modal-open]').forEach(function (btn) {
     btn.addEventListener('click', function (e) {
       e.preventDefault();
@@ -193,7 +198,7 @@
         body.set('table_id', tableId);
         body.set('status', nextStatus);
 
-        fetch('../../actions.php?action=admin_floor_update', {
+        fetch(actionUrl('admin_floor_update'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
           body: body.toString(),
@@ -251,7 +256,7 @@
       body.set('table_id', tableId);
       body.set('status', status);
 
-      fetch('../../actions.php?action=admin_floor_update', {
+      fetch(actionUrl('admin_floor_update'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: body.toString(),
@@ -275,7 +280,7 @@
       const body = new URLSearchParams();
       body.set('csrf_token', csrf);
       body.set('action_token', statusToken);
-      fetch('../../actions.php?action=admin_floor_status', {
+      fetch(actionUrl('admin_floor_status'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: body.toString(),
@@ -751,7 +756,7 @@
     body.set('seating_preference', seatingVal);
     body.set('party_size', String(partySize));
 
-    fetch('../../actions.php?action=check_availability', {
+    fetch(actionUrl('check_availability'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: body.toString(),
@@ -1075,7 +1080,7 @@
 
       if (submitBtn) submitBtn.disabled = true;
 
-      fetch(reserveTableForm.getAttribute('action') || '../../actions.php?action=admin_reserve_table', {
+      fetch(reserveTableForm.getAttribute('action') || actionUrl('admin_reserve_table'), {
         method: 'POST',
         headers: {
           'X-Requested-With': 'XMLHttpRequest',

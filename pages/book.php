@@ -1,6 +1,6 @@
 <?php
 /**
- * Booking Wizard — Eudaimonia Restaurant
+ * Booking Wizard — Restaurant
  * 4-step multi-step reservation form:
  *   Step 1: Guest Info → Step 2: Zone Selection → Step 3: Date & Time → Step 4: Review
  */
@@ -13,6 +13,45 @@ $basePath    = '../';
 
 require_once '../includes/security.php';
 start_secure_session();
+if (!booking_is_open() && ($_SESSION['role_name'] ?? '') !== 'admin') {
+  $bookingError = maintenance_message();
+  $services = [];
+  $packages = [];
+  $addOns = [];
+  $zones = [];
+  $user = [];
+  $tables = [];
+  include '../includes/header.php';
+  include '../includes/nav.php';
+  ?>
+  <div class="book-page">
+    <section class="book-hero">
+      <div class="container book-hero-inner">
+        <p class="section-label">Reservations Temporarily Closed</p>
+        <h1>We are making things better</h1>
+        <p><?= e($bookingError) ?></p>
+      </div>
+    </section>
+
+    <div class="container" style="padding: var(--space-8) 0;">
+      <div class="review-card" style="max-width: 760px; margin: 0 auto;">
+        <div class="review-card-section">
+          <p class="review-card-label">Maintenance Notice</p>
+          <p class="text-muted">
+            Online reservations are currently unavailable. Please check back soon or contact the restaurant directly.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <?php include '../includes/footer.php'; ?>
+  <script src="<?= $basePath ?>js/nav.js"></script>
+  </body>
+  </html>
+  <?php
+  exit;
+}
+
 require_login();
 
 $bookingError = get_flash('booking_error');

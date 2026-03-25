@@ -6,7 +6,7 @@
 --
 -- Event Index
 -- Event #1:  ev_auto_cancel_past_pending
--- Event #2:  ev_mark_no_show_confirmed
+-- Event #2:  ev_auto_complete_finished_confirmed
 -- Event #3:  ev_purge_appointment_audit_logs
 -- Event #4:  ev_purge_general_audit_logs
 -- Event #5:  ev_purge_user_audit_logs
@@ -37,23 +37,31 @@ BEGIN
       appointment_date < CURDATE()
       OR (appointment_date = CURDATE() AND start_time < DATE_SUB(CURTIME(), INTERVAL 30 MINUTE))
     );
+
+  UPDATE `tables`
+  SET current_status = fn_table_current_status(table_id);
 END$$
 
 -- ---------------------------------------------------------
--- EVENT #2: Mark confirmed appointments as no-show after end time
+-- EVENT #2: Auto-complete confirmed appointments after end time
+-- Note: this keeps the dashboard history moving automatically.
+-- If you need no-show tracking, add a separate attendance/check-in signal.
 -- ---------------------------------------------------------
-DROP EVENT IF EXISTS ev_mark_no_show_confirmed$$
-CREATE EVENT ev_mark_no_show_confirmed
+DROP EVENT IF EXISTS ev_auto_complete_finished_confirmed$$
+CREATE EVENT ev_auto_complete_finished_confirmed
 ON SCHEDULE EVERY 30 MINUTE
 DO
 BEGIN
   UPDATE appointments
-  SET status_id = (SELECT status_id FROM appointment_status WHERE status_name = 'no_show' LIMIT 1)
+  SET status_id = (SELECT status_id FROM appointment_status WHERE status_name = 'completed' LIMIT 1)
   WHERE status_id = (SELECT status_id FROM appointment_status WHERE status_name = 'confirmed' LIMIT 1)
     AND (
       appointment_date < CURDATE()
-      OR (appointment_date = CURDATE() AND end_time < CURTIME())
+      OR (appointment_date = CURDATE() AND end_time <= CURTIME())
     );
+
+  UPDATE `tables`
+  SET current_status = fn_table_current_status(table_id);
 END$$
 
 -- ---------------------------------------------------------

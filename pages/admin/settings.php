@@ -42,7 +42,7 @@ include '../../includes/header.php';
         <div class="admin-header-row">
           <div>
             <h1 class="admin-page-title">Settings</h1>
-            <p class="admin-page-subtitle">Configure restaurant details, booking rules, and system preferences.</p>
+            <p class="admin-page-subtitle">Configure restaurant details, booking rules, and system preferences. These settings update the public site, footer, and booking flow.</p>
           </div>
         </div>
         <?php if ($saveSuccess): ?>

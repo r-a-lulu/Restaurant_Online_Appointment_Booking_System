@@ -12,18 +12,21 @@ $basePath    = './';
 
 include 'includes/header.php';
 include 'includes/nav.php';
+
+$siteName = get_setting('restaurant_name', 'Eudaimonia');
+$siteDescription = get_setting('restaurant_description', 'An exquisite dining experience where every detail is crafted to create moments of pure joy and connection.');
 ?>
 
 <!-- Hero Section -->
 <section class="hero">
   <div class="hero-bg">
-    <img src="assets/images/hero/hero-restaurant.jpg" alt="Interior of Eudaimonia restaurant" class="img-cover">
+    <img src="assets/images/hero/hero-restaurant.jpg" alt="Interior of <?= e($siteName) ?> restaurant" class="img-cover">
   </div>
   <div class="hero-overlay"></div>
   <div class="hero-content container">
     <h4 class="hero-label">Welcome to</h4>
-    <h1 class="hero-title">Eudaimonia</h1>
-    <p class="hero-subtitle">An exquisite dining experience where every detail is crafted to create moments of pure joy and connection.</p>
+    <h1 class="hero-title"><?= e($siteName) ?></h1>
+    <p class="hero-subtitle"><?= e($siteDescription) ?></p>
     <div class="hero-actions">
       <a href="pages/book.php" class="btn btn-hero">Reserve a Table</a>
       <a href="pages/about.php" class="btn btn-outline-light btn-lg">Our Story</a>
@@ -37,7 +40,7 @@ include 'includes/nav.php';
     <h4 class="section-label">Our Philosophy</h4>
     <h2>The Art of Dining</h2>
     <p class="text-muted">
-      At Eudaimonia, we believe that dining is more than just a meal — it's an experience 
+      At <?= e($siteName) ?>, we believe that dining is more than just a meal — it's an experience 
       that nourishes the soul. Every dish is crafted with passion, every moment designed 
       to create lasting memories.
     </p>
@@ -99,7 +102,7 @@ include 'includes/nav.php';
 <section class="section-lg">
   <div class="container">
     <div class="features-header mb-12">
-      <h4 class="section-label">Why Eudaimonia</h4>
+      <h4 class="section-label">Why <?= e($siteName) ?></h4>
       <h2>An Unparalleled Experience</h2>
     </div>
 
@@ -145,7 +148,7 @@ include 'includes/nav.php';
     <h4 class="section-label">Begin Your Journey</h4>
     <h2>Ready for an Unforgettable Evening?</h2>
     <p>
-      Reserve your table today and discover why Eudaimonia is the city's most sought-after dining destination.
+      Reserve your table today and discover why <?= e($siteName) ?> is the city's most sought-after dining destination.
     </p>
     <div class="cta-actions">
       <a href="pages/book.php" class="btn btn-hero">Reserve a Table</a>

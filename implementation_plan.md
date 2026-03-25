@@ -1,4 +1,4 @@
-# Recreate Eudaimonia Reservation System (HTML/CSS/PHP/JS)
+# Recreate Restaurant Reservation System (HTML/CSS/PHP/JS)
 
 Recreate the v0/Next.js restaurant reservation system as a traditional web app using HTML, CSS, PHP, and JavaScript. Built phase-by-phase for 3 team members.
 

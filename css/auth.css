@@ -1,4 +1,4 @@
-/* Auth Pages — Login & Register (Eudaimonia) */
+/* Auth Pages — Login & Register (Restaurant) */
 
 /* ===== AUTH PAGE WRAPPER ===== */
 .auth-page {
@@ -298,6 +298,47 @@
 
 .auth-alert span {
   line-height: 1.45;
+}
+
+.auth-alert-booking {
+  background:
+    linear-gradient(135deg, rgba(120, 53, 15, 0.08), rgba(245, 158, 11, 0.14)),
+    #fffaf1;
+  color: #7c2d12;
+  border-color: #f59e0b;
+  box-shadow: 0 10px 24px rgba(180, 83, 9, 0.10);
+  align-items: center;
+}
+
+.auth-alert-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 999px;
+  background: rgba(245, 158, 11, 0.16);
+  color: #92400e;
+  flex-shrink: 0;
+}
+
+.auth-alert-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.auth-alert-body strong {
+  font-size: var(--text-sm);
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.auth-alert-body span {
+  font-size: var(--text-sm);
+  line-height: 1.45;
+  color: inherit;
+  opacity: 0.92;
 }
 
 .auth-alert.auth-success {

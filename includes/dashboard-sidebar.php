@@ -14,6 +14,7 @@ start_secure_session();
 
 $userName = trim(($_SESSION['first_name'] ?? '') . ' ' . ($_SESSION['last_name'] ?? ''));
 $userEmail = $_SESSION['email'] ?? '';
+$siteName = get_setting('restaurant_name', 'Eudaimonia');
 $initials = '';
 if ($userName !== '') {
     $parts = preg_split('/\s+/', $userName);
@@ -50,7 +51,7 @@ $navLinks = [
   <!-- Brand -->
   <div class="sidebar-brand">
     <a href="<?= $basePath ?>index.php" class="sidebar-brand-link">
-      <span class="sidebar-brand-name">Eudaimonia</span>
+      <span class="sidebar-brand-name"><?= e($siteName) ?></span>
     </a>
   </div>
 

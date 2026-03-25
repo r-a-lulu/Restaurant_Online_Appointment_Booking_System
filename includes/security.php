@@ -73,6 +73,67 @@ function clean_string(?string $value): string {
     return preg_replace('/\\s+/', ' ', $value);
 }
 
+function resolve_post_login_redirect(string $requestUri): string {
+    $requestUri = trim($requestUri);
+    if ($requestUri === '') {
+        return '';
+    }
+
+    $parts = parse_url($requestUri);
+    $path = $parts['path'] ?? '';
+    $query = $parts['query'] ?? '';
+
+    $action = '';
+    if ($query !== '') {
+        parse_str($query, $queryParams);
+        if (!empty($queryParams['action']) && is_string($queryParams['action'])) {
+            $action = $queryParams['action'];
+        }
+    }
+
+    if (substr($path, -11) === 'actions.php') {
+        switch ($action) {
+            case 'process_booking':
+            case 'check_availability':
+                return 'pages/book.php';
+            case 'user_cancel_booking':
+                return 'pages/dashboard/reservations.php';
+            case 'update_profile':
+            case 'update_password':
+                return 'pages/dashboard/profile.php';
+            case 'admin_update_status':
+                return 'pages/admin/reservations.php';
+            case 'admin_reserve_table':
+                return 'pages/admin/floor.php';
+            case 'save_settings':
+                return 'pages/admin/settings.php';
+            default:
+                return $requestUri;
+        }
+    }
+
+    if (strpos($requestUri, '/actions/process_booking.php') !== false) {
+        return 'pages/book.php';
+    }
+    if (strpos($requestUri, '/actions/check_availability.php') !== false) {
+        return 'pages/book.php';
+    }
+    if (strpos($requestUri, '/actions/user_cancel_booking.php') !== false) {
+        return 'pages/dashboard/reservations.php';
+    }
+    if (strpos($requestUri, '/actions/update_profile.php') !== false || strpos($requestUri, '/actions/update_password.php') !== false) {
+        return 'pages/dashboard/profile.php';
+    }
+    if (strpos($requestUri, '/actions/admin_update_status.php') !== false) {
+        return 'pages/admin/reservations.php';
+    }
+    if (strpos($requestUri, '/actions/admin_reserve_table.php') !== false) {
+        return 'pages/admin/floor.php';
+    }
+
+    return $requestUri;
+}
+
 function redirect(string $path): void {
     header('Location: ' . $path);
     exit;
@@ -97,7 +158,14 @@ $globalBasePath = '';
 function require_login() {
     global $globalBasePath;
     if (empty($_SESSION['user_id'])) {
-        set_flash('error', 'Please log in to access that page.');
+        $requestUri = $_SERVER['REQUEST_URI'] ?? '';
+        if (is_string($requestUri) && $requestUri !== '') {
+            $redirectTarget = resolve_post_login_redirect($requestUri);
+            if ($redirectTarget !== '') {
+                $_SESSION['post_login_redirect'] = $redirectTarget;
+            }
+        }
+        set_flash('error', 'Sign in to reserve your table and continue your booking.');
         header("Location: $globalBasePath/pages/login.php");
         exit;
     }
@@ -174,8 +242,8 @@ function guest_friendly_error_message(\Exception $e, string $fallback = 'Somethi
         if (strpos($normalized, 'cannot delete a confirmed appointment') !== false) {
             return 'Confirmed reservations cannot be deleted. Please cancel it first.';
         }
-        if (strpos($normalized, 'maximum active bookings') !== false || strpos($normalized, 'limit: 5') !== false) {
-            return 'You already have 5 active reservations. Please complete or cancel one before creating a new booking.';
+        if (strpos($normalized, 'maximum active bookings') !== false || strpos($normalized, 'limit: 12') !== false) {
+            return 'You already have 12 active reservations. Please complete or cancel one before creating a new booking.';
         }
         if (strpos($normalized, 'time slot conflicts') !== false || strpos($normalized, 'conflicts with an existing') !== false) {
             return 'That time is already booked. Please choose another time.';
@@ -299,4 +367,28 @@ function get_setting(string $key, ?string $default = null): string {
  */
 function is_maintenance_mode(): bool {
     return get_setting('maintenance_mode', '0') === '1';
+}
+
+function maintenance_message(): string {
+    return get_setting('maintenance_message', "We're temporarily offline for maintenance. Please check back shortly.");
+}
+
+function booking_is_open(): bool {
+    return !is_maintenance_mode();
+}
+
+function require_booking_open(bool $jsonResponse = false): void {
+    if (booking_is_open()) {
+        return;
+    }
+
+    $message = maintenance_message();
+    if ($jsonResponse) {
+        header('Content-Type: application/json');
+        echo json_encode(['error' => $message]);
+        exit;
+    }
+
+    set_flash('booking_error', $message);
+    redirect('pages/book.php');
 }

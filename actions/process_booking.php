@@ -5,6 +5,7 @@ if (!defined('FRONT_CONTROLLER')) {
 }
 require_once __DIR__ . '/../includes/security.php';
 start_secure_session();
+require_booking_open();
 require_login();
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -25,8 +26,8 @@ $packageId = isset($_POST['event_package_id']) && $_POST['event_package_id'] !==
 $zoneId = isset($_POST['zone_id']) && $_POST['zone_id'] !== '' ? (int) $_POST['zone_id'] : null;
 $tableId = isset($_POST['table_id']) && $_POST['table_id'] !== '' ? (int) $_POST['table_id'] : null;
 $seatingPref = clean_string($_POST['seating_preference'] ?? '');
-$appointmentDate = clean_string($_POST['appointment_date'] ?? '');
-$startTime = clean_string($_POST['start_time'] ?? '');
+$appointmentDate = trim($_POST['appointment_date'] ?? '');
+$startTime = trim($_POST['start_time'] ?? '');
 $partySize = isset($_POST['party_size']) ? (int) $_POST['party_size'] : 0;
 $specialRequests = clean_string($_POST['special_requests'] ?? '');
 $addOnIds = $_POST['add_on_ids'] ?? [];
@@ -65,10 +66,12 @@ if ($partySize > 8) {
 }
 
 $dateObj = DateTime::createFromFormat('Y-m-d', $appointmentDate);
-if (!$dateObj) {
+$dateErrors = DateTime::getLastErrors();
+if (!$dateObj || (is_array($dateErrors) && (($dateErrors['warning_count'] ?? 0) > 0 || ($dateErrors['error_count'] ?? 0) > 0))) {
     set_flash('booking_error', 'Invalid reservation date.');
     redirect('pages/book.php');
 }
+$appointmentDate = $dateObj->format('Y-m-d');
 $minDate = new DateTime('today');
 $minDate->modify('+1 day');
 if ($dateObj < $minDate) {
@@ -80,16 +83,17 @@ if ((int) $dateObj->format('N') === 1) {
     redirect('pages/book.php');
 }
 
-$startDt = DateTime::createFromFormat('H:i', $startTime);
-if (!$startDt) {
+$startDt = DateTime::createFromFormat('H:i:s', $startTime) ?: DateTime::createFromFormat('H:i', $startTime);
+$timeErrors = DateTime::getLastErrors();
+if (!$startDt || (is_array($timeErrors) && (($timeErrors['warning_count'] ?? 0) > 0 || ($timeErrors['error_count'] ?? 0) > 0))) {
     set_flash('booking_error', 'Invalid start time selected.');
     redirect('pages/book.php');
 }
+$startTime = $startDt->format('H:i:s');
 
 $endDt = clone $startDt;
 $endDt->modify('+2 hours');
 $endTime = $endDt->format('H:i:s');
-$startTimeFormatted = $startDt->format('H:i:s');
 
 try {
     $pdo = db();
@@ -112,7 +116,7 @@ try {
             ':party_size' => $partySize,
             ':seating_preference' => $seatingPref,
             ':appointment_date' => $appointmentDate,
-            ':start_time' => $startTimeFormatted,
+            ':start_time' => $startTime,
             ':end_time' => $endTime,
             ':zone_id_fn' => $zoneId,
         ]);
@@ -135,17 +139,15 @@ try {
         redirect('pages/book.php');
     }
 
-    $zoneIdForInsert = $tableId ? null : $zoneId;
-
     $proc = $pdo->prepare('CALL sp_appointment_create(:user_id, :service_id, :table_id, :zone_id, :event_package_id, :appointment_date, :start_time, :end_time, :party_size, :status_id, :special_requests)');
     $proc->execute([
         ':user_id' => (int) $_SESSION['user_id'],
         ':service_id' => $serviceId,
         ':table_id' => $tableId,
-        ':zone_id' => $zoneIdForInsert,
+        ':zone_id' => $zoneId,
         ':event_package_id' => $packageId,
         ':appointment_date' => $appointmentDate,
-        ':start_time' => $startTimeFormatted,
+        ':start_time' => $startTime,
         ':end_time' => $endTime,
         ':party_size' => $partySize,
         ':status_id' => (int) $statusId,

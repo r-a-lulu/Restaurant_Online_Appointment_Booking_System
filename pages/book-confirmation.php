@@ -1,6 +1,6 @@
-<?php
+ï»¿<?php
 /**
- * Booking Confirmation — Eudaimonia Restaurant
+ * Booking Confirmation - Restaurant
  * Success state with reservation details loaded from DB.
  */
 
@@ -13,11 +13,12 @@ $basePath    = '../';
 require_once '../includes/security.php';
 start_secure_session();
 
-// Redirect to login if not authenticated
 if (!isset($_SESSION['user_id'])) {
-  redirect('/pages/login.php');
+  header('Location: ' . $basePath . 'pages/login.php');
+  exit;
 }
 
+$siteName = get_setting('restaurant_name', 'Eudaimonia');
 $hideLogout = (isset($_GET['source']) && $_GET['source'] === 'dashboard');
 
 $appointment = [];
@@ -44,8 +45,6 @@ include '../includes/nav.php';
   <div class="container" id="confirmation-page">
 
     <div class="confirm-card">
-
-      <!-- ===== TOP: Success Banner ===== -->
       <div class="confirm-card-top">
         <div class="confirm-success-icon">
           <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -54,20 +53,17 @@ include '../includes/nav.php';
         </div>
 
         <h1>Request Received!</h1>
-        <p>Thank you for choosing Eudaimonia. Your reservation request has been submitted.</p>
+        <p>Thank you for choosing <?= e($siteName) ?>. Your reservation request has been submitted.</p>
 
         <span class="confirm-ref" id="conf-ref">EUD-<?= e((string) ($appointment['appointment_id'] ?? 'XXXXXXXX')) ?></span>
       </div>
 
-      <!-- ===== BODY: Reservation Details ===== -->
       <div class="confirm-card-body">
-
         <?php if ($confError): ?>
           <div class="auth-alert"><span><?= e($confError) ?></span></div>
         <?php endif; ?>
 
         <div class="confirm-details">
-
           <div class="confirm-detail-row">
             <div class="confirm-detail-icon">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
@@ -117,64 +113,13 @@ include '../includes/nav.php';
               <span class="confirm-detail-value" id="conf-time"><?= $appointment ? e(date('g:i A', strtotime($appointment['start_time']))) : '' ?></span>
             </div>
           </div>
-
-          <div class="confirm-detail-row">
-            <div class="confirm-detail-icon">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
-            </div>
-            <div class="confirm-detail-text">
-              <span class="confirm-detail-label">Confirmation Email</span>
-              <span class="confirm-detail-value" id="conf-email"><?= e($appointment['customer_email'] ?? '') ?></span>
-            </div>
-          </div>
-
-          <div class="confirm-detail-row">
-            <div class="confirm-detail-icon">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-            </div>
-            <div class="confirm-detail-text">
-              <span class="confirm-detail-label">Status</span>
-              <span class="confirm-detail-value"><?= e(ucfirst($appointment['status_name'] ?? 'pending')) ?></span>
-            </div>
-          </div>
-
-          <div class="confirm-detail-row">
-            <div class="confirm-detail-icon">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a4 4 0 0 1-4 4H7l-4 4V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4Z"/></svg>
-            </div>
-            <div class="confirm-detail-text">
-              <span class="confirm-detail-label">Special Requests</span>
-              <span class="confirm-detail-value"><?= e($appointment['special_requests'] ?? '—') ?></span>
-            </div>
-          </div>
-
-        </div><!-- /confirm-details -->
-
-        <!-- Actions -->
-        <div class="confirm-actions">
-          <a href="<?= $basePath ?>pages/dashboard/reservations.php" class="btn btn-primary btn-lg btn-block" id="conf-dashboard-btn">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-            View My Reservations
-          </a>
-          <a href="<?= $basePath ?>index.php" class="btn btn-outline btn-lg btn-block" id="conf-home-btn">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-            Return to Home
-          </a>
         </div>
-
-        <p class="confirm-note">
-          A confirmation email will be sent to your address within 1 hour. If you have any questions, please call us at <strong>(555) 123-4567</strong> or email <strong>hello@eudaimonia.com</strong>.
-        </p>
-
-      </div><!-- /confirm-card-body -->
-    </div><!-- /confirm-card -->
-
+      </div>
+    </div>
   </div>
 </div>
 
 <?php include '../includes/footer.php'; ?>
-
 <script src="<?= $basePath ?>js/nav.js"></script>
-<script src="<?= $basePath ?>js/book.js"></script>
 </body>
 </html>

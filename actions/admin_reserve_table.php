@@ -35,8 +35,8 @@ $tableId = isset($_POST['table_id']) && $_POST['table_id'] !== '' ? (int) $_POST
 $seatingPref = clean_string($_POST['seating_preference'] ?? '');
 $serviceId = isset($_POST['service_id']) && $_POST['service_id'] !== '' ? (int) $_POST['service_id'] : null;
 $packageId = isset($_POST['event_package_id']) && $_POST['event_package_id'] !== '' ? (int) $_POST['event_package_id'] : null;
-$date = $_POST['date'] ?? '';
-$time = $_POST['time'] ?? '';
+$date = trim($_POST['date'] ?? '');
+$time = trim($_POST['time'] ?? '');
 $partySize = (int) ($_POST['party_size'] ?? 2);
 $specialRequests = clean_string($_POST['special_requests'] ?? '');
 $addOnIds = $_POST['add_on_ids'] ?? [];
@@ -52,6 +52,24 @@ if (empty($time)) $errors[] = 'Time is required.';
 if ($partySize < 1 || $partySize > 20) $errors[] = 'Party size must be between 1-20.';
 if (($serviceId && $packageId) || (!$serviceId && !$packageId)) {
     $errors[] = 'Please choose either a service or an event package, not both.';
+}
+if ($date !== '') {
+    $dateObj = DateTime::createFromFormat('Y-m-d', $date);
+    $dateErrors = DateTime::getLastErrors();
+    if (!$dateObj || (is_array($dateErrors) && (($dateErrors['warning_count'] ?? 0) > 0 || ($dateErrors['error_count'] ?? 0) > 0))) {
+        $errors[] = 'Please enter a valid reservation date.';
+    } else {
+        $date = $dateObj->format('Y-m-d');
+    }
+}
+if ($time !== '') {
+    $timeObj = DateTime::createFromFormat('H:i:s', $time) ?: DateTime::createFromFormat('H:i', $time);
+    $timeErrors = DateTime::getLastErrors();
+    if (!$timeObj || (is_array($timeErrors) && (($timeErrors['warning_count'] ?? 0) > 0 || ($timeErrors['error_count'] ?? 0) > 0))) {
+        $errors[] = 'Please enter a valid reservation time.';
+    } else {
+        $time = $timeObj->format('H:i:s');
+    }
 }
 
 if (!empty($errors)) {
@@ -183,17 +201,6 @@ try {
         }
     }
 
-    if ($tableId <= 0) {
-        if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
-            header('Content-Type: application/json');
-            echo json_encode(['ok' => false, 'error' => 'No available tables were found for that seating preference and time. Please choose another one.']);
-            exit();
-        }
-        set_flash('admin_error', 'No available tables were found for that seating preference and time. Please choose another one.');
-        header('Location: ../pages/admin/floor.php');
-        exit();
-    }
-    
     // Get status_id for 'pending'
     $stmt = $pdo->prepare("SELECT status_id FROM appointment_status WHERE status_name = 'pending' LIMIT 1");
     $stmt->execute();
@@ -210,7 +217,7 @@ try {
         ':user_id' => $actualUserId,
         ':service_id' => $serviceId,
         ':table_id' => $tableId,
-        ':zone_id' => null,
+        ':zone_id' => $zoneId,
         ':event_package_id' => $packageId,
         ':appointment_date' => $date,
         ':start_time' => $startTime,
@@ -224,41 +231,57 @@ try {
     
     $appointmentId = (int) ($result['appointment_id'] ?? $pdo->lastInsertId());
 
+    $addonWarning = '';
     if ($appointmentId > 0 && is_array($addOnIds)) {
-        foreach ($addOnIds as $addOnId) {
-            $addOnId = (int) $addOnId;
-            if ($addOnId <= 0) {
-                continue;
+        $addonTransactionStarted = false;
+        try {
+            if (!$pdo->inTransaction()) {
+                $pdo->beginTransaction();
+                $addonTransactionStarted = true;
             }
-            $qty = isset($addOnQty[$addOnId]) ? (int) $addOnQty[$addOnId] : 1;
-            if ($qty < 1) {
-                $qty = 1;
-            } elseif ($qty > 20) {
-                $qty = 20;
+            foreach ($addOnIds as $addOnId) {
+                $addOnId = (int) $addOnId;
+                if ($addOnId <= 0) {
+                    continue;
+                }
+                $qty = isset($addOnQty[$addOnId]) ? (int) $addOnQty[$addOnId] : 1;
+                if ($qty < 1) {
+                    $qty = 1;
+                } elseif ($qty > 20) {
+                    $qty = 20;
+                }
+                $addProc = $pdo->prepare('CALL sp_appointment_add_on_add(:appointment_id, :add_on_id, :quantity)');
+                $addProc->execute([
+                    ':appointment_id' => $appointmentId,
+                    ':add_on_id' => $addOnId,
+                    ':quantity' => $qty,
+                ]);
+                $addProc->closeCursor();
             }
-            $addProc = $pdo->prepare('CALL sp_appointment_add_on_add(:appointment_id, :add_on_id, :quantity)');
-            $addProc->execute([
-                ':appointment_id' => $appointmentId,
-                ':add_on_id' => $addOnId,
-                ':quantity' => $qty,
-            ]);
-            $addProc->closeCursor();
+            if ($addonTransactionStarted && $pdo->inTransaction()) {
+                $pdo->commit();
+            }
+        } catch (PDOException $addonError) {
+            if ($addonTransactionStarted && $pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            error_log('Admin reservation add-ons failed for appointment ' . $appointmentId . ': ' . $addonError->getMessage());
+            $addonWarning = ' Add-ons were not fully saved.';
         }
     }
     
-    // Update table status based on the reservation timing
-    $currentDate = date('Y-m-d');
-    $currentTime = date('H:i:s');
-    $isActiveNow = ($date === $currentDate && $startTime <= $currentTime && $endTime > $currentTime);
-    $newTableStatus = $isActiveNow ? 'occupied' : 'reserved';
-
-    $stmt = $pdo->prepare("UPDATE `tables` SET current_status = ? WHERE table_id = ?");
-    $stmt->execute([$newTableStatus, $tableId]);
+    $statusStmt = $pdo->prepare('SELECT current_status FROM `tables` WHERE table_id = :table_id LIMIT 1');
+    $statusStmt->execute([':table_id' => $tableId]);
+    $newTableStatus = $statusStmt->fetchColumn() ?: 'available';
+    $statusStmt->closeCursor();
     
     $guestName = trim(($userRow['first_name'] ?? '') . ' ' . ($userRow['last_name'] ?? ''));
     $successMessage = $guestName !== ''
         ? 'Reservation created successfully for ' . $guestName . '.'
         : 'Reservation created successfully.';
+    if ($addonWarning !== '') {
+        $successMessage .= $addonWarning;
+    }
     if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
         header('Content-Type: application/json');
         echo json_encode([

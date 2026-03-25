@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Register Page — Eudaimonia Restaurant
+ * Register Page — Restaurant
  * Registration form: name, email, phone, password, confirm, terms checkbox.
  */
 
@@ -15,6 +15,7 @@ require_once '../includes/security.php';
 start_secure_session();
 $authError = get_flash('error');
 $formData = get_flash('form_data') ?: [];
+$siteName = get_setting('restaurant_name', 'Eudaimonia');
 
 include '../includes/header.php';
 ?>
@@ -26,11 +27,11 @@ include '../includes/header.php';
     <div class="auth-panel-bg"></div>
 
     <div class="auth-panel-content">
-      <a href="<?= $basePath ?>index.php" class="auth-panel-logo">Eudaimonia</a>
+      <a href="<?= $basePath ?>index.php" class="auth-panel-logo"><?= e($siteName) ?></a>
 
       <div class="auth-panel-quote">
         <blockquote>"Every great dining experience begins with a single reservation."</blockquote>
-        <cite>— Eudaimonia Philosophy</cite>
+        <cite>— <?= e($siteName) ?> Philosophy</cite>
       </div>
 
       <div class="auth-features">

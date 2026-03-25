@@ -124,3 +124,19 @@ CREATE OR REPLACE VIEW vw_active_add_ons AS
 SELECT add_on_id, category, name, description, price
 FROM add_ons
 ORDER BY category, name;
+
+-- ---------------------------------------------------------
+-- View #8: Masked users for reporting
+-- ---------------------------------------------------------
+CREATE OR REPLACE VIEW vw_users_masked AS
+SELECT
+  user_id,
+  role_id,
+  CONCAT(LEFT(first_name, 1), REPEAT('*', 2)) AS first_name_masked,
+  CONCAT(LEFT(last_name, 1), REPEAT('*', 2)) AS last_name_masked,
+  CONCAT(LEFT(email, 2), '***', SUBSTRING(email, LOCATE('@', email))) AS email_masked,
+  is_active,
+  created_by,
+  created_at,
+  last_login
+FROM users;

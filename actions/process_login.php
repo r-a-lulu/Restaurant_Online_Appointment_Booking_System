@@ -70,11 +70,25 @@ try {
         $_SESSION['last_name']  = $user['last_name'];
         $_SESSION['email']      = $user['email'];
 
+        // Record the successful sign-in for audit/reporting purposes.
+        try {
+            $loginStmt = $db->prepare('UPDATE users SET last_login = NOW() WHERE user_id = ?');
+            $loginStmt->execute([(int) $user['user_id']]);
+        } catch (PDOException $loginUpdateError) {
+            error_log('Failed to update last_login for user ' . (int) $user['user_id'] . ': ' . $loginUpdateError->getMessage());
+        }
+
         // Redirect based on role
         if ($roleName === 'admin') {
+            unset($_SESSION['post_login_redirect']);
             header("Location: pages/admin/index.php");
         } else {
-            header("Location: pages/dashboard/index.php");
+            $redirectTarget = $_SESSION['post_login_redirect'] ?? 'pages/dashboard/index.php';
+            unset($_SESSION['post_login_redirect']);
+            if (!is_string($redirectTarget) || $redirectTarget === '' || strpos($redirectTarget, '://') !== false || strpos($redirectTarget, '//') === 0) {
+                $redirectTarget = 'pages/dashboard/index.php';
+            }
+            header("Location: $redirectTarget");
         }
         exit;
         

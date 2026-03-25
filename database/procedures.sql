@@ -353,6 +353,12 @@ BEGIN
     p_appointment_date, p_start_time, p_end_time, p_party_size, p_status_id, p_special_requests
   );
 
+  IF p_table_id IS NOT NULL AND p_table_id > 0 THEN
+    UPDATE `tables`
+    SET current_status = fn_table_current_status(p_table_id)
+    WHERE table_id = p_table_id;
+  END IF;
+
   COMMIT;
 
   SELECT LAST_INSERT_ID() AS appointment_id;
@@ -372,6 +378,13 @@ CREATE PROCEDURE sp_appointment_update(
   IN p_status_id INT
 )
 BEGIN
+  DECLARE v_old_table_id INT DEFAULT NULL;
+
+  SELECT table_id INTO v_old_table_id
+  FROM appointments
+  WHERE appointment_id = p_appointment_id
+  LIMIT 1;
+
   UPDATE appointments
   SET service_id = p_service_id,
       table_id = p_table_id,
@@ -384,6 +397,18 @@ BEGIN
       status_id = p_status_id
   WHERE appointment_id = p_appointment_id;
 
+  IF v_old_table_id IS NOT NULL THEN
+    UPDATE `tables`
+    SET current_status = fn_table_current_status(v_old_table_id)
+    WHERE table_id = v_old_table_id;
+  END IF;
+
+  IF p_table_id IS NOT NULL AND p_table_id > 0 AND p_table_id <> v_old_table_id THEN
+    UPDATE `tables`
+    SET current_status = fn_table_current_status(p_table_id)
+    WHERE table_id = p_table_id;
+  END IF;
+
   SELECT ROW_COUNT() AS rows_affected;
 END$$
 
@@ -393,9 +418,22 @@ CREATE PROCEDURE sp_appointment_cancel(
   IN p_cancelled_status_id INT
 )
 BEGIN
+  DECLARE v_table_id INT DEFAULT NULL;
+
+  SELECT table_id INTO v_table_id
+  FROM appointments
+  WHERE appointment_id = p_appointment_id
+  LIMIT 1;
+
   UPDATE appointments
   SET status_id = p_cancelled_status_id
   WHERE appointment_id = p_appointment_id;
+
+  IF v_table_id IS NOT NULL THEN
+    UPDATE `tables`
+    SET current_status = fn_table_current_status(v_table_id)
+    WHERE table_id = v_table_id;
+  END IF;
 
   SELECT ROW_COUNT() AS rows_affected;
 END$$
@@ -546,6 +584,12 @@ CREATE PROCEDURE sp_update_appointment_status(
 )
 BEGIN
   DECLARE v_status_id INT;
+  DECLARE v_table_id INT DEFAULT NULL;
+
+  SELECT table_id INTO v_table_id
+  FROM appointments
+  WHERE appointment_id = p_appointment_id
+  LIMIT 1;
 
   SELECT status_id INTO v_status_id
   FROM appointment_status
@@ -560,6 +604,12 @@ BEGIN
   UPDATE appointments
   SET status_id = v_status_id
   WHERE appointment_id = p_appointment_id;
+
+  IF v_table_id IS NOT NULL THEN
+    UPDATE `tables`
+    SET current_status = fn_table_current_status(v_table_id)
+    WHERE table_id = v_table_id;
+  END IF;
 
   SELECT ROW_COUNT() AS rows_affected;
 END$$

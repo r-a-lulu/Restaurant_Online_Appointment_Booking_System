@@ -8,9 +8,11 @@
 - Auto-cancels pending appointments that are in the past.
 - Runs every 15 minutes.
 
-## Event #2: `ev_mark_no_show_confirmed`
-- Marks confirmed appointments as `no_show` after end time.
+## Event #2: `ev_auto_complete_finished_confirmed`
+- Marks confirmed appointments as `completed` after end time.
 - Runs every 30 minutes.
+- This is the automatic path that fills guest history without manual staff action.
+- If you need `no_show` tracking, that should be a separate attendance/check-in process.
 
 ## Event #3: `ev_purge_appointment_audit_logs`
 - Deletes appointment audit logs older than 365 days.

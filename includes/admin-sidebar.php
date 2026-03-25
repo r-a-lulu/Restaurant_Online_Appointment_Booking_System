@@ -8,6 +8,7 @@
  */
 
 $currentAdminPage = $currentAdminPage ?? 'dashboard';
+$siteName = get_setting('restaurant_name', 'Eudaimonia');
 
 $navLinks = [
     'dashboard'    => [
@@ -59,7 +60,7 @@ $navLinks = [
   <!-- Brand -->
   <div class="sidebar-brand">
     <a href="<?= $basePath ?>index.php" class="sidebar-brand-link" style="display:flex; align-items:center; gap:0.5rem;">
-      <span class="sidebar-brand-name">Eudaimonia</span>
+      <span class="sidebar-brand-name"><?= e($siteName) ?></span>
       <span class="admin-badge" style="margin-top:0;">Admin</span>
     </a>
   </div>

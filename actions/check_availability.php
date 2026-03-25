@@ -5,6 +5,7 @@ if (!defined('FRONT_CONTROLLER')) {
 }
 require_once __DIR__ . '/../includes/security.php';
 start_secure_session();
+require_booking_open(true);
 require_login();
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {

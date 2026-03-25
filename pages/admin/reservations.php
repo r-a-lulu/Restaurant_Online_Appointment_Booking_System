@@ -51,7 +51,7 @@ include '../../includes/header.php';
           <div class="admin-header-row">
             <div>
               <h1 class="admin-page-title">Reservations</h1>
-              <p class="admin-page-subtitle">Review, approve, and manage all guest reservations.</p>
+              <p class="admin-page-subtitle">Review, approve, and manage all guest reservations. Confirmed visits are auto-completed after their end time unless staff updates them earlier.</p>
             </div>
           </div>
         </header>
@@ -134,7 +134,7 @@ include '../../includes/header.php';
                                 <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
                                 <input type="hidden" name="action_token" value="<?= e(action_token('admin_update_status')) ?>">
                                 <input type="hidden" name="appointment_id" value="<?= e($r['appointment_id']) ?>">
-                                <button class="btn btn-outline btn-sm" name="action" value="complete">Complete</button>
+                                <button class="btn btn-outline btn-sm" name="action" value="complete">Mark Complete</button>
                               </form>
                               <form method="post" action="<?= $basePath ?>actions.php?action=admin_update_status" style="display:inline;">
                                 <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">

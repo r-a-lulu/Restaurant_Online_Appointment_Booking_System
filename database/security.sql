@@ -33,21 +33,6 @@ GRANT EVENT ON restaurant_booking_v1.* TO app_events;
 GRANT EXECUTE ON restaurant_booking_v1.* TO app_events;
 GRANT SELECT, UPDATE, DELETE ON restaurant_booking_v1.* TO app_events;
 
--- ---------------------------
--- Masked View for PII (for reports / readonly access)
--- ---------------------------
-CREATE OR REPLACE VIEW vw_users_masked AS
-SELECT
-  user_id,
-  role_id,
-  CONCAT(LEFT(first_name, 1), REPEAT('*', 2)) AS first_name_masked,
-  CONCAT(LEFT(last_name, 1), REPEAT('*', 2)) AS last_name_masked,
-  CONCAT(LEFT(email, 2), '***', SUBSTRING(email, LOCATE('@', email))) AS email_masked,
-  is_active,
-  created_at,
-  last_login
-FROM users;
-
 GRANT SELECT ON restaurant_booking_v1.vw_users_masked TO app_readonly;
 
 -- ---------------------------
