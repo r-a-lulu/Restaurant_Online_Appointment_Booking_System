@@ -22,24 +22,53 @@ try {
           COALESCE(a.zone_id, t.zone_id) AS zone_id,
           dz.zone_name,
           a.table_id,
-          t.table_number,
-          t.seating_preference,
+          t.seating_preference AS table_label,
           a.appointment_date,
           a.start_time,
           a.end_time,
           a.party_size,
           a.status_id,
-          fn_status_name(a.status_id) AS status_name,
-          fn_appointment_total(a.appointment_id) AS total_amount,
+          st.status_name AS status_name,
           a.special_requests,
           a.created_at,
           a.updated_at
         FROM appointments a
         JOIN users u ON u.user_id = a.user_id
+        JOIN appointment_status st ON st.status_id = a.status_id
         LEFT JOIN services s ON s.service_id = a.service_id
         LEFT JOIN event_packages ep ON ep.package_id = a.event_package_id
         LEFT JOIN `tables` t ON t.table_id = a.table_id
-        LEFT JOIN dining_zones dz ON dz.zone_id = COALESCE(a.zone_id, t.zone_id)"
+        LEFT JOIN dining_zones dz ON dz.zone_id = COALESCE(a.zone_id, t.zone_id)",
+        "CREATE OR REPLACE VIEW vw_admin_appointments AS
+        SELECT
+          a.appointment_id,
+          a.user_id,
+          CONCAT(u.first_name, ' ', u.last_name) AS customer_name,
+          u.email AS customer_email,
+          COALESCE(a.zone_id, t.zone_id) AS zone_id,
+          dz.zone_name,
+          a.table_id,
+          t.seating_preference AS table_label,
+          a.appointment_date,
+          a.start_time,
+          a.end_time,
+          a.party_size,
+          a.status_id,
+          st.status_name AS status_name,
+          a.special_requests,
+          a.created_at,
+          a.updated_at
+        FROM appointments a
+        JOIN users u ON u.user_id = a.user_id
+        JOIN appointment_status st ON st.status_id = a.status_id
+        LEFT JOIN `tables` t ON t.table_id = a.table_id
+        LEFT JOIN dining_zones dz ON dz.zone_id = COALESCE(a.zone_id, t.zone_id)
+        ORDER BY appointment_date DESC, start_time DESC",
+        "CREATE OR REPLACE VIEW vw_upcoming_appointments AS
+        SELECT *
+        FROM vw_appointments_detail
+        WHERE appointment_date >= CURDATE()
+          AND status_name NOT IN ('completed', 'cancelled', 'no_show')"
     ];
 
     foreach ($statements as $stmt) {

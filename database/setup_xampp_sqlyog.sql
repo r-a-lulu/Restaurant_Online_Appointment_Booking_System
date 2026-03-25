@@ -86,11 +86,9 @@ CREATE TABLE IF NOT EXISTS dining_zones (
 CREATE TABLE IF NOT EXISTS `tables` (
   table_id INT AUTO_INCREMENT PRIMARY KEY,
   zone_id INT NOT NULL,
-  table_number VARCHAR(30) NOT NULL,
   capacity INT NOT NULL,
-  seating_preference VARCHAR(100) NULL,
+  seating_preference VARCHAR(100) NOT NULL,
   CONSTRAINT ck_tables_capacity_positive CHECK (capacity > 0),
-  CONSTRAINT uq_tables_zone_table_number UNIQUE (zone_id, table_number),
   CONSTRAINT fk_tables_zone
     FOREIGN KEY (zone_id) REFERENCES dining_zones (zone_id)
     ON UPDATE CASCADE

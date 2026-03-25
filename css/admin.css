@@ -1264,6 +1264,72 @@
   margin-top: var(--space-1);
 }
 
+.floor-tile-new-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: auto;
+  position: relative;
+  z-index: 3;
+}
+
+.floor-tile-reserve-btn {
+  border-color: rgba(133, 77, 14, 0.35);
+  color: #7c4a03;
+  background-color: rgba(255, 255, 255, 0.45);
+  position: relative;
+  z-index: 4;
+  pointer-events: auto;
+}
+
+.floor-tile-reserve-btn:hover:not(:disabled) {
+  background-color: rgba(255, 255, 255, 0.75);
+  border-color: rgba(133, 77, 14, 0.55);
+}
+
+.floor-tile-reserve-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.guest-suggest-list {
+  margin-top: var(--space-2);
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-lg);
+  background: var(--clr-card);
+  max-height: 14rem;
+  overflow-y: auto;
+  box-shadow: var(--shadow-sm);
+}
+
+.guest-suggest-item {
+  width: 100%;
+  padding: 0.65rem 0.875rem;
+  border: none;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.guest-suggest-item:hover,
+.guest-suggest-item:focus {
+  background: var(--clr-muted);
+  outline: none;
+}
+
+.guest-suggest-name {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--clr-fg);
+}
+
+.guest-suggest-meta {
+  font-size: var(--text-xs);
+  color: var(--clr-muted-fg);
+}
+
 .floor-tile-new--available .floor-tile-new-status { color: #166534; }
 .floor-tile-new--reserved .floor-tile-new-status { color: #854d0e; }
 .floor-tile-new--occupied .floor-tile-new-status { color: #991b1b; }
@@ -1867,4 +1933,61 @@
   border-color: var(--clr-border);
   background-color: var(--clr-bg);
   box-shadow: var(--shadow-sm);
+}
+
+/* Admin Reservation Add-ons */
+.admin-addon-list {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.admin-addon-item {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: var(--space-3);
+  align-items: center;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-lg);
+  background-color: var(--clr-card);
+}
+
+.admin-addon-item input[type="checkbox"] {
+  width: 1rem;
+  height: 1rem;
+  accent-color: var(--clr-primary);
+}
+
+.admin-addon-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.admin-addon-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.admin-addon-name {
+  font-weight: 600;
+  color: var(--clr-fg);
+}
+
+.admin-addon-desc {
+  font-size: var(--text-xs);
+  color: var(--clr-muted-fg);
+}
+
+.admin-addon-price {
+  font-weight: 600;
+  color: var(--clr-primary);
+  white-space: nowrap;
+}
+
+.admin-addon-qty {
+  width: 5rem;
 }

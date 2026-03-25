@@ -106,13 +106,15 @@ try {
     if ($type === 'table') {
         if ($action === 'create') {
             $zoneId = (int) ($_POST['zone_id'] ?? 0);
-            $tableNumber = clean_string($_POST['table_number'] ?? '');
             $capacity = (int) ($_POST['capacity'] ?? 0);
             $seatingPreference = clean_string($_POST['seating_preference'] ?? '');
-            $stmt = $pdo->prepare('CALL sp_tables_create(:zone_id, :table_number, :capacity, :seating_pref)');
+            if ($zoneId <= 0 || $capacity <= 0 || $seatingPreference === '') {
+                set_flash('admin_error', 'Please provide a zone, seating preference, and capacity for the table.');
+                redirect('pages/admin/master-data.php');
+            }
+            $stmt = $pdo->prepare('CALL sp_tables_create(:zone_id, :capacity, :seating_pref)');
             $stmt->execute([
                 ':zone_id' => $zoneId,
-                ':table_number' => $tableNumber,
                 ':capacity' => $capacity,
                 ':seating_pref' => $seatingPreference !== '' ? $seatingPreference : null
             ]);
@@ -120,14 +122,16 @@ try {
         } elseif ($action === 'update') {
             $id = (int) ($_POST['table_id'] ?? 0);
             $zoneId = (int) ($_POST['zone_id'] ?? 0);
-            $tableNumber = clean_string($_POST['table_number'] ?? '');
             $capacity = (int) ($_POST['capacity'] ?? 0);
             $seatingPreference = clean_string($_POST['seating_preference'] ?? '');
-            $stmt = $pdo->prepare('CALL sp_tables_update(:id, :zone_id, :table_number, :capacity, :seating_pref)');
+            if ($id <= 0 || $zoneId <= 0 || $capacity <= 0 || $seatingPreference === '') {
+                set_flash('admin_error', 'Please provide a zone, seating preference, and capacity for the table.');
+                redirect('pages/admin/master-data.php');
+            }
+            $stmt = $pdo->prepare('CALL sp_tables_update(:id, :zone_id, :capacity, :seating_pref)');
             $stmt->execute([
                 ':id' => $id,
                 ':zone_id' => $zoneId,
-                ':table_number' => $tableNumber,
                 ':capacity' => $capacity,
                 ':seating_pref' => $seatingPreference !== '' ? $seatingPreference : null
             ]);

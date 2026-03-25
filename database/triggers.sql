@@ -246,7 +246,7 @@ FOR EACH ROW
 BEGIN
   INSERT INTO general_audit_logs (table_name, record_id, action_type, old_values, new_values)
   VALUES ('tables', NEW.table_id, 'INSERT', NULL,
-    JSON_OBJECT('zone_id', NEW.zone_id, 'table_number', NEW.table_number, 'capacity', NEW.capacity));
+    JSON_OBJECT('zone_id', NEW.zone_id, 'table_label', NEW.seating_preference, 'capacity', NEW.capacity));
 END$$
 
 DROP TRIGGER IF EXISTS trg_tables_after_update$$
@@ -256,8 +256,8 @@ FOR EACH ROW
 BEGIN
   INSERT INTO general_audit_logs (table_name, record_id, action_type, old_values, new_values)
   VALUES ('tables', NEW.table_id, 'UPDATE',
-    JSON_OBJECT('zone_id', OLD.zone_id, 'table_number', OLD.table_number, 'capacity', OLD.capacity),
-    JSON_OBJECT('zone_id', NEW.zone_id, 'table_number', NEW.table_number, 'capacity', NEW.capacity));
+    JSON_OBJECT('zone_id', OLD.zone_id, 'table_label', OLD.seating_preference, 'capacity', OLD.capacity),
+    JSON_OBJECT('zone_id', NEW.zone_id, 'table_label', NEW.seating_preference, 'capacity', NEW.capacity));
 END$$
 
 DROP TRIGGER IF EXISTS trg_tables_after_delete$$
@@ -267,7 +267,7 @@ FOR EACH ROW
 BEGIN
   INSERT INTO general_audit_logs (table_name, record_id, action_type, old_values, new_values)
   VALUES ('tables', OLD.table_id, 'DELETE',
-    JSON_OBJECT('zone_id', OLD.zone_id, 'table_number', OLD.table_number, 'capacity', OLD.capacity), NULL);
+    JSON_OBJECT('zone_id', OLD.zone_id, 'table_label', OLD.seating_preference, 'capacity', OLD.capacity), NULL);
 END$$
 
 -- == dining_zones (Triggers #16, #17, #18) ==
@@ -409,7 +409,7 @@ BEGIN
   IF NEW.table_id IS NOT NULL THEN
     IF fn_party_fits_table(NEW.table_id, NEW.party_size) = 0 THEN
       SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'Party size exceeds table capacity.';
+        SET MESSAGE_TEXT = 'The selected table cannot fit this party size. Please choose another table or reduce the number of guests.';
     END IF;
   END IF;
 END$$
@@ -426,7 +426,7 @@ BEGIN
   THEN
     IF fn_party_fits_table(NEW.table_id, NEW.party_size) = 0 THEN
       SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'Party size exceeds table capacity.';
+        SET MESSAGE_TEXT = 'The selected table cannot fit this party size. Please choose another table or reduce the number of guests.';
     END IF;
   END IF;
 END$$
@@ -441,7 +441,7 @@ BEGIN
   IF NEW.table_id IS NOT NULL THEN
     IF fn_table_has_conflict(NEW.table_id, NEW.appointment_date, NEW.start_time, NEW.end_time, NULL) = 1 THEN
       SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'Time slot conflicts with an existing table booking.';
+        SET MESSAGE_TEXT = 'That time is already booked for the selected table. Please choose another time.';
     END IF;
   END IF;
 
@@ -449,7 +449,7 @@ BEGIN
   IF NEW.zone_id IS NOT NULL THEN
     IF fn_zone_has_conflict(NEW.zone_id, NEW.appointment_date, NEW.start_time, NEW.end_time, NULL) = 1 THEN
       SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'Time slot conflicts with an existing zone booking.';
+        SET MESSAGE_TEXT = 'That time is already booked in the selected dining zone. Please choose another time or zone.';
     END IF;
   END IF;
 END$$
@@ -471,7 +471,7 @@ BEGIN
     IF NEW.table_id IS NOT NULL THEN
       IF fn_table_has_conflict(NEW.table_id, NEW.appointment_date, NEW.start_time, NEW.end_time, NEW.appointment_id) = 1 THEN
         SIGNAL SQLSTATE '45000'
-          SET MESSAGE_TEXT = 'Time slot conflicts with an existing table booking.';
+          SET MESSAGE_TEXT = 'That time is already booked for the selected table. Please choose another time.';
       END IF;
     END IF;
 
@@ -479,7 +479,7 @@ BEGIN
     IF NEW.zone_id IS NOT NULL THEN
       IF fn_zone_has_conflict(NEW.zone_id, NEW.appointment_date, NEW.start_time, NEW.end_time, NEW.appointment_id) = 1 THEN
         SIGNAL SQLSTATE '45000'
-          SET MESSAGE_TEXT = 'Time slot conflicts with an existing zone booking.';
+          SET MESSAGE_TEXT = 'That time is already booked in the selected dining zone. Please choose another time or zone.';
       END IF;
     END IF;
   END IF;
@@ -493,7 +493,7 @@ FOR EACH ROW
 BEGIN
   IF fn_is_past_datetime(NEW.appointment_date, NEW.start_time) = 1 THEN
     SIGNAL SQLSTATE '45000'
-      SET MESSAGE_TEXT = 'Cannot create an appointment in the past.';
+      SET MESSAGE_TEXT = 'Reservations cannot be made in the past. Please choose a future date and time.';
   END IF;
 END$$
 
@@ -509,7 +509,7 @@ BEGIN
   THEN
     IF fn_is_past_datetime(NEW.appointment_date, NEW.start_time) = 1 THEN
       SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'Cannot reschedule an appointment to a past date.';
+        SET MESSAGE_TEXT = 'Reservations cannot be moved to a past date. Please choose a future date and time.';
     END IF;
   END IF;
 END$$
@@ -524,7 +524,7 @@ BEGIN
      OR (NEW.service_id IS NOT NULL AND NEW.event_package_id IS NOT NULL)
   THEN
     SIGNAL SQLSTATE '45000'
-      SET MESSAGE_TEXT = 'Select either a service or an event package (not both).';
+      SET MESSAGE_TEXT = 'Please choose either a service or an event package, not both.';
   END IF;
 END$$
 
@@ -538,7 +538,7 @@ BEGIN
      OR (NEW.service_id IS NOT NULL AND NEW.event_package_id IS NOT NULL)
   THEN
     SIGNAL SQLSTATE '45000'
-      SET MESSAGE_TEXT = 'Select either a service or an event package (not both).';
+      SET MESSAGE_TEXT = 'Please choose either a service or an event package, not both.';
   END IF;
 END$$
 
@@ -674,10 +674,12 @@ BEFORE INSERT ON appointments
 FOR EACH ROW
 BEGIN
   DECLARE v_max_active INT DEFAULT 5;
+  DECLARE v_message VARCHAR(255);
+  SET v_message = CONCAT('You already have ', v_max_active, ' active reservations. Please complete or cancel one before creating a new booking.');
 
   IF fn_can_book_more(NEW.user_id, v_max_active) = 0 THEN
     SIGNAL SQLSTATE '45000'
-      SET MESSAGE_TEXT = 'Maximum active bookings reached (limit: 5). Please complete or cancel an existing booking first.';
+      SET MESSAGE_TEXT = v_message;
   END IF;
 END$$
 
@@ -688,6 +690,8 @@ BEFORE UPDATE ON appointments
 FOR EACH ROW
 BEGIN
   DECLARE v_max_active INT DEFAULT 5;
+  DECLARE v_message VARCHAR(255);
+  SET v_message = CONCAT('You already have ', v_max_active, ' active reservations. Please complete or cancel one before creating a new booking.');
 
   -- Only check when user_id changes OR status is changing TO an active status
   IF NEW.user_id <> OLD.user_id OR OLD.status_id <> NEW.status_id THEN
@@ -695,7 +699,7 @@ BEGIN
     IF fn_is_active_status(NEW.status_id) = 1 THEN
       IF fn_user_active_booking_count(NEW.user_id) >= v_max_active THEN
         SIGNAL SQLSTATE '45000'
-          SET MESSAGE_TEXT = 'Maximum active bookings reached (limit: 5). Please complete or cancel an existing booking first.';
+          SET MESSAGE_TEXT = v_message;
       END IF;
     END IF;
   END IF;

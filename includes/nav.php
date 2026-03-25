@@ -30,7 +30,7 @@ $firstName = $_SESSION['first_name'] ?? '';
       <a href="<?= $basePath ?>index.php" class="nav-link <?= $currentPage === 'home' ? 'active' : '' ?>">Home</a>
       <a href="<?= $basePath ?>pages/about.php" class="nav-link <?= $currentPage === 'about' ? 'active' : '' ?>">About</a>
       <a href="<?= $basePath ?>pages/dining-zones/index.php" class="nav-link <?= $currentPage === 'dining-zones' ? 'active' : '' ?>">Dining Zones</a>
-      <?php if ($isLoggedIn): ?>
+      <?php if ($isLoggedIn && $currentPage !== 'book'): ?>
         <a href="<?= $basePath ?>pages/dashboard/index.php" class="nav-link <?= $currentPage === 'dashboard' ? 'active' : '' ?>">Dashboard</a>
       <?php endif; ?>
       <?php if ($roleName === 'admin'): ?>
@@ -83,7 +83,7 @@ $firstName = $_SESSION['first_name'] ?? '';
     <a href="<?= $basePath ?>pages/about.php" class="mobile-menu-link <?= $currentPage === 'about' ? 'active' : '' ?>">About</a>
     <a href="<?= $basePath ?>pages/dining-zones/index.php" class="mobile-menu-link <?= $currentPage === 'dining-zones' ? 'active' : '' ?>">Dining Zones</a>
     <a href="<?= $basePath ?>pages/book.php" class="mobile-menu-link <?= $currentPage === 'book' ? 'active' : '' ?>">Reservations</a>
-    <?php if ($isLoggedIn): ?>
+    <?php if ($isLoggedIn && $currentPage !== 'book'): ?>
       <a href="<?= $basePath ?>pages/dashboard/index.php" class="mobile-menu-link">Dashboard</a>
     <?php endif; ?>
     <?php if ($roleName === 'admin'): ?>

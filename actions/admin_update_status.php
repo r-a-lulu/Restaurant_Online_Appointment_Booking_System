@@ -45,7 +45,7 @@ try {
     set_flash('admin_success', 'Appointment updated successfully.');
     redirect('pages/admin/reservations.php');
 } catch (PDOException $e) {
-    set_flash('admin_error', safe_error_message($e));
+    set_flash('admin_error', admin_booking_error_message($e));
     redirect('pages/admin/reservations.php');
 }
 

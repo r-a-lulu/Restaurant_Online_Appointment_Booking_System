@@ -59,7 +59,7 @@ try {
         $tableParams[':seating_pref'] = $seatingPref;
     }
 
-    $tableSql .= ' ORDER BY t.capacity ASC, t.table_number ASC';
+    $tableSql .= ' ORDER BY t.capacity ASC, t.seating_preference ASC';
 
     $tableStmt = $pdo->prepare($tableSql);
     $tableStmt->execute($tableParams);

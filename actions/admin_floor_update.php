@@ -21,7 +21,7 @@ if (!verify_csrf($csrf)) {
 
 $tableId = isset($_POST['table_id']) ? (int) $_POST['table_id'] : 0;
 $status = clean_string($_POST['status'] ?? '');
-$allowed = ['available', 'reserved', 'occupied'];
+$allowed = ['available', 'occupied'];
 
 if ($tableId <= 0 || !in_array($status, $allowed, true)) {
     header('Content-Type: application/json');
@@ -39,5 +39,5 @@ try {
     echo json_encode(['ok' => true]);
 } catch (PDOException $e) {
     header('Content-Type: application/json');
-    echo json_encode(['error' => safe_error_message($e)]);
+    echo json_encode(['error' => admin_booking_error_message($e)]);
 }

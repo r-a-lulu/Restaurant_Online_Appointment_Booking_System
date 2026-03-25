@@ -104,7 +104,7 @@ try {
                AND (t.current_status IS NULL OR t.current_status = "available")
                AND (:seating_preference = "" OR t.seating_preference = :seating_preference)
                AND fn_is_slot_available(:appointment_date, :start_time, :end_time, t.table_id, :zone_id_fn, NULL) = 1
-             ORDER BY t.capacity ASC, t.table_number ASC
+             ORDER BY t.capacity ASC, t.seating_preference ASC
              LIMIT 1'
         );
         $autoStmt->execute([

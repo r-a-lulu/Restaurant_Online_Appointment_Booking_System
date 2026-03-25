@@ -76,7 +76,7 @@ include '../../includes/header.php';
             <h1 class="dashboard-page-title">Welcome back, <?= e($_SESSION['first_name'] ?? 'Guest') ?>!</h1>
             <p class="dashboard-page-subtitle">Here's an overview of your dining activity.</p>
           </div>
-          <a href="book.php" class="btn btn-primary">
+          <a href="../book.php" class="btn btn-primary">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
             Book a Table
           </a>
@@ -160,7 +160,7 @@ include '../../includes/header.php';
         </div>
         <div class="dash-section-body">
           <div class="quick-actions">
-            <a href="book.php" class="quick-action-card">
+            <a href="../book.php" class="quick-action-card">
               <div class="icon-circle icon-circle-lg">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="14" x2="8" y2="14"/><line x1="12" y1="14" x2="12" y2="14"/><line x1="16" y1="14" x2="16" y2="14"/></svg>
               </div>

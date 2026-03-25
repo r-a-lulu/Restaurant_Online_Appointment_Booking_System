@@ -74,16 +74,10 @@ try {
   $zones = $stmt->fetchAll();
   $stmt->closeCursor();
 
-  $stmt = $pdo->prepare("SELECT t.table_id, t.table_number, t.capacity, dz.zone_id, dz.zone_name, t.seating_preference
+  $stmt = $pdo->prepare("SELECT t.table_id, t.capacity, dz.zone_id, dz.zone_name, t.seating_preference
     FROM `tables` t
     JOIN dining_zones dz ON dz.zone_id = t.zone_id
-    LEFT JOIN appointments a ON a.table_id = t.table_id
-      AND a.appointment_date = CURDATE()
-      AND a.status_id IN (SELECT status_id FROM appointment_status WHERE status_name IN ('pending','confirmed'))
-      AND a.start_time <= CURTIME() AND a.end_time > CURTIME()
-    WHERE (t.current_status IS NULL OR t.current_status = 'available')
-      AND a.appointment_id IS NULL
-    ORDER BY dz.zone_name, t.table_number");
+    ORDER BY dz.zone_name, t.seating_preference, t.capacity");
   $stmt->execute();
   $tables = $stmt->fetchAll();
   $stmt->closeCursor();

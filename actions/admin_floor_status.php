@@ -74,5 +74,5 @@ try {
     echo json_encode(['tables' => $tables, 'zones' => $zoneStats]);
 } catch (PDOException $e) {
     header('Content-Type: application/json');
-    echo json_encode(['error' => safe_error_message($e)]);
+    echo json_encode(['error' => admin_booking_error_message($e)]);
 }

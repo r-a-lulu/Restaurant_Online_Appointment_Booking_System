@@ -150,6 +150,36 @@ function guest_friendly_error_message(\Exception $e, string $fallback = 'Somethi
     }
 
     if (strpos($normalized, 'sqlstate') !== false || $e instanceof PDOException) {
+        if (strpos($normalized, 'party size exceeds table capacity') !== false) {
+            return 'The selected table cannot fit this party size. Please choose another table or reduce the number of guests.';
+        }
+        if (strpos($normalized, 'time slot conflicts with an existing table booking') !== false) {
+            return 'That time is already booked for the selected table. Please choose another time.';
+        }
+        if (strpos($normalized, 'time slot conflicts with an existing zone booking') !== false) {
+            return 'That time is already booked in the selected dining zone. Please choose another time or zone.';
+        }
+        if (strpos($normalized, 'cannot create an appointment in the past') !== false) {
+            return 'Reservations cannot be made in the past. Please choose a future date and time.';
+        }
+        if (strpos($normalized, 'cannot reschedule an appointment to a past date') !== false) {
+            return 'Reservations cannot be moved to a past date. Please choose a future date and time.';
+        }
+        if (strpos($normalized, 'select either a service or an event package') !== false) {
+            return 'Please choose either a service or an event package, not both.';
+        }
+        if (strpos($normalized, 'invalid status transition') !== false) {
+            return 'That reservation status change is not allowed. Please choose a valid next status.';
+        }
+        if (strpos($normalized, 'cannot delete a confirmed appointment') !== false) {
+            return 'Confirmed reservations cannot be deleted. Please cancel it first.';
+        }
+        if (strpos($normalized, 'maximum active bookings') !== false || strpos($normalized, 'limit: 5') !== false) {
+            return 'You already have 5 active reservations. Please complete or cancel one before creating a new booking.';
+        }
+        if (strpos($normalized, 'time slot conflicts') !== false || strpos($normalized, 'conflicts with an existing') !== false) {
+            return 'That time is already booked. Please choose another time.';
+        }
         if (strpos($normalized, 'duplicate') !== false) {
             return 'This reservation already exists or was just submitted. Please review your bookings and try another time if needed.';
         }
@@ -167,6 +197,10 @@ function guest_friendly_error_message(\Exception $e, string $fallback = 'Somethi
 
 function booking_error_message(\Exception $e): string {
     return guest_friendly_error_message($e, 'We could not complete your reservation right now. Please try again or choose another time.');
+}
+
+function admin_booking_error_message(\Exception $e): string {
+    return guest_friendly_error_message($e, 'We could not complete this reservation right now. Please review the details and try again.');
 }
 
 function enforce_session_timeout(): void {

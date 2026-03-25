@@ -97,29 +97,29 @@ VALUES
   ('The Bar')
 ON DUPLICATE KEY UPDATE zone_name = VALUES(zone_name);
 
-INSERT INTO tables (zone_id, table_number, capacity, seating_preference)
-SELECT dz.zone_id, t.table_number, t.capacity, t.seating_preference
+INSERT INTO tables (zone_id, capacity, seating_preference)
+SELECT dz.zone_id, t.capacity, t.seating_preference
 FROM (
-  SELECT 'Main Dining Room' AS zone_name, 'Table 1' AS table_number, 2 AS capacity, 'Window Table' AS seating_preference UNION ALL
-  SELECT 'Main Dining Room', 'Table 2', 2, 'Window Table' UNION ALL
-  SELECT 'Main Dining Room', 'Table 3', 4, 'Banquette' UNION ALL
-  SELECT 'Main Dining Room', 'Table 4', 4, 'Banquette' UNION ALL
-  SELECT 'Main Dining Room', 'Table 5', 6, 'Fireplace' UNION ALL
-  SELECT 'Main Dining Room', 'Table 6', 4, 'Chef\'s View' UNION ALL
-  SELECT 'Main Dining Room', 'Table 7', 2, 'Private Alcove' UNION ALL
-  SELECT 'Main Dining Room', 'Table 8', 8, 'Chandelier' UNION ALL
-  SELECT 'Main Dining Room', 'Table 9', 4, 'Window Table' UNION ALL
-  SELECT 'Main Dining Room', 'Table 10', 2, 'Banquette' UNION ALL
-  SELECT 'The Patio', 'Garden 1', 2, 'Garden View' UNION ALL
-  SELECT 'The Patio', 'Garden 2', 4, 'Garden View' UNION ALL
-  SELECT 'The Patio', 'Fountain', 4, 'Fountain Side' UNION ALL
-  SELECT 'The Patio', 'Pergola', 6, 'Pergola' UNION ALL
-  SELECT 'The Patio', 'Corner', 4, 'Corner Alcove' UNION ALL
-  SELECT 'The Bar', 'Bar 1', 2, 'Bar Counter' UNION ALL
-  SELECT 'The Bar', 'Bar 2', 2, 'Bar Counter' UNION ALL
-  SELECT 'The Bar', 'High Top 1', 4, 'High Tops' UNION ALL
-  SELECT 'The Bar', 'High Top 2', 4, 'High Tops' UNION ALL
-  SELECT 'The Bar', 'Lounge', 6, 'Lounge Booths'
+  SELECT 'Main Dining Room' AS zone_name, 2 AS capacity, 'Window Table' AS seating_preference UNION ALL
+  SELECT 'Main Dining Room', 2, 'Window Table' UNION ALL
+  SELECT 'Main Dining Room', 4, 'Banquette' UNION ALL
+  SELECT 'Main Dining Room', 4, 'Banquette' UNION ALL
+  SELECT 'Main Dining Room', 6, 'Fireplace' UNION ALL
+  SELECT 'Main Dining Room', 4, 'Chef''s View' UNION ALL
+  SELECT 'Main Dining Room', 2, 'Private Alcove' UNION ALL
+  SELECT 'Main Dining Room', 8, 'Chandelier' UNION ALL
+  SELECT 'Main Dining Room', 4, 'Window Table' UNION ALL
+  SELECT 'Main Dining Room', 2, 'Banquette' UNION ALL
+  SELECT 'The Patio', 2, 'Garden View' UNION ALL
+  SELECT 'The Patio', 4, 'Garden View' UNION ALL
+  SELECT 'The Patio', 4, 'Fountain Side' UNION ALL
+  SELECT 'The Patio', 6, 'Pergola' UNION ALL
+  SELECT 'The Patio', 4, 'Corner Alcove' UNION ALL
+  SELECT 'The Bar', 2, 'Bar Counter' UNION ALL
+  SELECT 'The Bar', 2, 'Bar Counter' UNION ALL
+  SELECT 'The Bar', 4, 'High Tops' UNION ALL
+  SELECT 'The Bar', 4, 'High Tops' UNION ALL
+  SELECT 'The Bar', 6, 'Lounge Booths'
 ) AS t
 JOIN dining_zones dz ON dz.zone_name = t.zone_name
 ON DUPLICATE KEY UPDATE capacity = VALUES(capacity), seating_preference = VALUES(seating_preference);
