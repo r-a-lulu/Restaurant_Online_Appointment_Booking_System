@@ -47,7 +47,7 @@
   text-transform: uppercase;
   letter-spacing: var(--tracking-wider);
   margin-bottom: var(--space-4);
-  color: rgba(240, 235, 228, 0.8);
+  color: rgba(240, 235, 228, 0.9);
 }
 
 .footer-links {
@@ -58,12 +58,13 @@
 
 .footer-link {
   font-size: var(--text-sm);
-  color: rgba(240, 235, 228, 0.55);
+  color: rgba(240, 235, 228, 0.7);
   transition: color var(--transition-fast);
 }
 
-.footer-link:hover {
-  color: var(--clr-sidebar-fg);
+.footer-link:hover,
+.footer-link.active {
+  color: var(--clr-accent);
 }
 
 /* Contact info */

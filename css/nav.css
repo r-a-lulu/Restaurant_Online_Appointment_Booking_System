@@ -45,7 +45,7 @@
   letter-spacing: 0.02em;
 }
 
-.site-nav:not(.scrolled) .nav-logo {
+.site-nav:not(.scrolled):not(.solid) .nav-logo {
   color: #fff;
 }
 
@@ -94,16 +94,16 @@
   width: 100%;
 }
 
-.site-nav:not(.scrolled) .nav-link {
+.site-nav:not(.scrolled):not(.solid) .nav-link {
   color: rgba(255, 255, 255, 0.85);
 }
 
-.site-nav:not(.scrolled) .nav-link:hover,
-.site-nav:not(.scrolled) .nav-link.active {
+.site-nav:not(.scrolled):not(.solid) .nav-link:hover,
+.site-nav:not(.scrolled):not(.solid) .nav-link.active {
   color: #fff;
 }
 
-.site-nav:not(.scrolled) .nav-link::after {
+.site-nav:not(.scrolled):not(.solid) .nav-link::after {
   background-color: #fff;
 }
 
@@ -124,21 +124,21 @@
   color: var(--clr-muted-fg);
 }
 
-.site-nav:not(.scrolled) .nav-actions .btn-ghost {
+.site-nav:not(.scrolled):not(.solid) .nav-actions .btn-ghost {
   color: rgba(255, 255, 255, 0.85);
 }
 
-.site-nav:not(.scrolled) .nav-actions .btn-ghost:hover {
+.site-nav:not(.scrolled):not(.solid) .nav-actions .btn-ghost:hover {
   color: #fff;
   background-color: rgba(255, 255, 255, 0.1);
 }
 
-.site-nav:not(.scrolled) .nav-actions .btn-primary {
+.site-nav:not(.scrolled):not(.solid) .nav-actions .btn-primary {
   background-color: #fff;
   color: var(--clr-primary);
 }
 
-.site-nav:not(.scrolled) .nav-actions .btn-primary:hover {
+.site-nav:not(.scrolled):not(.solid) .nav-actions .btn-primary:hover {
   background-color: rgba(255, 255, 255, 0.9);
 }
 
@@ -155,7 +155,7 @@
   background: none;
 }
 
-.site-nav:not(.scrolled) .nav-mobile-toggle {
+.site-nav:not(.scrolled):not(.solid) .nav-mobile-toggle {
   color: #fff;
 }
 

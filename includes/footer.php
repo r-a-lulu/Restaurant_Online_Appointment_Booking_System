@@ -17,10 +17,10 @@
     <div class="footer-column">
       <h4>Quick Links</h4>
       <div class="footer-links">
-        <a href="#" onclick="alert('This page will be built in Phase 2'); return false;" class="footer-link">About Us</a>
-        <a href="#" onclick="alert('This page will be built in Phase 2'); return false;" class="footer-link">Dining Zones</a>
-        <a href="<?= $basePath ?>pages/book.php" class="footer-link">Reservations</a>
-        <a href="<?= $basePath ?>pages/login.php" class="footer-link">Login</a>
+        <a href="<?= $basePath ?>pages/about.php" class="footer-link <?= $currentPage === 'about' ? 'active' : '' ?>">About Us</a>
+        <a href="<?= $basePath ?>pages/dining-zones/index.php" class="footer-link <?= $currentPage === 'dining-zones' ? 'active' : '' ?>">Dining Zones</a>
+        <a href="<?= $basePath ?>pages/book.php" class="footer-link <?= $currentPage === 'book' ? 'active' : '' ?>">Reservations</a>
+        <a href="<?= $basePath ?>pages/login.php" class="footer-link <?= $currentPage === 'login' ? 'active' : '' ?>">Login</a>
       </div>
     </div>
 
