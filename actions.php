@@ -18,8 +18,12 @@ $routes = [
     'user_cancel_booking' => __DIR__ . '/actions/user_cancel_booking.php',
     'admin_update_status' => __DIR__ . '/actions/admin_update_status.php',
     'admin_master_data' => __DIR__ . '/actions/admin_master_data.php',
+    'admin_floor_update' => __DIR__ . '/actions/admin_floor_update.php',
+    'admin_floor_status' => __DIR__ . '/actions/admin_floor_status.php',
+    'admin_reserve_table' => __DIR__ . '/actions/admin_reserve_table.php',
     'update_profile' => __DIR__ . '/actions/update_profile.php',
     'update_password' => __DIR__ . '/actions/update_password.php',
+    'save_settings' => __DIR__ . '/actions/process_settings.php',
 ];
 
 if (!$action || empty($routes[$action])) {
@@ -34,3 +38,4 @@ if (!verify_action_token($action, $_POST['action_token'] ?? '')) {
 
 define('FRONT_CONTROLLER', true);
 require $routes[$action];
+

@@ -24,6 +24,7 @@ $serviceId = isset($_POST['service_id']) && $_POST['service_id'] !== '' ? (int) 
 $packageId = isset($_POST['event_package_id']) && $_POST['event_package_id'] !== '' ? (int) $_POST['event_package_id'] : null;
 $zoneId = isset($_POST['zone_id']) && $_POST['zone_id'] !== '' ? (int) $_POST['zone_id'] : null;
 $tableId = isset($_POST['table_id']) && $_POST['table_id'] !== '' ? (int) $_POST['table_id'] : null;
+$seatingPref = clean_string($_POST['seating_preference'] ?? '');
 $appointmentDate = clean_string($_POST['appointment_date'] ?? '');
 $startTime = clean_string($_POST['start_time'] ?? '');
 $partySize = isset($_POST['party_size']) ? (int) $_POST['party_size'] : 0;
@@ -34,6 +35,18 @@ $addOnQty = $_POST['add_on_qty'] ?? [];
 if (($serviceId && $packageId) || (!$serviceId && !$packageId)) {
     set_flash('booking_error', 'Please choose either a service or a package.');
     redirect('pages/book.php');
+}
+
+if (!$zoneId && $tableId) {
+    try {
+        $zoneLookupPdo = db();
+        $zoneLookupStmt = $zoneLookupPdo->prepare('SELECT zone_id FROM `tables` WHERE table_id = :table_id LIMIT 1');
+        $zoneLookupStmt->execute([':table_id' => $tableId]);
+        $zoneId = (int) $zoneLookupStmt->fetchColumn();
+        $zoneLookupStmt->closeCursor();
+    } catch (PDOException $e) {
+        $zoneId = null;
+    }
 }
 
 if (!$zoneId) {
@@ -81,6 +94,37 @@ $startTimeFormatted = $startDt->format('H:i:s');
 try {
     $pdo = db();
 
+    // Auto-assign a table within the selected zone if none was chosen (zone-only booking UI)
+    if (!$tableId) {
+        $autoStmt = $pdo->prepare(
+            'SELECT t.table_id
+             FROM `tables` t
+             WHERE t.zone_id = :zone_id_filter
+               AND t.capacity >= :party_size
+               AND (t.current_status IS NULL OR t.current_status = "available")
+               AND (:seating_preference = "" OR t.seating_preference = :seating_preference)
+               AND fn_is_slot_available(:appointment_date, :start_time, :end_time, t.table_id, :zone_id_fn, NULL) = 1
+             ORDER BY t.capacity ASC, t.table_number ASC
+             LIMIT 1'
+        );
+        $autoStmt->execute([
+            ':zone_id_filter' => $zoneId,
+            ':party_size' => $partySize,
+            ':seating_preference' => $seatingPref,
+            ':appointment_date' => $appointmentDate,
+            ':start_time' => $startTimeFormatted,
+            ':end_time' => $endTime,
+            ':zone_id_fn' => $zoneId,
+        ]);
+        $tableId = $autoStmt->fetchColumn();
+        $autoStmt->closeCursor();
+
+        if (!$tableId) {
+            set_flash('booking_error', 'No available seats in the selected zone for this time. Please choose another time.');
+            redirect('pages/book.php');
+        }
+    }
+
     $statusStmt = $pdo->prepare('SELECT status_id FROM appointment_status WHERE status_name = :name LIMIT 1');
     $statusStmt->execute([':name' => 'pending']);
     $statusId = $statusStmt->fetchColumn();
@@ -91,12 +135,14 @@ try {
         redirect('pages/book.php');
     }
 
+    $zoneIdForInsert = $tableId ? null : $zoneId;
+
     $proc = $pdo->prepare('CALL sp_appointment_create(:user_id, :service_id, :table_id, :zone_id, :event_package_id, :appointment_date, :start_time, :end_time, :party_size, :status_id, :special_requests)');
     $proc->execute([
         ':user_id' => (int) $_SESSION['user_id'],
         ':service_id' => $serviceId,
         ':table_id' => $tableId,
-        ':zone_id' => $zoneId,
+        ':zone_id' => $zoneIdForInsert,
         ':event_package_id' => $packageId,
         ':appointment_date' => $appointmentDate,
         ':start_time' => $startTimeFormatted,
@@ -150,6 +196,7 @@ try {
     $timeLabel = clean_string($_POST['time_label'] ?? '');
 
     $params = http_build_query([
+        'appointment_id' => (int) $appointmentId,
         'name' => $name,
         'email' => $email,
         'guests' => $partySize,
@@ -166,7 +213,7 @@ try {
         redirect('pages/book-confirmation.php?' . $params);
     }
 } catch (PDOException $e) {
-    set_flash('booking_error', safe_error_message($e));
+    set_flash('booking_error', booking_error_message($e));
     redirect('pages/book.php');
 }
 

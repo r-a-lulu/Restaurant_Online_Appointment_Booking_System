@@ -141,6 +141,34 @@ function safe_error_message(\Exception $e) {
     return $e->getMessage();
 }
 
+function guest_friendly_error_message(\Exception $e, string $fallback = 'Something went wrong. Please try again.'): string {
+    $message = trim((string) $e->getMessage());
+    $normalized = strtolower($message);
+
+    if ($message === '') {
+        return $fallback;
+    }
+
+    if (strpos($normalized, 'sqlstate') !== false || $e instanceof PDOException) {
+        if (strpos($normalized, 'duplicate') !== false) {
+            return 'This reservation already exists or was just submitted. Please review your bookings and try another time if needed.';
+        }
+        if (strpos($normalized, 'foreign key') !== false || strpos($normalized, 'constraint') !== false) {
+            return 'One of the reservation details is no longer available. Please review your selection and try again.';
+        }
+        if (strpos($normalized, 'lock wait timeout') !== false || strpos($normalized, 'deadlock') !== false) {
+            return 'The reservation system is busy right now. Please try again in a moment.';
+        }
+        return $fallback;
+    }
+
+    return $message;
+}
+
+function booking_error_message(\Exception $e): string {
+    return guest_friendly_error_message($e, 'We could not complete your reservation right now. Please try again or choose another time.');
+}
+
 function enforce_session_timeout(): void {
     $timeout = 1800; // 30 minutes
     if (!empty($_SESSION['last_activity']) && (time() - (int) $_SESSION['last_activity']) > $timeout) {
@@ -199,4 +227,42 @@ function rate_limit_clear(string $key): void {
     if (is_file($path)) {
         @unlink($path);
     }
+}
+
+/**
+ * Get a system setting value from the database
+ * @param string $key The setting key
+ * @param string|null $default Default value if setting not found
+ * @return string The setting value or default
+ */
+function get_setting(string $key, ?string $default = null): string {
+    static $cache = [];
+    
+    if (array_key_exists($key, $cache)) {
+        return $cache[$key] ?? $default ?? '';
+    }
+    
+    try {
+        $pdo = db();
+        $stmt = $pdo->prepare("SELECT setting_value FROM system_settings WHERE setting_key = ?");
+        $stmt->execute([$key]);
+        $value = $stmt->fetchColumn();
+        
+        if ($value !== false) {
+            $cache[$key] = $value;
+            return $value;
+        }
+    } catch (PDOException $e) {
+        // Table may not exist or other DB error
+    }
+    
+    return $default ?? '';
+}
+
+/**
+ * Check if maintenance mode is enabled
+ * @return bool True if maintenance mode is on
+ */
+function is_maintenance_mode(): bool {
+    return get_setting('maintenance_mode', '0') === '1';
 }

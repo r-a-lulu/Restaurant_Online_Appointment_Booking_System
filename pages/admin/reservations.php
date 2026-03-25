@@ -110,6 +110,7 @@ include '../../includes/header.php';
                   <td><?= e((string) $r['party_size']) ?></td>
                   <td><span class="badge <?= $badgeClass ?>"><?= e(ucfirst($status)) ?></span></td>
                   <td class="admin-row-actions">
+                    <div class="admin-row-actions-inner">
                     <?php if ($status === 'pending'): ?>
                       <form method="post" action="<?= $basePath ?>actions.php?action=admin_update_status" style="display:inline;">
                         <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
@@ -142,6 +143,7 @@ include '../../includes/header.php';
                     <?php else: ?>
                       <span style="color:var(--clr-muted-fg);font-size:var(--text-xs);">No actions</span>
                     <?php endif; ?>
+                    </div>
                   </td>
                 </tr>
                 <?php endforeach; ?>

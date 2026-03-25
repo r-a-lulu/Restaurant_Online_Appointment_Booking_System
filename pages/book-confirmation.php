@@ -1,8 +1,7 @@
 <?php
 /**
- * Booking Confirmation — Eudaimonia Restaurant
- * Success state with reservation details passed via URL params.
- * Allows guests to view their reservation in the dashboard.
+ * Booking Confirmation � Eudaimonia Restaurant
+ * Success state with reservation details loaded from DB.
  */
 
 $pageTitle   = 'Reservation Confirmed';
@@ -20,6 +19,22 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 $hideLogout = (isset($_GET['source']) && $_GET['source'] === 'dashboard');
+
+$appointment = [];
+$confError = '';
+
+$appointmentId = isset($_GET['appointment_id']) ? (int) $_GET['appointment_id'] : 0;
+if ($appointmentId > 0) {
+  try {
+    $pdo = db();
+    $stmt = $pdo->prepare('SELECT appointment_id, appointment_date, start_time, party_size, status_name, zone_name, customer_name, customer_email, special_requests FROM vw_appointments_detail WHERE appointment_id = :id AND user_id = :uid LIMIT 1');
+    $stmt->execute([':id' => $appointmentId, ':uid' => (int) $_SESSION['user_id']]);
+    $appointment = $stmt->fetch() ?: [];
+    $stmt->closeCursor();
+  } catch (PDOException $e) {
+    $confError = safe_error_message($e);
+  }
+}
 
 include '../includes/header.php';
 include '../includes/nav.php';
@@ -41,11 +56,15 @@ include '../includes/nav.php';
         <h1>Request Received!</h1>
         <p>Thank you for choosing Eudaimonia. Your reservation request has been submitted.</p>
 
-        <span class="confirm-ref" id="conf-ref">EUD-XXXXXXXX</span>
+        <span class="confirm-ref" id="conf-ref">EUD-<?= e((string) ($appointment['appointment_id'] ?? 'XXXXXXXX')) ?></span>
       </div>
 
       <!-- ===== BODY: Reservation Details ===== -->
       <div class="confirm-card-body">
+
+        <?php if ($confError): ?>
+          <div class="auth-alert"><span><?= e($confError) ?></span></div>
+        <?php endif; ?>
 
         <div class="confirm-details">
 
@@ -55,7 +74,7 @@ include '../includes/nav.php';
             </div>
             <div class="confirm-detail-text">
               <span class="confirm-detail-label">Guest</span>
-              <span class="confirm-detail-value" id="conf-name">—</span>
+              <span class="confirm-detail-value" id="conf-name"><?= e($appointment['customer_name'] ?? '') ?></span>
             </div>
           </div>
 
@@ -65,7 +84,7 @@ include '../includes/nav.php';
             </div>
             <div class="confirm-detail-text">
               <span class="confirm-detail-label">Party Size</span>
-              <span class="confirm-detail-value" id="conf-guests">—</span>
+              <span class="confirm-detail-value" id="conf-guests"><?= e((string) ($appointment['party_size'] ?? '')) ?></span>
             </div>
           </div>
 
@@ -75,7 +94,7 @@ include '../includes/nav.php';
             </div>
             <div class="confirm-detail-text">
               <span class="confirm-detail-label">Dining Zone</span>
-              <span class="confirm-detail-value" id="conf-zone">—</span>
+              <span class="confirm-detail-value" id="conf-zone"><?= e($appointment['zone_name'] ?? '') ?></span>
             </div>
           </div>
 
@@ -85,7 +104,7 @@ include '../includes/nav.php';
             </div>
             <div class="confirm-detail-text">
               <span class="confirm-detail-label">Date</span>
-              <span class="confirm-detail-value" id="conf-date">—</span>
+              <span class="confirm-detail-value" id="conf-date"><?= $appointment ? e(date('F j, Y', strtotime($appointment['appointment_date']))) : '' ?></span>
             </div>
           </div>
 
@@ -95,7 +114,7 @@ include '../includes/nav.php';
             </div>
             <div class="confirm-detail-text">
               <span class="confirm-detail-label">Time</span>
-              <span class="confirm-detail-value" id="conf-time">—</span>
+              <span class="confirm-detail-value" id="conf-time"><?= $appointment ? e(date('g:i A', strtotime($appointment['start_time']))) : '' ?></span>
             </div>
           </div>
 
@@ -105,10 +124,27 @@ include '../includes/nav.php';
             </div>
             <div class="confirm-detail-text">
               <span class="confirm-detail-label">Confirmation Email</span>
-              <span class="confirm-detail-value" id="conf-email">—</span>
+              <span class="confirm-detail-value" id="conf-email"><?= e($appointment['customer_email'] ?? '') ?></span>
             </div>
           </div>
 
+          <div class="confirm-detail-row">
+            <div class="confirm-detail-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            </div>
+            <div class="confirm-detail-text">
+              <span class="confirm-detail-label">Status</span>
+              <span class="confirm-detail-value"><?= e(ucfirst($appointment['status_name'] ?? 'pending')) ?></span>
+            </div>
+          </div>
+
+          <div class="confirm-detail-row">
+            <div class="confirm-detail-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a4 4 0 0 1-4 4H7l-4 4V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4Z"/></svg>
+            </div>
+            <div class="confirm-detail-text">
+              <span class="confirm-detail-label">Special Requests</span>
+              <span class="confirm-detail-value"><?= e($appointment['special_requests'] ?? '�') ?></span>
             </div>
           </div>
 

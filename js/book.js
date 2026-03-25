@@ -11,27 +11,28 @@
     currentStep: 1,
     totalSteps: 4,
     // Step 1 – Guest Info
-    firstName:   '',
-    lastName:    '',
-    email:       '',
-    phone:       '',
-    guests:      '',
-    occasion:    '',
-    requests:    '',
-    serviceId:   '',
-    packageId:   '',
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    guests: '',
+    occasion: '',
+    requests: '',
+    serviceId: '',
+    packageId: '',
     // Step 2 – Zone & Spot
-    zone:        '',       // 'patio' | 'dining-room' | 'bar'
-    zoneLabel:   '',
-    zoneId:      '',
-    spot:        '',       // e.g. 'Garden Terrace'
-    tableId:     '',
+    zone: '',       // 'patio' | 'dining-room' | 'bar'
+    zoneLabel: '',
+    zoneId: '',
+    spot: '',       // e.g. 'Garden Terrace'
+    tableId: '',
     // Step 3 – Date & Time
-    date:        '',
-    dateLabel:   '',
-    time:        '',
-    timeValue:   '',
-    timeLabel:   '',
+    date: '',
+    dateLabel: '',
+    time: '',
+    timeValue: '',
+    timeLabel: '',
+    assignedTables: {},
   };
 
   // ─── DOM helpers ──────────────────────────────────────────────────────────
@@ -52,8 +53,8 @@
     $$('.wizard-step').forEach(function (el) {
       var s = parseInt(el.dataset.step, 10);
       el.classList.remove('active', 'completed');
-      if (s === n)     el.classList.add('active');
-      if (s < n)       el.classList.add('completed');
+      if (s === n) el.classList.add('active');
+      if (s < n) el.classList.add('completed');
     });
 
     // Update nav buttons
@@ -73,7 +74,7 @@
       var label = 'Continue';
       if (state.currentStep === 3) label = 'Review Reservation';
       if (state.currentStep === 4) label = 'Confirm Reservation';
-      
+
       var svg = btn.querySelector('svg');
       btn.textContent = label;
       if (svg) btn.appendChild(svg);
@@ -97,12 +98,12 @@
       if (!gs || !gs.value) { showStepError('Please select the number of guests.', gs); return false; }
       // Persist into state
       state.firstName = fn.value.trim();
-      state.lastName  = ln.value.trim();
-      state.email     = em.value.trim();
-      state.phone     = ($('#guest-phone') || {}).value || '';
-      state.guests    = gs.value;
-      state.occasion  = ($('#guest-occasion') || {}).value || '';
-      state.requests  = ($('#guest-requests') || {}).value || '';
+      state.lastName = ln.value.trim();
+      state.email = em.value.trim();
+      state.phone = ($('#guest-phone') || {}).value || '';
+      state.guests = gs.value;
+      state.occasion = ($('#guest-occasion') || {}).value || '';
+      state.requests = ($('#guest-requests') || {}).value || '';
 
       var serviceSel = $('#service-select');
       var packageSel = $('#package-select');
@@ -152,13 +153,13 @@
 
   // ─── Summary sidebar update ───────────────────────────────────────────────
   function updateSummary() {
-    setVal('#sum-name',   state.firstName && state.lastName ? state.firstName + ' ' + state.lastName : null);
-    setVal('#sum-email',  state.email || null);
+    setVal('#sum-name', state.firstName && state.lastName ? state.firstName + ' ' + state.lastName : null);
+    setVal('#sum-email', state.email || null);
     setVal('#sum-guests', state.guests ? state.guests + (state.guests === '1' ? ' guest' : ' guests') : null);
-    setVal('#sum-zone',   state.zoneLabel || null);
-    setVal('#sum-spot',   state.spot || null);
-    setVal('#sum-date',   state.dateLabel || null);
-    setVal('#sum-time',   state.timeLabel || null);
+    setVal('#sum-zone', state.zoneLabel || null);
+    setVal('#sum-spot', state.spot || null);
+    setVal('#sum-date', state.dateLabel || null);
+    setVal('#sum-time', state.timeLabel || null);
     setVal('#sum-occasion', state.occasion || null);
   }
 
@@ -180,11 +181,11 @@
       card.addEventListener('click', function () {
         $$('.zone-select-card').forEach(function (c) { c.classList.remove('selected'); });
         card.classList.add('selected');
-        state.zone      = card.dataset.zone;
+        state.zone = card.dataset.zone;
         state.zoneLabel = card.dataset.label;
-        state.zoneId    = card.dataset.zoneId;
-        state.spot      = '';   // reset spot when zone changes
-        state.tableId   = '';
+        state.zoneId = card.dataset.zoneId;
+        state.spot = '';   // reset spot when zone changes
+        state.tableId = '';
         revealSpotPills(state.zone);
         updateSummary();
         fetchAvailability();
@@ -194,18 +195,18 @@
 
   function revealSpotPills(zone) {
     var container = $('#seating-reveal');
-    var pillsEl   = $('#seating-spot-pills');
-    var titleEl   = $('#seating-reveal-title');
+    var pillsEl = $('#seating-spot-pills');
+    var titleEl = $('#seating-reveal-title');
     var capacityNotice = $('#seating-capacity-notice');
     if (!container || !pillsEl) return;
 
     if (!window.ALL_TABLES) { container.classList.remove('visible'); return; }
 
     var partySize = parseInt(state.guests || 1, 10);
-    
+
     // Find unique seating preferences for the selected zone and adequate capacity
     var availablePrefs = [];
-    window.ALL_TABLES.forEach(function(t) {
+    window.ALL_TABLES.forEach(function (t) {
       if (t.zone_id == state.zoneId && parseInt(t.capacity, 10) >= partySize) {
         if (t.seating_preference && availablePrefs.indexOf(t.seating_preference) === -1) {
           availablePrefs.push(t.seating_preference);
@@ -223,7 +224,7 @@
     pillsEl.innerHTML = '';
     if (titleEl) titleEl.textContent = 'Choose your preferred spot';
     if (capacityNotice) capacityNotice.textContent = 'Options are strictly filtered by your party size in this zone.';
-    
+
     availablePrefs.forEach(function (spot) {
       var pill = document.createElement('button');
       pill.type = 'button';
@@ -265,9 +266,9 @@
     // Set min date to tomorrow (24h lead time)
     var minDate = new Date();
     minDate.setDate(minDate.getDate() + 1);
-    var yyyy  = minDate.getFullYear();
-    var mm    = String(minDate.getMonth() + 1).padStart(2, '0');
-    var dd    = String(minDate.getDate()).padStart(2, '0');
+    var yyyy = minDate.getFullYear();
+    var mm = String(minDate.getMonth() + 1).padStart(2, '0');
+    var dd = String(minDate.getDate()).padStart(2, '0');
     dateEl.min = yyyy + '-' + mm + '-' + dd;
 
     dateEl.addEventListener('change', function () {
@@ -293,7 +294,7 @@
       }
 
       clearStepError();
-      state.date      = dateEl.value;
+      state.date = dateEl.value;
       state.dateLabel = formatDate(dateEl.value);
       updateSummary();
       fetchAvailability();
@@ -315,19 +316,19 @@
       el.addEventListener('input', function () {
         var oldGuests = state.guests;
         state.firstName = ($('#guest-firstname') || {}).value || '';
-        state.lastName  = ($('#guest-lastname')  || {}).value || '';
-        state.email     = ($('#guest-email')     || {}).value || '';
-        state.phone     = ($('#guest-phone')     || {}).value || '';
-        state.guests    = ($('#guest-count')     || {}).value || '';
-        state.occasion  = ($('#guest-occasion')  || {}).value || '';
-        state.serviceId = ($('#service-select')  || {}).value || '';
-        state.packageId = ($('#package-select')  || {}).value || '';
-        
+        state.lastName = ($('#guest-lastname') || {}).value || '';
+        state.email = ($('#guest-email') || {}).value || '';
+        state.phone = ($('#guest-phone') || {}).value || '';
+        state.guests = ($('#guest-count') || {}).value || '';
+        state.occasion = ($('#guest-occasion') || {}).value || '';
+        state.serviceId = ($('#service-select') || {}).value || '';
+        state.packageId = ($('#package-select') || {}).value || '';
+
         if (id === 'guest-count' && oldGuests !== state.guests && state.zone) {
           revealSpotPills(state.zone);
           fetchAvailability();
         }
-        
+
         updateSummary();
       });
     });
@@ -346,6 +347,12 @@
     body.set('csrf_token', csrf);
     body.set('action_token', actionToken);
     body.set('appointment_date', state.date);
+    if (state.guests) {
+      body.set('party_size', state.guests === '8+' ? '8' : state.guests);
+    }
+    if (state.spot) {
+      body.set('seating_preference', state.spot);
+    }
     body.set('zone_id', state.zoneId);
     if (state.spot) body.set('seating_preference', state.spot);
     body.set('party_size', state.guests);
@@ -358,16 +365,19 @@
       .then(function (res) { return res.json(); })
       .then(function (data) {
         if (!data || !data.availability) return;
-        updateTimeSlots(data.availability);
+        state.assignedTables = data.assigned_tables || {};
+        updateTimeSlots(data.availability, state.assignedTables);
       })
-      .catch(function () {});
+      .catch(function () { });
   }
 
-  function updateTimeSlots(availability) {
+  function updateTimeSlots(availability, assignedTables) {
     $$('.time-slot').forEach(function (slot) {
       var time = slot.dataset.time;
       if (!time) return;
-      var isAvailable = availability[time];
+      slot.dataset.assignedTable = assignedTables && assignedTables[time] ? assignedTables[time] : '';
+      // availability[time] is boolean true/false from PHP
+      var isAvailable = availability[time] === true || availability[time] === 1;
       slot.classList.remove('unavailable');
       slot.disabled = false;
       if (!isAvailable) {
@@ -380,23 +390,54 @@
           state.tableId = '';
           updateSummary();
         }
-      } else {
-        slot.dataset.assignedTable = isAvailable;
       }
     });
+
+    // Show/hide "no available seats" message before Review Reservation button
+    var hasAvailableSlots = false;
+    for (var time in availability) {
+      if (availability[time] === true || availability[time] === 1) {
+        hasAvailableSlots = true;
+        break;
+      }
+    }
+
+    var noSeatsMsg = $('#no-seats-message');
+    if (!hasAvailableSlots && state.date) {
+      if (!noSeatsMsg) {
+        noSeatsMsg = document.createElement('div');
+        noSeatsMsg.id = 'no-seats-message';
+        noSeatsMsg.className = 'auth-alert';
+        noSeatsMsg.style.cssText = 'margin: var(--space-4) 0; display: flex; align-items: center; gap: var(--space-2);';
+        noSeatsMsg.innerHTML =
+          '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>' +
+          '<span>No available seats in the selected zone for this time. Please choose another time or zone.</span>';
+
+        // Insert before the wizard-nav in step-3
+        var step3 = $('#step-3');
+        var wizardNav = step3 ? step3.querySelector('.wizard-nav') : null;
+        if (wizardNav && step3) {
+          step3.insertBefore(noSeatsMsg, wizardNav);
+        }
+      } else {
+        noSeatsMsg.style.display = 'flex';
+      }
+    } else if (noSeatsMsg) {
+      noSeatsMsg.style.display = 'none';
+    }
   }
 
   // ─── Review step: populate details ────────────────────────────────────────
   function populateReview() {
     var fields = {
-      '#rev-name':     state.firstName + ' ' + state.lastName,
-      '#rev-email':    state.email,
-      '#rev-phone':    state.phone || '—',
-      '#rev-guests':   state.guests + (state.guests === '1' ? ' guest' : ' guests'),
-      '#rev-zone':     state.zoneLabel,
-      '#rev-spot':     state.spot || '—',
-      '#rev-date':     state.dateLabel,
-      '#rev-time':     state.timeLabel,
+      '#rev-name': state.firstName + ' ' + state.lastName,
+      '#rev-email': state.email,
+      '#rev-phone': state.phone || '—',
+      '#rev-guests': state.guests + (state.guests === '1' ? ' guest' : ' guests'),
+      '#rev-zone': state.zoneLabel,
+      '#rev-spot': state.spot || '—',
+      '#rev-date': state.dateLabel,
+      '#rev-time': state.timeLabel,
       '#rev-occasion': state.occasion || '—',
       '#rev-requests': state.requests || '—',
     };
@@ -404,14 +445,14 @@
       var el = $(sel);
       if (el) el.textContent = fields[sel];
     }
-    
+
     var addonNames = [];
-    $$('input[name="add_on_ids[]"]:checked').forEach(function(cb) {
+    $$('input[name="add_on_ids[]"]:checked').forEach(function (cb) {
       var qtyEl = document.querySelector('input[name="add_on_qty[' + cb.value + ']"]');
       var qty = qtyEl ? parseInt(qtyEl.value || 1, 10) : 1;
       addonNames.push(cb.dataset.name + (qty > 1 ? ' (x' + qty + ')' : ''));
     });
-    
+
     var revAddon = $('#rev-addon');
     if (revAddon) {
       if (addonNames.length > 0) {
@@ -433,6 +474,11 @@
 
       if (prevBtn) {
         clearStepError();
+        // On step 1, go back to dashboard
+        if (state.currentStep === 1) {
+          window.location.href = '/pages/dashboard/index.php';
+          return;
+        }
         goToStep(state.currentStep - 1);
         updateSummary();
         return;
@@ -447,8 +493,9 @@
           if (!form) return;
           setHiddenValue('service-id', state.serviceId);
           setHiddenValue('event-package-id', state.packageId);
-          setHiddenValue('zone-id', state.tableId ? '' : (state.zoneId || ''));
+          setHiddenValue('zone-id', state.zoneId || '');
           setHiddenValue('table-id', state.tableId || '');
+          setHiddenValue('seating-preference', state.spot || '');
           setHiddenValue('appointment-date', state.date);
           setHiddenValue('start-time', state.timeValue);
           setHiddenValue('party-size', state.guests);
@@ -476,7 +523,7 @@
   // ─── Confirmation reference ────────────────────────────────────────────────
   function generateRef() {
     var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-    var ref   = 'EUD-';
+    var ref = 'EUD-';
     for (var i = 0; i < 8; i++) ref += chars[Math.floor(Math.random() * chars.length)];
     return ref;
   }
@@ -490,15 +537,15 @@
   function initConfirmPage() {
     var params = new URLSearchParams(window.location.search);
     var map = {
-      '#conf-name':    'name',
-      '#conf-guests':  'guests',
-      '#conf-zone':    'zone',
-      '#conf-date':    'date',
-      '#conf-time':    'time',
-      '#conf-email':   'email',
-      '#conf-occasion':'occasion',
-      '#conf-ref':     'ref',
-      '#conf-total':   'total',
+      '#conf-name': 'name',
+      '#conf-guests': 'guests',
+      '#conf-zone': 'zone',
+      '#conf-date': 'date',
+      '#conf-time': 'time',
+      '#conf-email': 'email',
+      '#conf-occasion': 'occasion',
+      '#conf-ref': 'ref',
+      '#conf-total': 'total',
     };
     for (var sel in map) {
       var el = $(sel);
@@ -508,8 +555,8 @@
   }
 
   function initAddonCheckboxes() {
-    $$('input[name="add_on_ids[]"]').forEach(function(cb) {
-      cb.addEventListener('change', function() {
+    $$('input[name="add_on_ids[]"]').forEach(function (cb) {
+      cb.addEventListener('change', function () {
         var qtyControls = cb.closest('.checkbox-item').querySelector('input[type="number"]');
         if (qtyControls) {
           if (cb.checked) {

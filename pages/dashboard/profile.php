@@ -33,7 +33,7 @@ include '../../includes/header.php';
   <?php include '../../includes/dashboard-sidebar.php'; ?>
 
   <main class="dashboard-main">
-    <div class="dashboard-content" style="max-width: 800px;">
+    <div class="dashboard-content">
 
       <?php if ($dashError): ?>
         <div class="auth-alert" style="margin-bottom: var(--space-4);">

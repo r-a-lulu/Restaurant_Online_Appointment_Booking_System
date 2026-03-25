@@ -7,9 +7,9 @@
   'use strict';
 
   /* ─── Mobile Sidebar ─── */
-  const layout   = document.querySelector('.dashboard-layout');
-  const toggle   = document.getElementById('sidebarToggle');
-  const overlay  = document.getElementById('sidebarOverlay');
+  const layout = document.querySelector('.dashboard-layout');
+  const toggle = document.getElementById('sidebarToggle');
+  const overlay = document.getElementById('sidebarOverlay');
 
   function openSidebar() {
     layout && layout.classList.add('sidebar-open');
@@ -19,7 +19,7 @@
     layout && layout.classList.remove('sidebar-open');
   }
 
-  toggle  && toggle.addEventListener('click', openSidebar);
+  toggle && toggle.addEventListener('click', openSidebar);
   overlay && overlay.addEventListener('click', closeSidebar);
 
   /* Close on Escape */
@@ -51,10 +51,10 @@
   });
 
   /* ─── Cancel Reservation Modal ─── */
-  const cancelModal   = document.getElementById('cancelModal');
-  const cancelBtns    = document.querySelectorAll('[data-action="cancel-reservation"]');
+  const cancelModal = document.getElementById('cancelModal');
+  const cancelBtns = document.querySelectorAll('[data-action="cancel-reservation"]');
   const cancelConfirm = document.getElementById('cancelConfirm');
-  const cancelBack    = document.querySelectorAll('[data-action="close-cancel-modal"]');
+  const cancelBack = document.querySelectorAll('[data-action="close-cancel-modal"]');
 
   function openCancelModal() {
     cancelModal && cancelModal.classList.add('active');
@@ -111,40 +111,41 @@
       tableId: '', // Set when a time slot is selected (check_availability returns this)
       date: '',
       timeVal: '',
-      partySize: 2
+      partySize: 2,
+      assignedTables: {}
     };
 
     const zoneCards = document.querySelectorAll('.zone-card-select');
     const guestInput = document.getElementById('bookGuests');
     const datePicker = document.getElementById('bookDate');
     const notesInput = document.getElementById('bookNotes');
-    
+
     // Summary Els
     const sumGuests = document.getElementById('summaryGuests');
-    const sumZone   = document.getElementById('summaryZone');
-    const sumSpot   = document.getElementById('summarySpot');
-    const sumDate   = document.getElementById('summaryDate');
-    const sumTime   = document.getElementById('summaryTime');
-    const errorMsg  = document.getElementById('formReviewError');
+    const sumZone = document.getElementById('summaryZone');
+    const sumSpot = document.getElementById('summarySpot');
+    const sumDate = document.getElementById('summaryDate');
+    const sumTime = document.getElementById('summaryTime');
+    const errorMsg = document.getElementById('formReviewError');
 
     function updateSummary() {
       if (sumGuests) sumGuests.textContent = state.partySize + (state.partySize === 1 ? ' Guest' : ' Guests');
       if (sumZone) sumZone.textContent = state.zoneLabel || '—';
       if (sumSpot) sumSpot.textContent = state.seatingPref || '—';
-      
+
       if (sumDate && state.date) {
         const d = new Date(state.date + 'T00:00:00');
         sumDate.textContent = d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
       } else if (sumDate) {
         sumDate.textContent = '—';
       }
-      
+
       if (sumTime) sumTime.textContent = state.timeVal ? formatTime(state.timeVal) : '—';
     }
 
     /* 1. Zone Selection */
-    zoneCards.forEach(function(card) {
-      card.addEventListener('click', function() {
+    zoneCards.forEach(function (card) {
+      card.addEventListener('click', function () {
         zoneCards.forEach(c => c.classList.remove('selected'));
         card.classList.add('selected');
         state.zoneId = card.getAttribute('data-zone-id');
@@ -167,7 +168,7 @@
 
       // Filter DB_TABLES
       const tables = (window.DB_TABLES || []).filter(t => String(t.zone_id) === String(state.zoneId) && parseInt(t.capacity, 10) >= state.partySize);
-      
+
       // Get unique seating preferences
       const prefs = new Set();
       tables.forEach(t => {
@@ -175,7 +176,7 @@
       });
 
       pillsEl.innerHTML = '';
-      
+
       if (prefs.size === 0) {
         pillsEl.innerHTML = '<p style="color:var(--clr-muted-fg); font-size:0.875rem;">No seating options big enough for your party in this zone.</p>';
       } else {
@@ -184,7 +185,7 @@
           pill.type = 'button';
           pill.className = 'seating-spot-pill';
           pill.textContent = pref;
-          pill.addEventListener('click', function() {
+          pill.addEventListener('click', function () {
             pillsEl.querySelectorAll('.seating-spot-pill').forEach(p => p.classList.remove('selected'));
             pill.classList.add('selected');
             state.seatingPref = pref;
@@ -201,10 +202,10 @@
 
     /* 3. Guests & Date */
     if (guestInput) {
-      guestInput.addEventListener('input', function() {
+      guestInput.addEventListener('input', function () {
         state.partySize = parseInt(guestInput.value, 10) || 1;
-        state.seatingPref = ''; 
-        state.tableId = ''; 
+        state.seatingPref = '';
+        state.tableId = '';
         state.timeVal = '';
         renderPills();
         updateSummary();
@@ -214,7 +215,7 @@
     }
 
     if (datePicker) {
-      datePicker.addEventListener('change', function() {
+      datePicker.addEventListener('change', function () {
         state.date = datePicker.value;
         state.timeVal = '';
         state.tableId = '';
@@ -232,7 +233,7 @@
         timeContainer.innerHTML = '<p style="color:var(--clr-muted-fg); font-size:0.875rem;">Please select a zone, seating preference, and date to view available times.</p>';
         return;
       }
-      
+
       const isMonday = new Date(state.date + 'T00:00:00').getDay() === 1;
       if (isMonday) {
         timeContainer.innerHTML = '<p style="color:var(--clr-destructive); font-size:0.875rem;">We are closed on Mondays. Please choose another date.</p>';
@@ -243,7 +244,7 @@
 
       const csrf = document.querySelector('input[name="csrf_token"]').value;
       const actionToken = document.getElementById('dash-check-availability-token').value;
-      
+
       const body = new URLSearchParams();
       body.set('csrf_token', csrf);
       body.set('action_token', actionToken);
@@ -257,54 +258,79 @@
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body: body.toString()
       })
-      .then(res => res.json())
-      .then(data => {
-        if (!data || !data.availability) {
-          timeContainer.innerHTML = '<p style="color:var(--clr-destructive); font-size:0.875rem;">Error loading times.</p>';
-          return;
-        }
-        renderTimeSlots(data.availability);
-      })
-      .catch(err => {
-        timeContainer.innerHTML = '<p style="color:var(--clr-destructive); font-size:0.875rem;">Error communicating with server.</p>';
-      });
+        .then(res => res.json())
+        .then(data => {
+          if (!data || !data.availability) {
+            timeContainer.innerHTML = '<p style="color:var(--clr-destructive); font-size:0.875rem;">Error loading times.</p>';
+            return;
+          }
+          state.assignedTables = data.assigned_tables || {};
+          renderTimeSlots(data.availability, state.assignedTables);
+        })
+        .catch(err => {
+          timeContainer.innerHTML = '<p style="color:var(--clr-destructive); font-size:0.875rem;">Error communicating with server.</p>';
+        });
     }
 
-    function renderTimeSlots(availabilityMap) {
+    function renderTimeSlots(availabilityMap, assignedTables) {
       const timeContainer = document.getElementById('timeSlotContainer');
       timeContainer.innerHTML = '';
-      
+
       const sortedTimes = Object.keys(availabilityMap).sort();
       if (sortedTimes.length === 0) {
         timeContainer.innerHTML = '<p style="color:var(--clr-muted-fg); font-size:0.875rem;">No times available.</p>';
         return;
       }
 
-      sortedTimes.forEach(function(time) {
+      let hasAvailableSlots = false;
+
+      sortedTimes.forEach(function (time) {
         const t = document.createElement('div');
         t.className = 'time-slot';
         t.textContent = formatTime(time);
-        
-        if (!availabilityMap[time]) {
+        t.dataset.assignedTable = assignedTables && assignedTables[time] ? assignedTables[time] : '';
+
+        // availabilityMap[time] is boolean true/false from PHP
+        const isAvailable = availabilityMap[time] === true || availabilityMap[time] === 1;
+
+        if (isAvailable) {
+          hasAvailableSlots = true;
+        }
+
+        if (!isAvailable) {
           t.classList.add('unavailable');
           t.setAttribute('disabled', 'true');
         } else {
-          t.addEventListener('click', function() {
-            timeContainer.querySelectorAll('.time-slot').forEach(function(s) {
+          t.addEventListener('click', function () {
+            timeContainer.querySelectorAll('.time-slot').forEach(function (s) {
               s.classList.remove('selected');
             });
             t.classList.add('selected');
             state.timeVal = time;
-            // availabilityMap[time] contains the active table_id for this slot
-            state.tableId = availabilityMap[time]; 
+            state.tableId = t.dataset.assignedTable || '';
             updateSummary();
           });
         }
         timeContainer.appendChild(t);
       });
-      
-      if (timeContainer.innerHTML === '') {
-          timeContainer.innerHTML = '<p style="color:var(--clr-muted-fg); font-size:0.875rem;">No times available for this selection.</p>';
+
+      // Show/hide "no available seats" message
+      var noSeatsMsg = document.getElementById('dash-no-seats-message');
+      if (!hasAvailableSlots && state.date) {
+        if (!noSeatsMsg) {
+          noSeatsMsg = document.createElement('div');
+          noSeatsMsg.id = 'dash-no-seats-message';
+          noSeatsMsg.className = 'auth-alert';
+          noSeatsMsg.style.cssText = 'margin-top: var(--space-4); display: flex; align-items: center; gap: var(--space-2);';
+          noSeatsMsg.innerHTML =
+            '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>' +
+            '<span>No available seats in the selected zone for this time. Please choose another time or zone.</span>';
+          timeContainer.parentNode.appendChild(noSeatsMsg);
+        } else {
+          noSeatsMsg.style.display = 'flex';
+        }
+      } else if (noSeatsMsg) {
+        noSeatsMsg.style.display = 'none';
       }
     }
 
@@ -322,9 +348,9 @@
     /* 5. Submit Handling */
     const submitBtn = document.getElementById('btnConfirmReservation');
     if (submitBtn) {
-      submitBtn.addEventListener('click', function(e) {
+      submitBtn.addEventListener('click', function (e) {
         e.preventDefault();
-        
+
         // Validation check
         if (!state.zoneId || !state.date || !state.timeVal || !state.tableId || !state.seatingPref) {
           if (errorMsg) {
@@ -337,17 +363,18 @@
         // Fill hidden inputs
         document.getElementById('zone-id').value = state.zoneId;
         document.getElementById('table-id').value = state.tableId;
+        document.getElementById('seating-preference').value = state.seatingPref;
         document.getElementById('start-time').value = state.timeVal;
         document.getElementById('zone-label').value = state.zoneLabel;
         document.getElementById('date-label').value = state.date;
         document.getElementById('time-label').value = formatTime(state.timeVal);
         document.getElementById('hidden-party-size').value = state.partySize;
         document.getElementById('hidden-appointment-date').value = state.date;
-        
+
         let reqNotes = notesInput ? notesInput.value.trim() : '';
         // Prepend seating preference to notes (optional but nice for DB records)
         if (state.seatingPref) {
-           reqNotes = `Seating Preference: ${state.seatingPref} ` + (reqNotes ? `\nNotes: ${reqNotes}` : '');
+          reqNotes = `Seating Preference: ${state.seatingPref} ` + (reqNotes ? `\nNotes: ${reqNotes}` : '');
         }
 
         document.getElementById('hidden-special-requests').value = reqNotes;

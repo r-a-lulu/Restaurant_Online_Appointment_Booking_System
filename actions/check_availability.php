@@ -37,30 +37,107 @@ $timeSlots = [
 
 try {
     $pdo = db();
-    
-    // Call the stored procedure to get availability for all slots at once
-    $stmt = $pdo->prepare('CALL sp_get_available_slots(:date, :zone_id, :party_size, :seating_pref)');
-    $stmt->execute([
-        ':date' => $appointmentDate,
-        ':zone_id' => $zoneId,
-        ':party_size' => $partySize,
-        ':seating_pref' => $seatingPref
-    ]);
-    
-    $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    $stmt->closeCursor();
+
+    $tableSql = "SELECT t.table_id
+      FROM `tables` t
+      WHERE t.capacity >= :party_size
+        AND (t.current_status IS NULL OR t.current_status = 'available')";
+    $tableParams = [
+        ':party_size' => $partySize > 0 ? $partySize : 1,
+    ];
+
+    if ($tableId) {
+        $tableSql .= ' AND t.table_id = :table_id';
+        $tableParams[':table_id'] = $tableId;
+    } else {
+        $tableSql .= ' AND t.zone_id = :zone_id';
+        $tableParams[':zone_id'] = $zoneId;
+    }
+
+    if ($seatingPref !== '') {
+        $tableSql .= ' AND t.seating_preference = :seating_pref';
+        $tableParams[':seating_pref'] = $seatingPref;
+    }
+
+    $tableSql .= ' ORDER BY t.capacity ASC, t.table_number ASC';
+
+    $tableStmt = $pdo->prepare($tableSql);
+    $tableStmt->execute($tableParams);
+    $candidateTables = $tableStmt->fetchAll(PDO::FETCH_COLUMN);
+    $tableStmt->closeCursor();
 
     $availability = [];
-    foreach ($results as $row) {
-        $time = substr($row['slot_time'], 0, 5); // Format 17:00:00 to 17:00
-        $availability[$time] = (int)$row['is_available'] === 1;
+    $assignedTables = [];
+
+    if (empty($candidateTables)) {
+        foreach ($timeSlots as $time) {
+            $availability[$time] = false;
+            $assignedTables[$time] = null;
+        }
+
+        header('Content-Type: application/json');
+        echo json_encode(['availability' => $availability, 'assigned_tables' => $assignedTables]);
+        exit();
+    }
+
+    $placeholders = [];
+    $conflictParams = [':appointment_date' => $appointmentDate];
+    foreach ($candidateTables as $index => $candidateTableId) {
+        $ph = ':table_' . $index;
+        $placeholders[] = $ph;
+        $conflictParams[$ph] = (int) $candidateTableId;
+    }
+
+    $conflictSql = "SELECT a.table_id, a.start_time, a.end_time
+      FROM appointments a
+      WHERE a.appointment_date = :appointment_date
+        AND a.table_id IN (" . implode(', ', $placeholders) . ")
+        AND a.status_id IN (
+          SELECT status_id FROM appointment_status WHERE status_name IN ('pending', 'confirmed')
+        )";
+
+    $conflictStmt = $pdo->prepare($conflictSql);
+    $conflictStmt->execute($conflictParams);
+    $conflicts = $conflictStmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    $conflictStmt->closeCursor();
+
+    $conflictsByTable = [];
+    foreach ($conflicts as $conflict) {
+        $conflictsByTable[(int) $conflict['table_id']][] = [
+            'start' => substr((string) $conflict['start_time'], 0, 8),
+            'end' => substr((string) $conflict['end_time'], 0, 8),
+        ];
+    }
+
+    foreach ($timeSlots as $time) {
+        $slotStart = $time . ':00';
+        $slotEnd = date('H:i:s', strtotime($slotStart . ' +2 hours'));
+        $matchedTableId = null;
+
+        foreach ($candidateTables as $candidateTableId) {
+            $candidateTableId = (int) $candidateTableId;
+            $hasConflict = false;
+            foreach ($conflictsByTable[$candidateTableId] ?? [] as $conflict) {
+                if ($conflict['start'] < $slotEnd && $conflict['end'] > $slotStart) {
+                    $hasConflict = true;
+                    break;
+                }
+            }
+            if (!$hasConflict) {
+                $matchedTableId = $candidateTableId;
+                break;
+            }
+        }
+
+        $availability[$time] = $matchedTableId !== null;
+        $assignedTables[$time] = $matchedTableId;
     }
 
     header('Content-Type: application/json');
-    echo json_encode(['availability' => $availability]);
+    echo json_encode(['availability' => $availability, 'assigned_tables' => $assignedTables]);
 } catch (PDOException $e) {
 
     header('Content-Type: application/json');
-    echo json_encode(['error' => safe_error_message($e)]);
+    echo json_encode(['error' => booking_error_message($e)]);
 }
 

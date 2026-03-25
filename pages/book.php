@@ -74,12 +74,21 @@ try {
   $zones = $stmt->fetchAll();
   $stmt->closeCursor();
 
-  $stmt = $pdo->prepare('SELECT table_id, table_number, capacity, zone_id, zone_name, seating_preference FROM vw_available_tables');
+  $stmt = $pdo->prepare("SELECT t.table_id, t.table_number, t.capacity, dz.zone_id, dz.zone_name, t.seating_preference
+    FROM `tables` t
+    JOIN dining_zones dz ON dz.zone_id = t.zone_id
+    LEFT JOIN appointments a ON a.table_id = t.table_id
+      AND a.appointment_date = CURDATE()
+      AND a.status_id IN (SELECT status_id FROM appointment_status WHERE status_name IN ('pending','confirmed'))
+      AND a.start_time <= CURTIME() AND a.end_time > CURTIME()
+    WHERE (t.current_status IS NULL OR t.current_status = 'available')
+      AND a.appointment_id IS NULL
+    ORDER BY dz.zone_name, t.table_number");
   $stmt->execute();
   $tables = $stmt->fetchAll();
   $stmt->closeCursor();
 } catch (PDOException $e) {
-  $bookingError = safe_error_message($e);
+  $bookingError = booking_error_message($e);
 }
 
 include '../includes/header.php';
@@ -158,6 +167,7 @@ include '../includes/nav.php';
     <input type="hidden" name="event_package_id" id="event-package-id">
     <input type="hidden" name="zone_id" id="zone-id">
     <input type="hidden" name="table_id" id="table-id">
+    <input type="hidden" name="seating_preference" id="seating-preference">
     <input type="hidden" name="appointment_date" id="appointment-date">
     <input type="hidden" name="start_time" id="start-time">
     <input type="hidden" name="party_size" id="party-size">
@@ -273,7 +283,7 @@ include '../includes/nav.php';
         <!-- Navigation -->
         <div class="wizard-nav">
           <div class="wizard-nav-left">
-            <button type="button" class="btn btn-outline" id="btn-prev" disabled>
+            <button type="button" class="btn btn-outline" id="btn-prev">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
               Back
             </button>

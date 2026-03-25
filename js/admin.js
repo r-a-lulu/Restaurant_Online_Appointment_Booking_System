@@ -1,251 +1,200 @@
 (function () {
   'use strict';
 
-  /* ═══════════════════════════════════════════════════════
-     Custom Confirm Dialog — replaces window.confirm()
-     Injected into the DOM on load, reused for every action.
-  ═══════════════════════════════════════════════════════ */
+  /* ------------------------------------------------------------------
+     Floor Status Modal + Polling (10s)
+  ------------------------------------------------------------------ */
+  const floorMeta = document.getElementById('floor-csrf-container');
+  const floorModal = document.getElementById('floorStatusModal');
+  const floorForm = document.getElementById('floorStatusForm');
+  const floorSelect = document.getElementById('floorStatusSelect');
+  const floorTableId = document.getElementById('floorStatusTableId');
+  const floorTableLabel = document.getElementById('floorStatusTableLabel');
 
-  const CONFIRM_HTML = `
-<div class="ac-backdrop" id="adminConfirmBackdrop" role="dialog" aria-modal="true" aria-labelledby="acTitle">
-  <div class="ac-card">
-    <h2 class="ac-title" id="acTitle">Confirm Action</h2>
-    <p  class="ac-message" id="acMessage"></p>
-    <div class="ac-actions">
-      <button class="ac-btn ac-btn-cancel" id="acCancel">Cancel</button>
-      <button class="ac-btn ac-btn-confirm" id="acConfirm">Confirm</button>
-    </div>
-  </div>
-</div>`;
+  const FLOOR_STATUS = ['available', 'reserved', 'occupied'];
 
-  // Inject once
-  const wrapper = document.createElement('div');
-  wrapper.innerHTML = CONFIRM_HTML;
-  document.body.appendChild(wrapper.firstElementChild);
+  /* ------------------------------------------------------------------
+     Segmented Tabs (Admin Panels)
+  ------------------------------------------------------------------ */
+  document.querySelectorAll('[data-admin-tabs]').forEach(function (tabsRoot) {
+    const buttons = tabsRoot.querySelectorAll('[data-tab]');
+    const panels = document.querySelectorAll('.admin-panel[data-panel]');
 
-  const backdrop  = document.getElementById('adminConfirmBackdrop');
-  const acTitle   = document.getElementById('acTitle');
-  const acMessage = document.getElementById('acMessage');
-  const acConfirm = document.getElementById('acConfirm');
-  const acCancel  = document.getElementById('acCancel');
+    function activateTab(key) {
+      buttons.forEach(function (btn) {
+        const isActive = btn.getAttribute('data-tab') === key;
+        btn.classList.toggle('active', isActive);
+        btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+      });
+      panels.forEach(function (panel) {
+        const isActive = panel.getAttribute('data-panel') === key;
+        panel.classList.toggle('active', isActive);
+      });
+    }
 
-  let _resolve = null;
+    buttons.forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        const key = btn.getAttribute('data-tab');
+        if (key) activateTab(key);
+      });
+    });
+  });
 
-  function adminConfirm(opts) {
-    /* opts: { title, message, confirmLabel, action } */
-    acTitle.textContent   = opts.title   || 'Confirm Action';
-    acMessage.textContent = opts.message || 'Are you sure?';
-    acConfirm.textContent = opts.confirmLabel || 'Confirm';
-
-    // Colour the button based on action type
-    const isDanger = (opts.action === 'reject' || opts.action === 'cancel');
-    acConfirm.className   = 'ac-btn '      + (isDanger ? 'ac-btn-danger'  : 'ac-btn-confirm');
-
-    backdrop.classList.add('ac-open');
-    acCancel.focus();
-
-    return new Promise(function (resolve) { _resolve = resolve; });
+  function setTileStatus(tile, status) {
+    FLOOR_STATUS.forEach(function (s) { tile.classList.remove('floor-tile-new--' + s); });
+    tile.classList.add('floor-tile-new--' + status);
+    tile.setAttribute('data-status', status);
+    const lbl = tile.querySelector('.floor-tile-new-status');
+    if (lbl) lbl.textContent = status.charAt(0).toUpperCase() + status.slice(1);
   }
 
-  function closeConfirm(result) {
-    backdrop.classList.remove('ac-open');
-    if (_resolve) { _resolve(result); _resolve = null; }
+  function updatePanelStats(panel) {
+    if (!panel) return;
+    let avail = 0, res = 0, occ = 0;
+    panel.querySelectorAll('.floor-tile-new').forEach(function (t) {
+      const st = t.getAttribute('data-status');
+      if (st === 'available') avail++;
+      if (st === 'reserved') res++;
+      if (st === 'occupied') occ++;
+    });
+    const statVals = panel.querySelectorAll('.floor-stat-val');
+    if (statVals.length >= 3) {
+      statVals[0].textContent = avail;
+      statVals[1].textContent = res;
+      statVals[2].textContent = occ;
+    }
   }
 
-  acConfirm.addEventListener('click', function () { closeConfirm(true);  });
-  acCancel .addEventListener('click', function () { closeConfirm(false); });
-  backdrop .addEventListener('click', function (e) { if (e.target === backdrop) closeConfirm(false); });
+  if (floorMeta) {
+    const csrf = floorMeta.dataset.csrf || '';
+    const actionToken = floorMeta.dataset.actionToken || '';
 
-  document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape' && backdrop.classList.contains('ac-open')) closeConfirm(false);
-  });
+    document.querySelectorAll('.floor-tile-new[data-status]').forEach(function (tile) {
+      tile.addEventListener('click', function () {
+        const tableId = tile.getAttribute('data-table-id');
+        const currentStatus = tile.getAttribute('data-status') || 'available';
+        const STATUS_CYCLE = ['available', 'occupied'];
+        const nextStatus = STATUS_CYCLE[(STATUS_CYCLE.indexOf(currentStatus) + 1) % STATUS_CYCLE.length];
 
-  /* ═══════════════════════════════════════════════════════
-     Mobile Sidebar Toggle
-  ═══════════════════════════════════════════════════════ */
-  const sidebar   = document.getElementById('adminSidebar');
-  const toggleBtn = document.getElementById('adminSidebarToggle');
-  const overlay   = document.getElementById('adminSidebarOverlay');
+        // Update UI immediately and mark as recently changed
+        setTileStatus(tile, nextStatus);
+        tile.setAttribute('data-last-changed', Date.now().toString());
+        updatePanelStats(tile.closest('.admin-panel'));
 
-  function openSidebar()  { sidebar && sidebar.classList.add('open'); overlay && overlay.classList.add('visible'); }
-  function closeSidebar() { sidebar && sidebar.classList.remove('open'); overlay && overlay.classList.remove('visible'); }
+        const body = new URLSearchParams();
+        body.set('csrf_token', csrf);
+        body.set('action_token', actionToken);
+        body.set('table_id', tableId);
+        body.set('status', nextStatus);
 
-  toggleBtn && toggleBtn.addEventListener('click', openSidebar);
-  overlay   && overlay.addEventListener('click', closeSidebar);
-
-  /* ═══════════════════════════════════════════════════════
-     Tab Switching
-  ═══════════════════════════════════════════════════════ */
-  document.querySelectorAll('[data-admin-tabs]').forEach(function (container) {
-    const tabs   = container.querySelectorAll('[data-tab]');
-    // Panels might be siblings, so search within parent
-    const panels = container.parentElement.querySelectorAll('[data-panel]');
-
-    tabs.forEach(function (tab) {
-      tab.addEventListener('click', function () {
-        const target = tab.getAttribute('data-tab');
-        tabs.forEach(function (t) { t.classList.remove('active'); t.setAttribute('aria-selected', 'false'); });
-        tab.classList.add('active');
-        tab.setAttribute('aria-selected', 'true');
-        panels.forEach(function (panel) {
-          panel.classList.toggle('active', panel.getAttribute('data-panel') === target);
-        });
+        fetch('../actions.php?action=admin_floor_update', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: body.toString(),
+        })
+          .then(function (res) { return res.json(); })
+          .then(function (data) {
+            if (!data || !data.ok) {
+              setTileStatus(tile, currentStatus);
+              updatePanelStats(tile.closest('.admin-panel'));
+              console.error('Failed to update status:', data);
+            }
+          })
+          .catch(function (err) {
+            setTileStatus(tile, currentStatus);
+            updatePanelStats(tile.closest('.admin-panel'));
+            console.error('Error updating status:', err);
+          });
       });
     });
-  });
+  }
 
-  /* ═══════════════════════════════════════════════════════
-     Live Search Filter
-  ═══════════════════════════════════════════════════════ */
-  document.querySelectorAll('[data-search-input]').forEach(function (input) {
-    const targetQuery = input.getAttribute('data-search-input');
-    const tables = document.querySelectorAll('#' + targetQuery + ', .' + targetQuery);
-    if (tables.length === 0) return;
-    
-    input.addEventListener('input', function () {
-      const q = input.value.toLowerCase().trim();
-      tables.forEach(table => {
-        table.querySelectorAll('tbody tr').forEach(function (row) {
-          row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
-        });
+  if (floorMeta && floorModal && floorForm) {
+    const csrf = floorMeta.dataset.csrf || '';
+    const actionToken = floorMeta.dataset.actionToken || '';
+    const statusToken = floorMeta.dataset.statusToken || '';
+
+    document.querySelectorAll('.floor-tile-new[data-status]').forEach(function (tile) {
+      tile.addEventListener('click', function () {
+        const tableId = tile.getAttribute('data-table-id');
+        const labelEl = tile.querySelector('.floor-tile-new-number');
+        if (floorTableId) floorTableId.value = tableId || '';
+        if (floorTableLabel) floorTableLabel.textContent = labelEl ? labelEl.textContent.trim() : 'Table';
+        if (floorSelect) floorSelect.value = tile.getAttribute('data-status') || 'available';
+        floorModal.classList.add('open');
       });
     });
-  });
 
-  /* ═══════════════════════════════════════════════════════
-     Modal Open / Close
-  ═══════════════════════════════════════════════════════ */
-  document.querySelectorAll('[data-modal-open]').forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      const modal = document.getElementById(btn.getAttribute('data-modal-open'));
-      modal && modal.classList.add('open');
+    floorForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      const tableId = floorTableId ? floorTableId.value : '';
+      const status = floorSelect ? floorSelect.value : '';
+      if (!tableId || FLOOR_STATUS.indexOf(status) === -1) return;
+
+      const body = new URLSearchParams();
+      body.set('csrf_token', csrf);
+      body.set('action_token', actionToken);
+      body.set('table_id', tableId);
+      body.set('status', status);
+
+      fetch('../actions.php?action=admin_floor_update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: body.toString(),
+      })
+        .then(function (res) { return res.json(); })
+        .then(function (data) {
+          if (data && data.ok) {
+            const tile = document.querySelector('.floor-tile-new[data-table-id="' + tableId + '"]');
+            if (tile) {
+              setTileStatus(tile, status);
+              updatePanelStats(tile.closest('.admin-panel'));
+            }
+            floorModal.classList.remove('open');
+          }
+        })
+        .catch(function () { });
     });
-  });
 
-  document.querySelectorAll('[data-modal-close]').forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      const m = btn.closest('.admin-modal');
-      m && m.classList.remove('open');
-    });
-  });
+    // Poll every 10s
+    setInterval(function () {
+      const body = new URLSearchParams();
+      body.set('csrf_token', csrf);
+      body.set('action_token', statusToken);
+      fetch('../actions.php?action=admin_floor_status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: body.toString(),
+      })
+        .then(function (res) { return res.json(); })
+        .then(function (data) {
+          if (!data || !data.tables) return;
+          const now = Date.now();
+          const PROTECT_MS = 30000; // Don't override manual changes for 30 seconds
 
-  document.querySelectorAll('.admin-modal').forEach(function (modal) {
-    modal.addEventListener('click', function (e) {
-      if (e.target === modal) modal.classList.remove('open');
-    });
-  });
+          data.tables.forEach(function (t) {
+            const tile = document.querySelector('.floor-tile-new[data-table-id="' + t.table_id + '"]');
+            if (!tile) return;
 
-  /* ═══════════════════════════════════════════════════════
-     Approve / Reject — uses custom confirm dialog
-  ═══════════════════════════════════════════════════════ */
-  document.querySelectorAll('[data-confirm-action]').forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      const action = btn.getAttribute('data-confirm-action');
-      const row    = btn.closest('tr');
-      const name   = row
-        ? (row.querySelector('.admin-guest-name') || row.cells[1]).textContent.trim()
-        : 'this reservation';
-
-      const isApprove = action === 'approve';
-      const isReject  = action === 'reject' || action === 'cancel';
-
-      adminConfirm({
-        title:        isApprove ? 'Approve Reservation'  : 'Cancel Reservation',
-        message:      isApprove
-          ? 'Confirm the reservation for ' + name + '? They will be notified by email.'
-          : 'Reject the reservation for ' + name + '? This action cannot be undone.',
-        confirmLabel: isApprove ? 'Yes, Approve' : 'Yes, Reject',
-        action:       action,
-      }).then(function (confirmed) {
-        if (!confirmed) return;
-
-        const id = row.cells[0].textContent.trim();
-        const targetState = isApprove ? 'confirmed' : 'cancelled';
-
-        document.querySelectorAll('.admin-table tbody tr').forEach(function (r) {
-          if (r.cells[0] && r.cells[0].textContent.trim() === id) {
-            
-            // 1. Update Badge
-            const badge = r.querySelector('.badge');
-            if (badge) {
-              badge.className = 'badge badge-' + targetState;
-              badge.textContent = targetState.charAt(0).toUpperCase() + targetState.slice(1);
+            // Skip if tile was recently clicked (manual override)
+            const lastChanged = tile.getAttribute('data-last-changed');
+            if (lastChanged && (now - parseInt(lastChanged)) < PROTECT_MS) {
+              return; // Don't override recent manual changes
             }
 
-            // 2. Remove old action buttons
-            r.querySelectorAll('[data-confirm-action]').forEach(function (b) {
-              b.remove(); // Remove buttons so they can't be clicked again
-            });
+            setTileStatus(tile, t.status);
+          });
+          document.querySelectorAll('.admin-panel').forEach(function (panel) {
+            updatePanelStats(panel);
+          });
+        })
+        .catch(function () { });
+    }, 10000);
+  }
 
-            // 3. Move row to the correct panel if needed (exclude the "All" panel row)
-            const panel = r.closest('[data-panel]');
-            if (panel) {
-              const panelType = panel.getAttribute('data-panel');
-              if (panelType !== 'all' && panelType !== targetState) {
-                  const destTbody = document.querySelector('[data-panel="' + targetState + '"] tbody');
-                  if (destTbody) destTbody.appendChild(r);
-              }
-            }
-          }
-        });
-
-        // 4. Update the tab counters
-        ['pending', 'confirmed', 'cancelled'].forEach(function (key) {
-          const tabCount = document.querySelector('[data-tab="' + key + '"] .admin-tab-count');
-          const tbody = document.querySelector('[data-panel="' + key + '"] tbody');
-          if (tabCount && tbody) {
-             let validRows = 0;
-             tbody.querySelectorAll('tr').forEach(function (tr) {
-                 if (!tr.querySelector('td[colspan]')) validRows++;
-             });
-             tabCount.textContent = '(' + validRows + ')';
-          }
-        });
-      });
-    });
-  });
-
-  /* ═══════════════════════════════════════════════════════
-     Floor Tile Status Toggle
-  ═══════════════════════════════════════════════════════ */
-  const STATUS_CYCLE = ['available', 'reserved', 'occupied'];
-  document.querySelectorAll('.floor-tile-new[data-status]').forEach(function (tile) {
-    tile.addEventListener('click', function () {
-      const current = tile.getAttribute('data-status');
-      const next    = STATUS_CYCLE[(STATUS_CYCLE.indexOf(current) + 1) % STATUS_CYCLE.length];
-      
-      STATUS_CYCLE.forEach(function (s) { tile.classList.remove('floor-tile-new--' + s); });
-      tile.classList.add('floor-tile-new--' + next);
-      tile.setAttribute('data-status', next);
-      
-      const lbl = tile.querySelector('.floor-tile-new-status');
-      if (lbl) {
-         lbl.textContent = next === 'available' ? 'Walk-in' : (next === 'reserved' ? '6:30 PM' : 'VIP');
-      }
-
-      // Update the panel's top summary stats live!
-      const panel = tile.closest('.admin-panel');
-      if (panel) {
-        let avail = 0, res = 0, occ = 0;
-        panel.querySelectorAll('.floor-tile-new').forEach(function(t) {
-          const st = t.getAttribute('data-status');
-          if (st === 'available') avail++;
-          if (st === 'reserved') res++;
-          if (st === 'occupied') occ++;
-        });
-        const statVals = panel.querySelectorAll('.floor-stat-val');
-        if (statVals.length >= 3) {
-          statVals[0].textContent = avail;
-          statVals[1].textContent = res;
-          statVals[2].textContent = occ;
-        }
-      }
-    });
-  });
-
-  /* ═══════════════════════════════════════════════════════
+  /* ------------------------------------------------------------------
      Pre-fill Reservation Detail Modal from table row
-  ═══════════════════════════════════════════════════════ */
+  ------------------------------------------------------------------ */
   document.querySelectorAll('[data-open-detail]').forEach(function (btn) {
     btn.addEventListener('click', function () {
       const modal = document.getElementById('reservationDetailModal');
@@ -254,20 +203,19 @@
       if (!row) { modal.classList.add('open'); return; }
 
       const cells = row.cells;
-      const set   = function (id, val) { const el = modal.querySelector('#detail' + id); if (el) el.textContent = val; };
+      const set = function (id, val) { const el = modal.querySelector('#detail' + id); if (el) el.textContent = val; };
 
-      set('Id',      cells[0] ? cells[0].textContent.trim() : '—');
-      set('Guest',   cells[1] ? cells[1].textContent.trim() : '—');
-      set('Zone',    cells[2] ? cells[2].textContent.trim() : '—');
-      set('Seating', cells[3] ? cells[3].textContent.trim() : '—');
-      set('Date',    cells[4] ? cells[4].textContent.trim() : '—');
-      set('Time',    cells[5] ? cells[5].textContent.trim() : '—');
-      set('Guests',  cells[6] ? cells[6].textContent.trim() : '—');
-
-      const badgeEl  = row.querySelector('.badge');
+      set('Id', cells[0] ? cells[0].textContent.trim() : '-');
+      set('Guest', cells[1] ? cells[1].textContent.trim() : '-');
+      set('Zone', cells[2] ? cells[2].textContent.trim() : '-');
+      set('Seating', cells[3] ? cells[3].textContent.trim() : '-');
+      set('Date', cells[4] ? cells[4].textContent.trim() : '-');
+      set('Time', cells[5] ? cells[5].textContent.trim() : '-');
+      set('Guests', cells[6] ? cells[6].textContent.trim() : '-');
+      const badgeEl = row.querySelector('.badge');
       const statusEl = modal.querySelector('#detailStatus');
       if (statusEl && badgeEl) {
-        statusEl.className   = badgeEl.className;
+        statusEl.className = badgeEl.className;
         statusEl.textContent = badgeEl.textContent;
       }
 
@@ -275,31 +223,31 @@
     });
   });
 
-  /* ═══════════════════════════════════════════════════════
+  /* ------------------------------------------------------------------
      Guest Profile Modal Dynamic Population & Edit
-  ═══════════════════════════════════════════════════════ */
-  document.querySelectorAll('.view-profile-btn').forEach(function(btn) {
-    btn.addEventListener('click', function() {
+  ------------------------------------------------------------------ */
+  document.querySelectorAll('.view-profile-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
       const row = btn.closest('tr');
       if (!row) return;
-      
+
       const index = row.getAttribute('data-user-index');
       const name = row.querySelector('.guest-name').textContent.trim();
       const statusBadge = row.querySelector('.guest-status-badge');
       const statusText = statusBadge ? statusBadge.textContent.trim() : 'Regular';
-      
+
       const initials = name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-      
+
       const modal = document.getElementById('userProfileModal');
       if (!modal) return;
-      
+
       modal.setAttribute('data-active-user-index', index);
-      
+
       const modalName = modal.querySelector('#modalGuestName');
       const modalInitials = modal.querySelector('#modalGuestInitials');
       const modalStatus = modal.querySelector('#modalGuestStatus');
       const selectStatus = modal.querySelector('#guestStatusSelect');
-      
+
       if (modalName) modalName.textContent = name;
       if (modalInitials) modalInitials.textContent = initials;
       if (modalStatus) {
@@ -309,10 +257,10 @@
       if (selectStatus) {
         selectStatus.value = statusText;
       }
-      
+
       const editBlock = document.getElementById('guestStatusEdit');
       const viewBlock = document.getElementById('guestStatusView');
-      if(editBlock && viewBlock) {
+      if (editBlock && viewBlock) {
         editBlock.style.display = 'none';
         viewBlock.style.display = 'flex';
       }
@@ -322,32 +270,32 @@
   const editStatusBtn = document.getElementById('editGuestStatusBtn');
   const saveStatusBtn = document.getElementById('saveGuestStatusBtn');
   const cancelStatusBtn = document.getElementById('cancelGuestStatusBtn');
-  
+
   if (editStatusBtn && saveStatusBtn && cancelStatusBtn) {
     const viewMode = document.getElementById('guestStatusView');
     const editMode = document.getElementById('guestStatusEdit');
     const statusSelect = document.getElementById('guestStatusSelect');
     const modalStatus = document.getElementById('modalGuestStatus');
     const modal = document.getElementById('userProfileModal');
-    
-    editStatusBtn.addEventListener('click', function() {
+
+    editStatusBtn.addEventListener('click', function () {
       viewMode.style.display = 'none';
       editMode.style.display = 'flex';
     });
-    
-    cancelStatusBtn.addEventListener('click', function() {
+
+    cancelStatusBtn.addEventListener('click', function () {
       editMode.style.display = 'none';
       viewMode.style.display = 'flex';
       statusSelect.value = modalStatus.textContent.trim();
     });
-    
-    saveStatusBtn.addEventListener('click', function() {
+
+    saveStatusBtn.addEventListener('click', function () {
       const newStatus = statusSelect.value;
       const lowerStatus = newStatus.toLowerCase();
-      
+
       modalStatus.textContent = newStatus;
       modalStatus.className = 'badge badge-' + lowerStatus + ' guest-status-badge';
-      
+
       const activeIndex = modal.getAttribute('data-active-user-index');
       if (activeIndex !== null) {
         const row = document.querySelector('tr[data-user-index="' + activeIndex + '"]');
@@ -359,34 +307,34 @@
           }
         }
       }
-      
+
       editMode.style.display = 'none';
       viewMode.style.display = 'flex';
     });
   }
 
-  /* ═══════════════════════════════════════════════════════
+  /* ------------------------------------------------------------------
      Add New Table Flow (Floor Management)
-  ═══════════════════════════════════════════════════════ */
+  ------------------------------------------------------------------ */
   const addTableForm = document.getElementById('addTableForm');
   if (addTableForm) {
     addTableForm.addEventListener('submit', function (e) {
       e.preventDefault();
-      
+
       const zone = document.getElementById('newTableZone').value;
       const name = document.getElementById('newTableName').value;
       const seats = document.getElementById('newTableSeats').value;
-      
+
       const panel = document.querySelector('[data-panel="' + zone + '"]');
       const grid = panel ? panel.querySelector('.floor-grid-new') : null;
-      
+
       if (grid) {
         // Create the new tile element
         const tile = document.createElement('div');
         tile.className = 'floor-tile-new floor-tile-new--available';
         tile.setAttribute('data-status', 'available');
         tile.setAttribute('tabindex', '0');
-        
+
         tile.innerHTML = `
           <div class="floor-tile-new-top">
             <span class="floor-tile-new-number">${name}</span>
@@ -396,27 +344,30 @@
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
             ${seats} seats
           </div>
-          <div class="floor-tile-new-status">Walk-in</div>
+          <div class="floor-tile-new-status">Available</div>
         `;
-        
+
         // Attach the critical click handler so the new tile behaves like natively rendered ones
         tile.addEventListener('click', function () {
-          const current = tile.getAttribute('data-status');
-          const STATUS_CYCLE = ['available', 'reserved', 'occupied'];
-          const next = STATUS_CYCLE[(STATUS_CYCLE.indexOf(current) + 1) % STATUS_CYCLE.length];
-          
+          const tableId = tile.getAttribute('data-table-id');
+          const currentStatus = tile.getAttribute('data-status') || 'available';
+          const STATUS_CYCLE = ['available', 'occupied'];
+          const nextStatus = STATUS_CYCLE[(STATUS_CYCLE.indexOf(currentStatus) + 1) % STATUS_CYCLE.length];
+
+          // Update UI immediately
           STATUS_CYCLE.forEach(function (s) { tile.classList.remove('floor-tile-new--' + s); });
-          tile.classList.add('floor-tile-new--' + next);
-          tile.setAttribute('data-status', next);
-          
+          tile.classList.add('floor-tile-new--' + nextStatus);
+          tile.setAttribute('data-status', nextStatus);
+
           const lbl = tile.querySelector('.floor-tile-new-status');
           if (lbl) {
-             lbl.textContent = next === 'available' ? 'Walk-in' : (next === 'reserved' ? '6:30 PM' : 'VIP');
+            lbl.textContent = nextStatus.charAt(0).toUpperCase() + nextStatus.slice(1);
           }
 
+          // Update stats
           if (panel) {
             let avail = 0, res = 0, occ = 0;
-            panel.querySelectorAll('.floor-tile-new').forEach(function(t) {
+            panel.querySelectorAll('.floor-tile-new').forEach(function (t) {
               const st = t.getAttribute('data-status');
               if (st === 'available') avail++;
               if (st === 'reserved') res++;
@@ -429,14 +380,35 @@
               statVals[2].textContent = occ;
             }
           }
+
+          // Save to database if we have the CSRF token
+          const floorMeta = document.getElementById('floor-csrf-container');
+          if (floorMeta && tableId) {
+            const csrf = floorMeta.dataset.csrf || '';
+            const actionToken = floorMeta.dataset.actionToken || '';
+
+            const body = new URLSearchParams();
+            body.set('csrf_token', csrf);
+            body.set('action_token', actionToken);
+            body.set('table_id', tableId);
+            body.set('status', nextStatus);
+
+            fetch('../actions.php?action=admin_floor_update', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+              body: body.toString(),
+            })
+              .then(function (res) { return res.json(); })
+              .catch(function () { });
+          }
         });
-        
+
         // Render it to the DOM
         grid.appendChild(tile);
-        
+
         // Instantly increment the parent panel's Available counter since new tables are always Available
         let avail = 0;
-        panel.querySelectorAll('.floor-tile-new').forEach(function(t) {
+        panel.querySelectorAll('.floor-tile-new').forEach(function (t) {
           if (t.getAttribute('data-status') === 'available') avail++;
         });
         const statVals = panel.querySelectorAll('.floor-stat-val');
@@ -444,7 +416,7 @@
           statVals[0].textContent = avail;
         }
       }
-      
+
       // Clear up the form and shut the modal safely
       addTableForm.reset();
       const modal = document.getElementById('addTableModal');
@@ -452,4 +424,72 @@
     });
   }
 
+  /* ------------------------------------------------------------------
+     Reserve Table Modal - User lookup and auto-fill
+  ------------------------------------------------------------------ */
+  const reserveUserId = document.getElementById('reserveUserId');
+  const guestInfoFields = document.getElementById('guestInfoFields');
+  const reserveFirstName = document.getElementById('reserveFirstName');
+  const reserveLastName = document.getElementById('reserveLastName');
+  const reserveEmail = document.getElementById('reserveEmail');
+  const reservePhone = document.getElementById('reservePhone');
+  const reserveZone = document.getElementById('reserveZone');
+  const reserveTable = document.getElementById('reserveTable');
+
+  // Store tables data for zone-based filtering
+  window.ALL_TABLES = window.ALL_TABLES || {};
+
+  if (reserveUserId && guestInfoFields) {
+    reserveUserId.addEventListener('change', function () {
+      const selected = reserveUserId.options[reserveUserId.selectedIndex];
+      const userId = selected.value;
+
+      if (userId === 'guest') {
+        // Walk-in guest - show empty fields for manual entry
+        guestInfoFields.style.display = 'block';
+        reserveFirstName.value = '';
+        reserveLastName.value = '';
+        reserveEmail.value = '';
+        reservePhone.value = '';
+        reserveFirstName.required = true;
+        reserveLastName.required = true;
+        reserveEmail.required = true;
+      } else if (userId) {
+        // Registered user - auto-fill from data attributes
+        guestInfoFields.style.display = 'block';
+        reserveFirstName.value = selected.dataset.firstName || '';
+        reserveLastName.value = selected.dataset.lastName || '';
+        reserveEmail.value = selected.dataset.email || '';
+        reservePhone.value = selected.dataset.phone || '';
+        reserveFirstName.required = true;
+        reserveLastName.required = true;
+        reserveEmail.required = true;
+      } else {
+        // No selection
+        guestInfoFields.style.display = 'none';
+      }
+    });
+  }
+
+  if (reserveZone && reserveTable) {
+    reserveZone.addEventListener('change', function () {
+      const zoneKey = reserveZone.value;
+      reserveTable.innerHTML = '<option value="">-- Select table --</option>';
+      reserveTable.disabled = true;
+
+      if (!zoneKey || !window.ALL_TABLES[zoneKey]) return;
+
+      const tables = window.ALL_TABLES[zoneKey];
+      tables.forEach(function (t) {
+        const opt = document.createElement('option');
+        opt.value = t.table_id;
+        opt.textContent = t.label + ' (' + t.cap + ' seats)';
+        reserveTable.appendChild(opt);
+      });
+      reserveTable.disabled = false;
+    });
+  }
+
 })();
+
+
