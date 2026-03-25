@@ -15,7 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $csrf = $_POST['csrf_token'] ?? '';
 if (!verify_csrf($csrf)) {
     set_flash('admin_error', 'Invalid security token.');
-    redirect('../pages/admin/master-data.php');
+    redirect('pages/admin/master-data.php');
 }
 
 $type = clean_string($_POST['type'] ?? '');
@@ -141,7 +141,7 @@ try {
     }
 
     set_flash('admin_success', 'Changes saved successfully.');
-    redirect('../pages/admin/master-data.php');
+    redirect('pages/admin/master-data.php');
 } catch (PDOException $e) {
     set_flash('admin_error', safe_error_message($e));
     redirect('../pages/admin/master-data.php');

@@ -70,8 +70,10 @@
       btn.disabled = state.currentStep === 1;
     });
     $$('#btn-next, [data-action="next"]').forEach(function (btn) {
-      // Preserve the arrow icon inside the button
-      var label = state.currentStep === state.totalSteps ? 'Confirm Reservation' : 'Continue';
+      var label = 'Continue';
+      if (state.currentStep === 3) label = 'Review Reservation';
+      if (state.currentStep === 4) label = 'Confirm Reservation';
+      
       var svg = btn.querySelector('svg');
       btn.textContent = label;
       if (svg) btn.appendChild(svg);
@@ -403,30 +405,12 @@
       if (el) el.textContent = fields[sel];
     }
     
-    // Calculate total
-    var total = 0;
-    var serviceEl = $('#service-select');
-    if (serviceEl && serviceEl.selectedIndex > 0) {
-      total += parseFloat(serviceEl.options[serviceEl.selectedIndex].dataset.price || 0);
-    }
-    var packageEl = $('#package-select');
-    if (packageEl && packageEl.selectedIndex > 0) {
-      total += parseFloat(packageEl.options[packageEl.selectedIndex].dataset.price || 0);
-    }
-    
     var addonNames = [];
     $$('input[name="add_on_ids[]"]:checked').forEach(function(cb) {
-      var price = parseFloat(cb.dataset.price || 0);
       var qtyEl = document.querySelector('input[name="add_on_qty[' + cb.value + ']"]');
       var qty = qtyEl ? parseInt(qtyEl.value || 1, 10) : 1;
-      total += (price * qty);
       addonNames.push(cb.dataset.name + (qty > 1 ? ' (x' + qty + ')' : ''));
     });
-    
-    var revTotal = $('#rev-total');
-    if (revTotal) {
-      revTotal.textContent = '$' + total.toFixed(2);
-    }
     
     var revAddon = $('#rev-addon');
     if (revAddon) {

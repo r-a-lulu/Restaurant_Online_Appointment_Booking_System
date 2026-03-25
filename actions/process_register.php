@@ -9,14 +9,14 @@ require_once __DIR__ . '/../includes/security.php';
 start_secure_session();
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    header("Location: ../pages/register.php");
+    header("Location: pages/register.php");
     exit;
 }
 
 $csrf = $_POST['csrf_token'] ?? '';
 if (!verify_csrf($csrf)) {
     set_flash('error', 'Invalid security token. Please try again.');
-    header("Location: ../pages/register.php");
+    header("Location: pages/register.php");
     exit;
 }
 
@@ -35,7 +35,7 @@ if (empty($firstName) || empty($lastName) || empty($email) || empty($password)) 
         'email' => $email,
         'phone' => $phone
     ]);
-    header("Location: ../pages/register.php");
+    header("Location: pages/register.php");
     exit;
 }
 
@@ -47,7 +47,7 @@ if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         'email' => $email,
         'phone' => $phone
     ]);
-    header("Location: ../pages/register.php");
+    header("Location: pages/register.php");
     exit;
 }
 
@@ -59,7 +59,7 @@ if (strlen($password) < 8) {
         'email' => $email,
         'phone' => $phone
     ]);
-    header("Location: ../pages/register.php");
+    header("Location: pages/register.php");
     exit;
 }
 
@@ -71,7 +71,7 @@ if ($password !== $confirm) {
         'email' => $email,
         'phone' => $phone
     ]);
-    header("Location: ../pages/register.php");
+    header("Location: pages/register.php");
     exit;
 }
 
@@ -80,7 +80,7 @@ $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
 $rateKey = 'register:' . $ip;
 if (rate_limit_exceeded($rateKey, 5, 3600)) {
     set_flash('error', 'Too many registration attempts. Please try again later.');
-    header("Location: ../pages/register.php");
+    header("Location: pages/register.php");
     exit;
 }
 
@@ -98,7 +98,7 @@ try {
             'email' => $email,
             'phone' => $phone
         ]);
-        header("Location: ../pages/register.php");
+        header("Location: pages/register.php");
         exit;
     }
     $stmt->closeCursor();
@@ -122,7 +122,7 @@ try {
             'email' => $email,
             'phone' => $phone
         ]);
-        header("Location: ../pages/register.php");
+        header("Location: pages/register.php");
         exit;
     }
 
@@ -135,7 +135,7 @@ try {
     rate_limit_clear($rateKey);
 
     set_flash('success', 'Registration successful! You may now sign in.');
-    header("Location: ../pages/login.php");
+    header("Location: pages/login.php");
     exit;
 
 } catch (PDOException $e) {
@@ -146,6 +146,6 @@ try {
         'email' => $email,
         'phone' => $phone
     ]);
-    header("Location: ../pages/register.php");
+    header("Location: pages/register.php");
     exit;
 }

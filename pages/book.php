@@ -510,10 +510,6 @@ include '../includes/nav.php';
                 <span class="review-row-key">Add-ons</span>
                 <span class="review-row-val" id="rev-addon">—</span>
               </div>
-              <div class="review-row">
-                <span class="review-row-key">Estimated Total</span>
-                <span class="review-row-val" id="rev-total">—</span>
-              </div>
             </div>
           </div>
 

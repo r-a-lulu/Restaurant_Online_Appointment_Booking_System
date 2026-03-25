@@ -9,14 +9,14 @@ require_once __DIR__ . '/../includes/security.php';
 start_secure_session();
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    header("Location: ../pages/login.php");
+    header("Location: pages/login.php");
     exit;
 }
 
 $csrf = $_POST['csrf_token'] ?? '';
 if (!verify_csrf($csrf)) {
     set_flash('error', 'Invalid security token. Please try again.');
-    header("Location: ../pages/login.php");
+    header("Location: pages/login.php");
     exit;
 }
 
@@ -25,7 +25,7 @@ $password = $_POST['password'] ?? '';
 
 if (empty($email) || empty($password)) {
     set_flash('error', 'Please enter your email and password.');
-    header("Location: ../pages/login.php");
+    header("Location: pages/login.php");
     exit;
 }
 
@@ -34,7 +34,7 @@ $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
 $rateKey = 'login:' . $ip . ':' . strtolower($email);
 if (rate_limit_exceeded($rateKey, 5, 900)) {
     set_flash('error', 'Too many login attempts. Please try again in 15 minutes.');
-    header("Location: ../pages/login.php");
+    header("Location: pages/login.php");
     exit;
 }
 
@@ -49,7 +49,7 @@ try {
     if ($user && password_verify($password, $user['password_hash'])) {
         if (!$user['is_active']) {
             set_flash('error', 'Your account has been deactivated. Please contact support.');
-            header("Location: ../pages/login.php");
+            header("Location: pages/login.php");
             exit;
         }
 
@@ -72,21 +72,21 @@ try {
 
         // Redirect based on role
         if ($roleName === 'admin') {
-            header("Location: ../pages/admin/index.php");
+            header("Location: pages/admin/index.php");
         } else {
-            header("Location: ../pages/dashboard/index.php");
+            header("Location: pages/dashboard/index.php");
         }
         exit;
         
     } else {
         rate_limit_hit($rateKey, 900);
         set_flash('error', 'Invalid email or password.');
-        header("Location: ../pages/login.php");
+        header("Location: pages/login.php");
         exit;
     }
 
 } catch (PDOException $e) {
     set_flash('error', 'Authentication service unavailable: ' . safe_error_message($e));
-    header("Location: ../pages/login.php");
+    header("Location: pages/login.php");
     exit;
 }

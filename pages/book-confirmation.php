@@ -109,13 +109,6 @@ include '../includes/nav.php';
             </div>
           </div>
 
-          <div class="confirm-detail-row">
-            <div class="confirm-detail-icon">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="M6 8h12M6 12h12M6 16h6"/></svg>
-            </div>
-            <div class="confirm-detail-text">
-              <span class="confirm-detail-label">Total</span>
-              <span class="confirm-detail-value" id="conf-total">—</span>
             </div>
           </div>
 

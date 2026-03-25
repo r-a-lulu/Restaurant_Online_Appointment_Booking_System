@@ -15,13 +15,13 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $csrf = $_POST['csrf_token'] ?? '';
 if (!verify_csrf($csrf)) {
     set_flash('dash_error', 'Invalid security token.');
-    redirect('../pages/dashboard/reservations.php');
+    redirect('pages/dashboard/reservations.php');
 }
 
 $appointmentId = isset($_POST['appointment_id']) ? (int) $_POST['appointment_id'] : 0;
 if ($appointmentId <= 0) {
     set_flash('dash_error', 'Invalid reservation.');
-    redirect('../pages/dashboard/reservations.php');
+    redirect('pages/dashboard/reservations.php');
 }
 
 try {
@@ -33,7 +33,7 @@ try {
 
     if (!$appt) {
         set_flash('dash_error', 'Reservation not found.');
-        redirect('../pages/dashboard/reservations.php');
+        redirect('pages/dashboard/reservations.php');
     }
 
     $statusStmt = $pdo->prepare('SELECT status_name FROM appointment_status WHERE status_id = :id LIMIT 1');
@@ -43,7 +43,7 @@ try {
 
     if (!in_array($statusName, ['pending', 'confirmed'], true)) {
         set_flash('dash_error', 'This reservation cannot be cancelled.');
-        redirect('../pages/dashboard/reservations.php');
+        redirect('pages/dashboard/reservations.php');
     }
 
     $proc = $pdo->prepare('CALL sp_update_appointment_status(:appointment_id, :status_name)');
@@ -51,9 +51,9 @@ try {
     $proc->closeCursor();
 
     set_flash('dash_success', 'Reservation cancelled.');
-    redirect('../pages/dashboard/reservations.php');
+    redirect('pages/dashboard/reservations.php');
 } catch (PDOException $e) {
     set_flash('dash_error', safe_error_message($e));
-    redirect('../pages/dashboard/reservations.php');
+    redirect('pages/dashboard/reservations.php');
 }
 

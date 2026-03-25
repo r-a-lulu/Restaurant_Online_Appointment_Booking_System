@@ -15,7 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $csrf = $_POST['csrf_token'] ?? '';
 if (!verify_csrf($csrf)) {
     set_flash('admin_error', 'Invalid security token.');
-    redirect('../pages/admin/reservations.php');
+    redirect('pages/admin/reservations.php');
 }
 
 $appointmentId = isset($_POST['appointment_id']) ? (int) $_POST['appointment_id'] : 0;
@@ -30,7 +30,7 @@ $map = [
 
 if ($appointmentId <= 0 || !isset($map[$action])) {
     set_flash('admin_error', 'Invalid request.');
-    redirect('../pages/admin/reservations.php');
+    redirect('pages/admin/reservations.php');
 }
 
 try {
@@ -43,9 +43,9 @@ try {
     $stmt->closeCursor();
 
     set_flash('admin_success', 'Appointment updated successfully.');
-    redirect('../pages/admin/reservations.php');
+    redirect('pages/admin/reservations.php');
 } catch (PDOException $e) {
     set_flash('admin_error', safe_error_message($e));
-    redirect('../pages/admin/reservations.php');
+    redirect('pages/admin/reservations.php');
 }
 
