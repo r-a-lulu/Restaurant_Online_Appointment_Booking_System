@@ -444,14 +444,6 @@ BEGIN
         SET MESSAGE_TEXT = 'That time is already booked for the selected table. Please choose another time.';
     END IF;
   END IF;
-
-  -- Check zone-level overlap
-  IF NEW.zone_id IS NOT NULL THEN
-    IF fn_zone_has_conflict(NEW.zone_id, NEW.appointment_date, NEW.start_time, NEW.end_time, NULL) = 1 THEN
-      SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'That time is already booked in the selected dining zone. Please choose another time or zone.';
-    END IF;
-  END IF;
 END$$
 
 -- Trigger #30: Prevent double-booking on UPDATE
@@ -472,14 +464,6 @@ BEGIN
       IF fn_table_has_conflict(NEW.table_id, NEW.appointment_date, NEW.start_time, NEW.end_time, NEW.appointment_id) = 1 THEN
         SIGNAL SQLSTATE '45000'
           SET MESSAGE_TEXT = 'That time is already booked for the selected table. Please choose another time.';
-      END IF;
-    END IF;
-
-    -- Check zone-level overlap (exclude self)
-    IF NEW.zone_id IS NOT NULL THEN
-      IF fn_zone_has_conflict(NEW.zone_id, NEW.appointment_date, NEW.start_time, NEW.end_time, NEW.appointment_id) = 1 THEN
-        SIGNAL SQLSTATE '45000'
-          SET MESSAGE_TEXT = 'That time is already booked in the selected dining zone. Please choose another time or zone.';
       END IF;
     END IF;
   END IF;

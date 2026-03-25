@@ -40,9 +40,11 @@ VALUES
   ('restaurant_phone', '+1 (555) 000-1234'),
   ('restaurant_address', '12 Harmony Lane, New York, NY'),
   ('restaurant_description', 'A contemporary dining experience rooted in timeless hospitality.'),
+  ('reservation_confirmation_note', 'A confirmation email will be sent to your address within 1 hour. If you have any questions, please call us at {phone} or email {email}.'),
   ('notify_new_reservation', '1'),
   ('notify_cancellation', '1'),
   ('notify_daily_summary', '0'),
+  ('floor_manual_occupied_minutes', '120'),
   ('maintenance_mode', '0'),
   ('maintenance_message', 'We''re temporarily offline for maintenance. Please check back shortly.')
 ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value);

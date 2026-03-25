@@ -18,6 +18,15 @@ $users = [];
 $services = [];
 $packages = [];
 $addOns = [];
+$selectedFloorDate = trim((string) ($_GET['floor_date'] ?? date('Y-m-d')));
+$floorDateObj = DateTime::createFromFormat('Y-m-d', $selectedFloorDate);
+$floorDateErrors = DateTime::getLastErrors();
+if (!$floorDateObj || (is_array($floorDateErrors) && (($floorDateErrors['warning_count'] ?? 0) > 0 || ($floorDateErrors['error_count'] ?? 0) > 0))) {
+  $selectedFloorDate = date('Y-m-d');
+}
+$todayDate = date('Y-m-d');
+$isViewingToday = ($selectedFloorDate === $todayDate);
+$isPastFloorDate = ($selectedFloorDate < $todayDate);
 
 try {
   $pdo = db();
@@ -54,41 +63,55 @@ try {
   $addOns = $stmt->fetchAll() ?: [];
   $stmt->closeCursor();
 
-  $stmt = $pdo->prepare("SELECT t.table_id, t.capacity, t.seating_preference, t.current_status, dz.zone_id, dz.zone_name,
-    -- Check if there's an active appointment right now (start_time <= CURTIME() <= end_time)
+  $stmt = $pdo->prepare("SELECT t.table_id, t.capacity, t.seating_preference, t.current_status, t.manual_status_until, dz.zone_id, dz.zone_name,
+    -- Check if there's a confirmed appointment happening right now on the selected date
     EXISTS(
-      SELECT 1 FROM appointments a 
-      WHERE a.table_id = t.table_id 
-      AND a.appointment_date = CURDATE()
+      SELECT 1 FROM appointments a
+      JOIN appointment_status s ON s.status_id = a.status_id
+      WHERE a.table_id = t.table_id
+      AND a.appointment_date = :floor_date
+      AND :is_today = 1
       AND a.start_time <= CURTIME() 
       AND a.end_time > CURTIME()
-      AND a.status_id IN (SELECT status_id FROM appointment_status WHERE status_name IN ('pending','confirmed'))
+      AND s.status_name = 'confirmed'
     ) AS is_active_now,
-    -- Check if table has any reservation today (reserved for later)
+    -- Check if table has any reservation on the selected date
     EXISTS(
-      SELECT 1 FROM appointments a2 
-      WHERE a2.table_id = t.table_id 
-      AND a2.appointment_date = CURDATE()
-      AND a2.start_time > CURTIME()
-      AND a2.status_id IN (SELECT status_id FROM appointment_status WHERE status_name IN ('pending','confirmed'))
-    ) AS is_reserved_later
+      SELECT 1 FROM appointments a2
+      JOIN appointment_status s2 ON s2.status_id = a2.status_id
+      WHERE a2.table_id = t.table_id
+      AND a2.appointment_date = :floor_date_reserved
+      AND s2.status_name IN ('pending','confirmed')
+      AND (:is_today_reserved = 0 OR a2.start_time > CURTIME())
+    ) AS is_reserved_for_date
     FROM `tables` t
     JOIN dining_zones dz ON dz.zone_id = t.zone_id
     GROUP BY t.table_id
     ORDER BY dz.zone_name, t.seating_preference, t.capacity");
-  $stmt->execute();
+  $stmt->execute([
+    ':floor_date' => $selectedFloorDate,
+    ':is_today' => $isViewingToday ? 1 : 0,
+    ':floor_date_reserved' => $selectedFloorDate,
+    ':is_today_reserved' => $isViewingToday ? 1 : 0,
+  ]);
   $tables = $stmt->fetchAll() ?: [];
   $stmt->closeCursor();
 
   $tablesByZone = [];
   foreach ($tables as $t) {
-    // Determine status: active reservation = occupied (priority), then manual status, then reserved later
+    $manualOccupiedActive = $isViewingToday
+      && ($t['current_status'] ?? '') === 'occupied'
+      && (
+        empty($t['manual_status_until'])
+        || strtotime((string) $t['manual_status_until']) > time()
+      );
+
     if ((int) $t['is_active_now'] === 1) {
-      $status = 'occupied'; // Active reservation happening now
-    } elseif (!empty($t['current_status']) && $t['current_status'] !== 'available') {
-      $status = $t['current_status']; // Manual override
-    } elseif ((int) $t['is_reserved_later'] === 1) {
-      $status = 'reserved'; // Has future reservation today
+      $status = 'occupied';
+    } elseif ($manualOccupiedActive) {
+      $status = 'occupied';
+    } elseif ((int) $t['is_reserved_for_date'] === 1) {
+      $status = 'reserved';
     } else {
       $status = 'available';
     }
@@ -140,23 +163,23 @@ include '../../includes/header.php';
         <div class="admin-header-row" style="display:flex; justify-content:space-between; align-items:center;">
           <div>
             <h1 class="admin-page-title">Floor Management</h1>
-            <p class="admin-page-subtitle">Manage tables and dining zones</p>
+            <p class="admin-page-subtitle">Manage tables and dining zones for <?= e(date('F j, Y', strtotime($selectedFloorDate))) ?>.</p>
           </div>
-          <div style="display:flex; gap:var(--space-3);">
-            <button class="btn btn-outline" data-modal-open="reserveTableModal" data-reset-reserve="1" style="display:flex; align-items:center; gap:var(--space-2);">
+          <div style="display:flex; gap:var(--space-3); align-items:flex-end; flex-wrap:wrap;">
+            <form method="get" action="floor.php" style="display:flex; flex-direction:column; gap:var(--space-2); min-width: 12rem;">
+              <label for="floorDate" class="form-label" style="margin-bottom:0;">Floor Date</label>
+              <input type="date" id="floorDate" name="floor_date" class="form-input" value="<?= e($selectedFloorDate) ?>" onchange="this.form.submit()">
+            </form>
+            <button class="btn btn-outline" data-modal-open="reserveTableModal" data-reset-reserve="1" style="display:flex; align-items:center; gap:var(--space-2);" <?= $isPastFloorDate ? 'disabled title="Reservations cannot be created from a past floor date."' : '' ?>>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
               Reserve
-            </button>
-            <button class="btn btn-primary" data-modal-open="addTableModal" style="display:flex; align-items:center; gap:var(--space-2);">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              Add Table
             </button>
           </div>
         </div>
       </header>
 
       <div class="admin-floor-wrap" style="margin-top:var(--space-6); overflow:visible;">
-        <div id="floor-csrf-container" data-csrf="<?= e(csrf_token()) ?>" data-action-token="<?= e(action_token('admin_floor_update')) ?>" data-availability-token="<?= e(action_token('check_availability')) ?>" style="display:none"></div>
+        <div id="floor-csrf-container" data-csrf="<?= e(csrf_token()) ?>" data-action-token="<?= e(action_token('admin_floor_update')) ?>" data-status-token="<?= e(action_token('admin_floor_status')) ?>" data-details-token="<?= e(action_token('admin_floor_details')) ?>" data-availability-token="<?= e(action_token('check_availability')) ?>" data-selected-date="<?= e($selectedFloorDate) ?>" data-today-date="<?= e($todayDate) ?>" data-is-past-view="<?= $isPastFloorDate ? '1' : '0' ?>" style="display:none"></div>
 
         <!-- Segmented Tabs -->
         <div class="segmented-tabs" data-admin-tabs>
@@ -213,7 +236,7 @@ include '../../includes/header.php';
                   </div>
                   <div class="floor-tile-new-status"><?= e(ucfirst($t['status'])) ?></div>
                   <div class="floor-tile-new-actions">
-                    <button type="button" class="btn btn-sm btn-outline floor-tile-reserve-btn" data-reserve-table data-table-id="<?= e((string)$t['table_id']) ?>" data-zone-key="<?= e($key) ?>" data-seating-preference="<?= e($t['seating_preference'] ?? '') ?>" onclick="event.stopPropagation(); return window.adminOpenReserveTable(this);" <?= $t['status'] !== 'available' ? 'disabled' : '' ?>>
+                    <button type="button" class="btn btn-sm btn-outline floor-tile-reserve-btn" data-reserve-table data-table-id="<?= e((string)$t['table_id']) ?>" data-zone-key="<?= e($key) ?>" data-seating-preference="<?= e($t['seating_preference'] ?? '') ?>" onclick="event.stopPropagation(); return window.adminOpenReserveTable(this);" <?= ($t['status'] !== 'available' || $isPastFloorDate) ? 'disabled' : '' ?> <?= $isPastFloorDate ? 'title="Reservations cannot be created from a past floor date."' : '' ?>>
                       Reserve
                     </button>
                   </div>
@@ -237,6 +260,83 @@ include '../../includes/header.php';
     </div>
   </main>
 
+</div>
+
+<!-- Floor Details Modal -->
+<div class="admin-modal" id="floorDetailModal">
+  <div class="admin-modal-card" style="max-width:34rem;">
+    <div class="admin-modal-header" style="align-items:flex-start;">
+      <div>
+        <h2 class="admin-modal-title" id="floorDetailTitle" style="margin-bottom:var(--space-1);">Table Details</h2>
+        <p class="admin-modal-subtitle" id="floorDetailSubtitle" style="color:var(--clr-muted-fg);font-size:var(--text-sm);">Reservation details for the selected table</p>
+      </div>
+      <button class="admin-modal-close" data-modal-close aria-label="Close">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <div class="floor-detail-loading" id="floorDetailLoading">Loading table details...</div>
+    <div class="auth-alert" id="floorDetailError" style="display:none; margin-bottom:var(--space-4);"><span></span></div>
+
+    <div id="floorDetailContent" style="display:none;">
+      <div class="floor-detail-list-wrap" id="floorDetailListWrap" style="display:none;">
+        <div class="floor-detail-list-title">Reservations for this table</div>
+        <div class="floor-detail-list" id="floorDetailList"></div>
+      </div>
+
+      <div class="floor-detail-highlight">
+        <div>
+          <div class="floor-detail-kicker">Current Selection</div>
+          <div class="floor-detail-table" id="floorDetailTableLabel">Table</div>
+          <div class="floor-detail-zone" id="floorDetailZoneLabel">Zone</div>
+        </div>
+        <span class="badge" id="floorDetailStatusBadge">Reserved</span>
+      </div>
+
+      <dl class="admin-modal-rows floor-detail-rows">
+        <div class="admin-modal-row">
+          <dt>Guest</dt>
+          <dd id="floorDetailGuestName">-</dd>
+        </div>
+        <div class="admin-modal-row">
+          <dt>Email</dt>
+          <dd id="floorDetailGuestEmail">-</dd>
+        </div>
+        <div class="admin-modal-row">
+          <dt>Guests</dt>
+          <dd id="floorDetailPartySize">-</dd>
+        </div>
+        <div class="admin-modal-row">
+          <dt>Date</dt>
+          <dd id="floorDetailDate">-</dd>
+        </div>
+        <div class="admin-modal-row">
+          <dt>Time</dt>
+          <dd id="floorDetailTime">-</dd>
+        </div>
+        <div class="admin-modal-row">
+          <dt>Booking</dt>
+          <dd id="floorDetailService">-</dd>
+        </div>
+        <div class="admin-modal-row">
+          <dt>Reference</dt>
+          <dd id="floorDetailReference">-</dd>
+        </div>
+        <div class="admin-modal-row">
+          <dt>Created</dt>
+          <dd id="floorDetailCreated">-</dd>
+        </div>
+        <div class="admin-modal-row">
+          <dt>Notes</dt>
+          <dd id="floorDetailNotes">No special requests.</dd>
+        </div>
+      </dl>
+    </div>
+
+    <div class="admin-modal-footer">
+      <button type="button" class="btn btn-outline" data-modal-close>Close</button>
+    </div>
+  </div>
 </div>
 
 <!-- Reserve Table Modal -->
@@ -394,45 +494,6 @@ include '../../includes/header.php';
       <div class="admin-modal-footer" style="padding-top:0; border-top:none; display:flex; gap:var(--space-3); justify-content:flex-end;">
         <button type="button" class="btn btn-outline" data-modal-close>Cancel</button>
         <button type="submit" class="btn btn-primary">Create Reservation</button>
-      </div>
-    </form>
-  </div>
-</div>
-
-<!-- Add Table Modal -->
-<div class="admin-modal" id="addTableModal">
-  <div class="admin-modal-card" style="max-width:28rem;">
-    <div class="admin-modal-header" style="align-items:flex-start;">
-      <div>
-        <h2 class="admin-modal-title" style="margin-bottom:var(--space-1);">Add New Table</h2>
-        <p class="admin-modal-subtitle" style="color:var(--clr-muted-fg);font-size:var(--text-sm);">Add a new table to the selected zone</p>
-      </div>
-      <button class="admin-modal-close" data-modal-close aria-label="Close">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-      </button>
-    </div>
-    <form class="admin-form" id="addTableForm">
-      <div class="form-group" style="margin-bottom:var(--space-4);">
-        <label class="form-label">Zone</label>
-        <div style="position:relative; width:max-content; min-width:8rem;">
-          <select class="form-select" id="newTableZone" style="background-color:var(--clr-bg);" required>
-            <?php foreach ($zones as $key => $zone): ?>
-              <option value="<?= e($key) ?>"><?= e($zone['label']) ?></option>
-            <?php endforeach; ?>
-          </select>
-        </div>
-      </div>
-      <div class="form-group" style="margin-bottom:var(--space-4);">
-        <label class="form-label">Table Name</label>
-        <input type="text" class="form-input" id="newTableName" placeholder="e.g., Table 11" required>
-      </div>
-      <div class="form-group" style="margin-bottom:var(--space-6);">
-        <label class="form-label">Seats</label>
-        <input type="number" class="form-input" id="newTableSeats" min="1" max="50" placeholder="e.g., 4" required style="width: 8rem;">
-      </div>
-      <div class="admin-modal-footer" style="padding-top:0; border-top:none; display:flex; gap:var(--space-3); justify-content:flex-end;">
-        <button type="button" class="btn btn-outline" data-modal-close>Cancel</button>
-        <button type="submit" class="btn btn-primary">Add Table</button>
       </div>
     </form>
   </div>

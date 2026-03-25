@@ -96,7 +96,11 @@
       if (!ln || !ln.value.trim()) { showStepError('Please enter your last name.', ln); return false; }
       var emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!em || !emailRe.test(em.value.trim())) { showStepError('Please enter a valid email address.', em); return false; }
-      if (!gs || !gs.value) { showStepError('Please select the number of guests.', gs); return false; }
+      if (!gs || !gs.value) { showStepError('Please choose the number of guests.', gs); return false; }
+      var guestCount = parseInt(gs.value, 10);
+      var guestMax = parseInt(gs.max, 10) || getGuestCountMax(state.zoneId || '');
+      if (!guestCount || guestCount < 1) { showStepError('Please choose at least 1 guest.', gs); return false; }
+      if (guestCount > guestMax) { showStepError('Please choose ' + guestMax + ' guests or fewer.', gs); return false; }
       // Persist into state
       state.firstName = fn.value.trim();
       state.lastName = ln.value.trim();
@@ -176,6 +180,54 @@
     }
   }
 
+  function getGuestCountMax(zoneId) {
+    var input = $('#guest-count');
+    var fallback = 8;
+
+    if (input) {
+      var attrMax = parseInt(input.getAttribute('max') || input.dataset.maxCapacity || '8', 10);
+      if (!isNaN(attrMax) && attrMax > 0) {
+        fallback = attrMax;
+      }
+    }
+
+    if (!zoneId || !window.ALL_TABLES || !window.ALL_TABLES.length) {
+      return fallback;
+    }
+
+    var zoneMax = 0;
+    window.ALL_TABLES.forEach(function (t) {
+      if (String(t.zone_id) === String(zoneId)) {
+        zoneMax = Math.max(zoneMax, parseInt(t.capacity, 10) || 0);
+      }
+    });
+
+    return zoneMax > 0 ? zoneMax : fallback;
+  }
+
+  function updateGuestCountCap(zoneId) {
+    var input = $('#guest-count');
+    if (!input) return 0;
+
+    var maxGuests = getGuestCountMax(zoneId || state.zoneId || '');
+    input.max = String(maxGuests);
+
+    var current = parseInt(input.value, 10);
+    if (isNaN(current) || current < 1) current = 1;
+    if (current > maxGuests) current = maxGuests;
+    input.value = String(current);
+    state.guests = String(current);
+
+    var hint = $('#guest-count-hint');
+    if (hint) {
+      hint.textContent = zoneId || state.zoneId
+        ? 'Up to ' + maxGuests + ' guests for this dining zone.'
+        : 'Up to ' + maxGuests + ' guests based on the table capacities in our database.';
+    }
+
+    return maxGuests;
+  }
+
   // ─── Zone selection ───────────────────────────────────────────────────────
   function initZoneCards() {
     $$('.zone-select-card').forEach(function (card) {
@@ -187,6 +239,7 @@
         state.zoneId = card.dataset.zoneId;
         state.spot = '';   // reset spot when zone changes
         state.tableId = '';
+        updateGuestCountCap(state.zoneId);
         revealSpotPills(state.zone);
         updateSummary();
         fetchAvailability();
@@ -203,6 +256,7 @@
 
     if (!window.ALL_TABLES) { container.classList.remove('visible'); return; }
 
+    updateGuestCountCap(state.zoneId);
     var partySize = parseInt(state.guests || 1, 10);
 
     // Find unique seating preferences for the selected zone and adequate capacity
@@ -325,6 +379,10 @@
         state.serviceId = ($('#service-select') || {}).value || '';
         state.packageId = ($('#package-select') || {}).value || '';
 
+        if (id === 'guest-count') {
+          updateGuestCountCap(state.zoneId);
+        }
+
         if (id === 'guest-count' && oldGuests !== state.guests && state.zone) {
           revealSpotPills(state.zone);
           fetchAvailability();
@@ -348,14 +406,10 @@
     body.set('csrf_token', csrf);
     body.set('action_token', actionToken);
     body.set('appointment_date', state.date);
-    if (state.guests) {
-      body.set('party_size', state.guests === '8+' ? '8' : state.guests);
-    }
     if (state.spot) {
       body.set('seating_preference', state.spot);
     }
     body.set('zone_id', state.zoneId);
-    if (state.spot) body.set('seating_preference', state.spot);
     body.set('party_size', state.guests);
 
     fetch('../actions.php?action=check_availability', {
@@ -586,6 +640,7 @@
       initGuestFieldListeners();
       initAddonCheckboxes();
       initNavButtons();
+      updateGuestCountCap();
       updateSummary();
     }
 

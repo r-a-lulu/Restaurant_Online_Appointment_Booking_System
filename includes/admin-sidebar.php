@@ -111,14 +111,18 @@ $navLinks = [
       </svg>
       Settings
     </a>
-    <a href="<?= $basePath ?>pages/login.php" class="sidebar-footer-link sidebar-logout">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-        <polyline points="16 17 21 12 16 7"/>
-        <line x1="21" y1="12" x2="9" y2="12"/>
-      </svg>
-      Sign Out
-    </a>
+    <form method="post" action="<?= $basePath ?>actions.php?action=logout" class="sidebar-footer-link sidebar-logout" style="margin: 0;" onsubmit="return confirm('Are you sure you want to sign out?');">
+      <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+      <input type="hidden" name="action_token" value="<?= e(action_token('logout')) ?>">
+      <button type="submit" style="all:unset; cursor:pointer; display:flex; align-items:center; gap:var(--space-4); color:inherit; width:100%; font:inherit;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+          <polyline points="16 17 21 12 16 7"/>
+          <line x1="21" y1="12" x2="9" y2="12"/>
+        </svg>
+        Sign Out
+      </button>
+    </form>
   </div>
 
 </aside>

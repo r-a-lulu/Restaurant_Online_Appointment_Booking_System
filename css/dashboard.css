@@ -918,6 +918,80 @@
   }
 }
 
+/* Shared dashboard/admin notice styling */
+.dashboard-content .auth-alert,
+.admin-content .auth-alert {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+  padding: var(--space-4) var(--space-5);
+  border: 1px solid rgba(185, 28, 28, 0.14);
+  border-radius: var(--radius-xl);
+  background:
+    linear-gradient(135deg, rgba(127, 29, 29, 0.04), rgba(248, 113, 113, 0.1)),
+    #fff8f8;
+  color: #7f1d1d;
+  box-shadow: 0 14px 28px rgba(127, 29, 29, 0.06);
+  overflow: hidden;
+}
+
+.dashboard-content .auth-alert::before,
+.admin-content .auth-alert::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  background: linear-gradient(180deg, #dc2626, #f97316);
+}
+
+.dashboard-content .auth-alert::after,
+.admin-content .auth-alert::after {
+  content: '!';
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.85rem;
+  height: 1.85rem;
+  flex-shrink: 0;
+  margin-top: 1px;
+  margin-left: var(--space-1);
+  border-radius: 999px;
+  background: rgba(220, 38, 38, 0.12);
+  color: #b91c1c;
+  font-size: 0.95rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.dashboard-content .auth-alert span,
+.admin-content .auth-alert span {
+  line-height: 1.55;
+}
+
+.dashboard-content .auth-alert.auth-success,
+.admin-content .auth-alert.auth-success {
+  border-color: rgba(22, 101, 52, 0.16);
+  background:
+    linear-gradient(135deg, rgba(21, 128, 61, 0.05), rgba(74, 222, 128, 0.12)),
+    #f4fff7;
+  color: #166534;
+  box-shadow: 0 14px 28px rgba(21, 128, 61, 0.06);
+}
+
+.dashboard-content .auth-alert.auth-success::before,
+.admin-content .auth-alert.auth-success::before {
+  background: linear-gradient(180deg, #15803d, #4ade80);
+}
+
+.dashboard-content .auth-alert.auth-success::after,
+.admin-content .auth-alert.auth-success::after {
+  content: '✓';
+  background: rgba(22, 163, 74, 0.12);
+  color: #15803d;
+}
+
 /* ─── CUSTOM OVERRIDES FOR GUEST BOOKING REDESIGN ─── */
 .zone-card-select {
   position: relative;

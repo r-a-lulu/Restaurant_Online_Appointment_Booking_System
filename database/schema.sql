@@ -40,26 +40,6 @@ CREATE TABLE IF NOT EXISTS users (
     ON DELETE SET NULL
 ) ENGINE=InnoDB;
 
-CREATE TABLE IF NOT EXISTS user_audit_logs (
-  log_id BIGINT AUTO_INCREMENT PRIMARY KEY,
-  target_user_id INT NOT NULL,
-  actor_user_id INT NOT NULL,
-  action_type VARCHAR(30) NOT NULL,
-  old_values JSON NULL,
-  new_values JSON NULL,
-  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT ck_user_audit_logs_action_type
-    CHECK (action_type IN ('CREATE', 'UPDATE_ROLE', 'DEACTIVATE')),
-  CONSTRAINT fk_user_audit_logs_target
-    FOREIGN KEY (target_user_id) REFERENCES users (user_id)
-    ON UPDATE CASCADE
-    ON DELETE RESTRICT,
-  CONSTRAINT fk_user_audit_logs_actor
-    FOREIGN KEY (actor_user_id) REFERENCES users (user_id)
-    ON UPDATE CASCADE
-    ON DELETE RESTRICT
-) ENGINE=InnoDB;
-
 CREATE TABLE IF NOT EXISTS system_settings (
   setting_id INT AUTO_INCREMENT PRIMARY KEY,
   setting_key VARCHAR(100) NOT NULL,
@@ -97,6 +77,7 @@ CREATE TABLE IF NOT EXISTS `tables` (
   capacity INT NOT NULL,
   seating_preference VARCHAR(100) NOT NULL,
   current_status ENUM('available','reserved','occupied') NOT NULL DEFAULT 'available',
+  manual_status_until DATETIME NULL DEFAULT NULL,
   CONSTRAINT ck_tables_capacity_positive CHECK (capacity > 0),
   CONSTRAINT fk_tables_zone
     FOREIGN KEY (zone_id) REFERENCES dining_zones (zone_id)
@@ -136,11 +117,6 @@ CREATE TABLE IF NOT EXISTS appointments (
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT ck_appointments_time_order CHECK (end_time > start_time),
   CONSTRAINT ck_appointments_party_size_positive CHECK (party_size > 0),
-  CONSTRAINT ck_appointments_target_scope
-    CHECK (
-      (table_id IS NOT NULL AND zone_id IS NULL) OR
-      (table_id IS NULL AND zone_id IS NOT NULL)
-    ),
   CONSTRAINT ck_appointments_bookable_item
     CHECK (
       (service_id IS NOT NULL AND event_package_id IS NULL)
@@ -189,8 +165,6 @@ CREATE TABLE IF NOT EXISTS appointment_add_ons (
 ) ENGINE=InnoDB;
 
 CREATE INDEX idx_users_role_active ON users (role_id, is_active);
-CREATE INDEX idx_user_audit_logs_target_created ON user_audit_logs (target_user_id, created_at);
-CREATE INDEX idx_user_audit_logs_actor_created ON user_audit_logs (actor_user_id, created_at);
 CREATE INDEX idx_tables_zone_capacity ON `tables` (zone_id, capacity);
 CREATE INDEX idx_tables_seating_preference ON `tables` (seating_preference);
 CREATE INDEX idx_tables_current_status ON `tables` (current_status);
@@ -202,9 +176,6 @@ CREATE INDEX idx_appointments_created_at ON appointments (created_at);
 CREATE INDEX idx_appointments_service_id ON appointments (service_id);
 CREATE INDEX idx_appointments_event_package_id ON appointments (event_package_id);
 CREATE INDEX idx_appointment_add_ons_add_on ON appointment_add_ons (add_on_id);
-CREATE UNIQUE INDEX uq_appointments_exact_table_slot ON appointments (table_id, appointment_date, start_time);
-CREATE UNIQUE INDEX uq_appointments_exact_zone_slot ON appointments (zone_id, appointment_date, start_time);
-
 -- =========================================================
 -- Schema Additions Required by Triggers
 -- =========================================================
@@ -241,3 +212,6 @@ ALTER TABLE appointments
 
 ALTER TABLE users
   ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP NULL DEFAULT NULL AFTER last_login;
+
+ALTER TABLE `tables`
+  ADD COLUMN IF NOT EXISTS manual_status_until DATETIME NULL DEFAULT NULL AFTER current_status;

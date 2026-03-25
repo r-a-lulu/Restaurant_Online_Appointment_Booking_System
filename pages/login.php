@@ -89,7 +89,7 @@ include '../includes/header.php';
           </div>
         <?php endif; ?>
       <?php elseif ($authSuccess): ?>
-        <div class="auth-alert" style="border-color: var(--clr-success, #2e7d32); color: var(--clr-success, #2e7d32);">
+        <div class="auth-alert auth-success">
           <span><?= e($authSuccess) ?></span>
         </div>
       <?php endif; ?>

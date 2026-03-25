@@ -59,7 +59,7 @@ include '../../includes/header.php';
       <?php if ($adminError): ?>
         <div class="auth-alert"><span><?= e($adminError) ?></span></div>
       <?php elseif ($adminSuccess): ?>
-        <div class="auth-alert" style="border-color: var(--clr-success, #2e7d32); color: var(--clr-success, #2e7d32);"><span><?= e($adminSuccess) ?></span></div>
+        <div class="auth-alert auth-success"><span><?= e($adminSuccess) ?></span></div>
       <?php endif; ?>
 
       <div class="admin-section">
@@ -94,7 +94,7 @@ include '../../includes/header.php';
                     <td><input type="number" name="price" class="form-input" value="<?= e((string) $service['price']) ?>" step="0.01" min="0"></td>
                     <td>
                       <button type="submit" name="action" value="update" class="btn btn-outline btn-sm">Update</button>
-                      <button type="submit" name="action" value="delete" class="btn btn-outline btn-sm" style="color:var(--clr-destructive);border-color:var(--clr-destructive);">Delete</button>
+                      <button type="submit" name="action" value="delete" class="btn btn-outline btn-sm" style="color:var(--clr-destructive);border-color:var(--clr-destructive);" onclick="return confirm('Are you sure you want to delete this service?');">Delete</button>
                     </td>
                   </form>
                 </tr>
@@ -140,7 +140,7 @@ include '../../includes/header.php';
                     <td><input type="number" name="price" class="form-input" value="<?= e((string) $addOn['price']) ?>" step="0.01" min="0"></td>
                     <td>
                       <button type="submit" name="action" value="update" class="btn btn-outline btn-sm">Update</button>
-                      <button type="submit" name="action" value="delete" class="btn btn-outline btn-sm" style="color:var(--clr-destructive);border-color:var(--clr-destructive);">Delete</button>
+                      <button type="submit" name="action" value="delete" class="btn btn-outline btn-sm" style="color:var(--clr-destructive);border-color:var(--clr-destructive);" onclick="return confirm('Are you sure you want to delete this add-on?');">Delete</button>
                     </td>
                   </form>
                 </tr>
@@ -180,7 +180,7 @@ include '../../includes/header.php';
                     <td><input type="text" name="zone_name" class="form-input" value="<?= e($zone['zone_name']) ?>"></td>
                     <td>
                       <button type="submit" name="action" value="update" class="btn btn-outline btn-sm">Update</button>
-                      <button type="submit" name="action" value="delete" class="btn btn-outline btn-sm" style="color:var(--clr-destructive);border-color:var(--clr-destructive);">Delete</button>
+                      <button type="submit" name="action" value="delete" class="btn btn-outline btn-sm" style="color:var(--clr-destructive);border-color:var(--clr-destructive);" onclick="return confirm('Are you sure you want to delete this dining zone?');">Delete</button>
                     </td>
                   </form>
                 </tr>
@@ -235,7 +235,7 @@ include '../../includes/header.php';
                     <td><input type="number" name="capacity" class="form-input" value="<?= e((string) $table['capacity']) ?>" min="1"></td>
                     <td>
                       <button type="submit" name="action" value="update" class="btn btn-outline btn-sm">Update</button>
-                      <button type="submit" name="action" value="delete" class="btn btn-outline btn-sm" style="color:var(--clr-destructive);border-color:var(--clr-destructive);">Delete</button>
+                      <button type="submit" name="action" value="delete" class="btn btn-outline btn-sm" style="color:var(--clr-destructive);border-color:var(--clr-destructive);" onclick="return confirm('Are you sure you want to delete this table?');">Delete</button>
                     </td>
                   </form>
                 </tr>

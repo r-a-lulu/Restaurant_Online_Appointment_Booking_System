@@ -6,29 +6,29 @@
 --
 -- Function Index
 -- Function #1:  fn_status_name(status_id)
--- Function #2:  fn_is_terminal_status(status_id)
--- Function #3:  fn_is_active_status(status_id)
--- Function #4:  fn_user_full_name(user_id)
--- Function #5:  fn_user_active_booking_count(user_id)
--- Function #6:  fn_can_book_more(user_id, max_active)
--- Function #7:  fn_is_past_datetime(date, time)
--- Function #8:  fn_overlaps(start1, end1, start2, end2)
--- Function #9:  fn_table_capacity(table_id)
--- Function #10: fn_party_fits_table(table_id, party_size)
--- Function #11: fn_table_has_conflict(table_id, date, start, end, exclude_appt_id)
--- Function #12: fn_zone_has_conflict(zone_id, date, start, end, exclude_appt_id)
--- Function #13: fn_is_slot_available(date, start, end, table_id, zone_id, exclude_appt_id)
--- Function #14: fn_service_price(service_id)
--- Function #15: fn_package_price(package_id)
--- Function #16: fn_add_on_price(add_on_id)
--- Function #17: fn_appointment_subtotal(appointment_id)
--- Function #18: fn_appointment_total(appointment_id)
--- Function #19: fn_daily_booking_count(date)
--- Function #20: fn_daily_revenue(date)
--- Function #21: fn_zone_booking_count(zone_id, date_from, date_to)
--- Function #22: fn_service_booking_count(service_id, date_from, date_to)
--- Function #23: fn_is_valid_status_transition(old_status_id, new_status_id)
--- Function #24: fn_table_current_status(table_id)
+-- Function #2:  fn_status_id_by_name(status_name)
+-- Function #3:  fn_is_terminal_status(status_id)
+-- Function #4:  fn_is_active_status(status_id)
+-- Function #5:  fn_user_full_name(user_id)
+-- Function #6:  fn_user_active_booking_count(user_id)
+-- Function #7:  fn_can_book_more(user_id, max_active)
+-- Function #8:  fn_is_past_datetime(date, time)
+-- Function #9:  fn_overlaps(start1, end1, start2, end2)
+-- Function #10: fn_table_capacity(table_id)
+-- Function #11: fn_party_fits_table(table_id, party_size)
+-- Function #12: fn_table_has_conflict(table_id, date, start, end, exclude_appt_id)
+-- Function #13: fn_zone_has_conflict(zone_id, date, start, end, exclude_appt_id)
+-- Function #14: fn_is_slot_available(date, start, end, table_id, zone_id, exclude_appt_id)
+-- Function #15: fn_service_price(service_id)
+-- Function #16: fn_package_price(package_id)
+-- Function #17: fn_add_on_price(add_on_id)
+-- Function #18: fn_appointment_subtotal(appointment_id)
+-- Function #19: fn_appointment_total(appointment_id)
+-- Function #20: fn_daily_booking_count(date)
+-- Function #21: fn_daily_revenue(date)
+-- Function #22: fn_zone_booking_count(zone_id, date_from, date_to)
+-- Function #23: fn_service_booking_count(service_id, date_from, date_to)
+-- Function #24: fn_is_valid_status_transition(old_status_id, new_status_id)
 
 USE restaurant_booking_v1;
 
@@ -48,6 +48,19 @@ BEGIN
   FROM appointment_status
   WHERE status_id = p_status_id;
   RETURN v_name;
+END$$
+
+DROP FUNCTION IF EXISTS fn_status_id_by_name$$
+CREATE FUNCTION fn_status_id_by_name(p_status_name VARCHAR(30))
+RETURNS INT
+READS SQL DATA
+BEGIN
+  DECLARE v_status_id INT DEFAULT NULL;
+  SELECT status_id INTO v_status_id
+  FROM appointment_status
+  WHERE status_name = p_status_name
+  LIMIT 1;
+  RETURN v_status_id;
 END$$
 
 DROP FUNCTION IF EXISTS fn_is_terminal_status$$
@@ -388,20 +401,6 @@ BEGIN
 
   IF v_count > 0 THEN
     RETURN 'occupied';
-  END IF;
-
-  SELECT COUNT(*) INTO v_count
-  FROM appointments a
-  JOIN appointment_status s ON s.status_id = a.status_id
-  WHERE a.table_id = p_table_id
-    AND s.status_name IN ('pending', 'confirmed')
-    AND (
-      a.appointment_date > CURDATE()
-      OR (a.appointment_date = CURDATE() AND a.start_time > CURTIME())
-    );
-
-  IF v_count > 0 THEN
-    RETURN 'reserved';
   END IF;
 
   RETURN 'available';

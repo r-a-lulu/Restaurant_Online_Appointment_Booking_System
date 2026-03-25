@@ -38,7 +38,7 @@ include '../../includes/header.php';
       <?php if ($dashError): ?>
         <div class="auth-alert"><span><?= e($dashError) ?></span></div>
       <?php elseif ($dashSuccess): ?>
-        <div class="auth-alert" style="border-color: var(--clr-success, #2e7d32); color: var(--clr-success, #2e7d32);"><span><?= e($dashSuccess) ?></span></div>
+        <div class="auth-alert auth-success"><span><?= e($dashSuccess) ?></span></div>
       <?php endif; ?>
 
       <header class="dashboard-header">

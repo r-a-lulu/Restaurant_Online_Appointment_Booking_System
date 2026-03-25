@@ -32,7 +32,7 @@ $siteName = get_setting('restaurant_name', 'Eudaimonia');
       <?php if ($isLoggedIn): ?>
         <span class="nav-welcome">Hi, <?= e($firstName) ?></span>
         <?php if (empty($hideLogout)): ?>
-          <form method="post" action="<?= $basePath ?>actions.php?action=logout" style="display:inline;">
+          <form method="post" action="<?= $basePath ?>actions.php?action=logout" style="display:inline;" onsubmit="return confirm('Are you sure you want to sign out?');">
             <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
             <input type="hidden" name="action_token" value="<?= e(action_token('logout')) ?>">
             <button type="submit" class="btn btn-outline btn-sm">Logout</button>
@@ -80,7 +80,7 @@ $siteName = get_setting('restaurant_name', 'Eudaimonia');
   <div class="mobile-menu-actions">
     <?php if ($isLoggedIn): ?>
       <?php if (empty($hideLogout)): ?>
-        <form method="post" action="<?= $basePath ?>actions.php?action=logout">
+        <form method="post" action="<?= $basePath ?>actions.php?action=logout" onsubmit="return confirm('Are you sure you want to sign out?');">
           <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
           <input type="hidden" name="action_token" value="<?= e(action_token('logout')) ?>">
           <button type="submit" class="btn btn-outline btn-block">Logout</button>

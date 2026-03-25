@@ -47,14 +47,14 @@ try {
   $stmt = $pdo->query('SELECT zone_id, zone_name FROM dining_zones ORDER BY zone_name');
   $zones = $stmt->fetchAll();
 
-  $stmt = $pdo->query("SELECT t.table_id, t.capacity, t.seating_preference, dz.zone_id, dz.zone_name
+    $stmt = $pdo->query("SELECT t.table_id, t.capacity, t.seating_preference, dz.zone_id, dz.zone_name
     FROM `tables` t
     JOIN dining_zones dz ON dz.zone_id = t.zone_id
     LEFT JOIN appointments a ON a.table_id = t.table_id
       AND a.appointment_date = CURDATE()
       AND a.status_id IN (SELECT status_id FROM appointment_status WHERE status_name IN ('pending','confirmed'))
       AND a.start_time <= CURTIME() AND a.end_time > CURTIME()
-    WHERE (t.current_status IS NULL OR t.current_status = 'available')
+    WHERE COALESCE(t.current_status, 'available') <> 'occupied'
       AND a.appointment_id IS NULL
     ORDER BY dz.zone_name, t.seating_preference, t.capacity");
   $tables = $stmt->fetchAll();

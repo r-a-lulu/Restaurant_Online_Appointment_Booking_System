@@ -22,8 +22,6 @@
 - Deletes general audit logs older than 365 days.
 - Runs daily at 02:05.
 
-## Event #5: `ev_purge_user_audit_logs`
-- Deletes user audit logs older than 365 days.
 - Runs daily at 02:10.
 
 ---

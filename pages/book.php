@@ -13,6 +13,7 @@ $basePath    = '../';
 
 require_once '../includes/security.php';
 start_secure_session();
+sync_booking_debug_mode();
 if (!booking_is_open() && ($_SESSION['role_name'] ?? '') !== 'admin') {
   $bookingError = maintenance_message();
   $services = [];
@@ -55,6 +56,11 @@ if (!booking_is_open() && ($_SESSION['role_name'] ?? '') !== 'admin') {
 require_login();
 
 $bookingError = get_flash('booking_error');
+$bookingErrorMain = $bookingError;
+$bookingErrorDebug = '';
+if ($bookingError && strpos($bookingError, "\n\nDebug: ") !== false) {
+  [$bookingErrorMain, $bookingErrorDebug] = explode("\n\nDebug: ", $bookingError, 2);
+}
 $services = [];
 $packages = [];
 $addOns = [];
@@ -120,6 +126,11 @@ try {
   $stmt->execute();
   $tables = $stmt->fetchAll();
   $stmt->closeCursor();
+
+  $maxGuests = 8;
+  foreach ($tables as $table) {
+    $maxGuests = max($maxGuests, (int) ($table['capacity'] ?? 0));
+  }
 } catch (PDOException $e) {
   $bookingError = booking_error_message($e);
 }
@@ -145,8 +156,35 @@ include '../includes/nav.php';
 
   <?php if ($bookingError): ?>
     <div class="container" style="margin-top: var(--space-4);">
-      <div class="auth-alert">
-        <span><?= e($bookingError) ?></span>
+      <div class="booking-alert-card">
+        <div class="booking-alert-icon" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M12 8v4"></path>
+            <path d="M12 16h.01"></path>
+          </svg>
+        </div>
+        <div class="booking-alert-body">
+          <p class="booking-alert-eyebrow">Reservation Update</p>
+          <strong><?= e($bookingErrorMain ?: 'We could not complete your reservation right now.') ?></strong>
+          <span>Please review your selection below and try again when you are ready.</span>
+          <?php if ($bookingErrorDebug): ?>
+            <code class="booking-alert-debug">Debug: <?= e($bookingErrorDebug) ?></code>
+          <?php endif; ?>
+        </div>
+      </div>
+    </div>
+  <?php endif; ?>
+
+  <?php if (booking_debug_enabled()): ?>
+    <div class="container" style="margin-top: var(--space-4);">
+      <div class="review-card" style="border-color: #d6b25e;">
+        <div class="review-card-section">
+          <p class="review-card-label">Debug Mode</p>
+          <p class="text-muted">
+            Booking debug is enabled. Submit a reservation and the exact database error will be shown with the usual message.
+          </p>
+        </div>
       </div>
     </div>
   <?php endif; ?>
@@ -250,18 +288,21 @@ include '../includes/nav.php';
           <!-- Party size -->
           <div class="form-group">
             <label for="guest-count" class="form-label">Number of Guests <span style="color:var(--clr-destructive)">*</span></label>
-            <select id="guest-count" name="party_size" class="form-select" required>
-              <option value="">Select party size</option>
-              <option value="1">1 guest</option>
-              <option value="2">2 guests</option>
-              <option value="3">3 guests</option>
-              <option value="4">4 guests</option>
-              <option value="5">5 guests</option>
-              <option value="6">6 guests</option>
-              <option value="7">7 guests</option>
-              <option value="8">8 guests</option>
-              <option value="8">8 guests</option>
-            </select>
+            <input
+              type="number"
+              id="guest-count"
+              name="party_size"
+              class="form-input"
+              min="1"
+              max="<?= e((string) $maxGuests) ?>"
+              step="1"
+              value="2"
+              inputmode="numeric"
+              required
+            >
+            <p class="text-muted text-sm" id="guest-count-hint" style="margin-top: var(--space-2);">
+              Up to <?= e((string) $maxGuests) ?> guests based on the table capacities in our database.
+            </p>
           </div>
 
           <!-- Occasion (optional) -->

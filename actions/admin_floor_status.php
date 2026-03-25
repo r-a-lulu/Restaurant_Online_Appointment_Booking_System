@@ -19,39 +19,64 @@ if (!verify_csrf($csrf)) {
     exit();
 }
 
+$floorDate = trim((string) ($_POST['floor_date'] ?? date('Y-m-d')));
+$dateObj = DateTime::createFromFormat('Y-m-d', $floorDate);
+$dateErrors = DateTime::getLastErrors();
+if (!$dateObj || (is_array($dateErrors) && (($dateErrors['warning_count'] ?? 0) > 0 || ($dateErrors['error_count'] ?? 0) > 0))) {
+    header('Content-Type: application/json');
+    echo json_encode(['error' => 'Invalid floor date.']);
+    exit();
+}
+$floorDate = $dateObj->format('Y-m-d');
+$isToday = ($floorDate === date('Y-m-d')) ? 1 : 0;
+
 try {
     $pdo = db();
-    $stmt = $pdo->prepare("SELECT t.table_id, t.zone_id, t.current_status,
+    $stmt = $pdo->prepare("SELECT t.table_id, t.zone_id, t.current_status, t.manual_status_until,
       -- Check if there's an active appointment right now
       EXISTS(
-        SELECT 1 FROM appointments a 
+        SELECT 1 FROM appointments a
+        JOIN appointment_status s ON s.status_id = a.status_id
         WHERE a.table_id = t.table_id 
-        AND a.appointment_date = CURDATE()
+        AND a.appointment_date = :floor_date
+        AND :is_today = 1
         AND a.start_time <= CURTIME() 
         AND a.end_time > CURTIME()
-        AND a.status_id IN (SELECT status_id FROM appointment_status WHERE status_name IN ('pending','confirmed'))
+        AND s.status_name = 'confirmed'
       ) AS is_active_now,
-      -- Check if table has any future reservation today
+      -- Check if table has a reservation on the selected floor date
       EXISTS(
-        SELECT 1 FROM appointments a2 
+        SELECT 1 FROM appointments a2
+        JOIN appointment_status s2 ON s2.status_id = a2.status_id
         WHERE a2.table_id = t.table_id 
-        AND a2.appointment_date = CURDATE()
-        AND a2.start_time > CURTIME()
-        AND a2.status_id IN (SELECT status_id FROM appointment_status WHERE status_name IN ('pending','confirmed'))
+        AND a2.appointment_date = :floor_date_reserved
+        AND s2.status_name IN ('pending','confirmed')
+        AND (:is_today_reserved = 0 OR a2.start_time > CURTIME())
       ) AS is_reserved_later
       FROM `tables` t");
-    $stmt->execute();
+    $stmt->execute([
+        ':floor_date' => $floorDate,
+        ':is_today' => $isToday,
+        ':floor_date_reserved' => $floorDate,
+        ':is_today_reserved' => $isToday,
+    ]);
     $rows = $stmt->fetchAll() ?: [];
     $stmt->closeCursor();
 
     $tables = [];
     $zoneStats = [];
     foreach ($rows as $r) {
-        // Same logic as floor.php: active now > manual status > reserved later > available
+        $manualOccupiedActive = $isToday === 1
+            && ($r['current_status'] ?? '') === 'occupied'
+            && (
+                empty($r['manual_status_until'])
+                || strtotime((string) $r['manual_status_until']) > time()
+            );
+
         if ((int) $r['is_active_now'] === 1) {
             $status = 'occupied';
-        } elseif (!empty($r['current_status']) && $r['current_status'] !== 'available') {
-            $status = $r['current_status'];
+        } elseif ($manualOccupiedActive) {
+            $status = 'occupied';
         } elseif ((int) $r['is_reserved_later'] === 1) {
             $status = 'reserved';
         } else {

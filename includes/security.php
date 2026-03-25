@@ -73,6 +73,38 @@ function clean_string(?string $value): string {
     return preg_replace('/\\s+/', ' ', $value);
 }
 
+function is_local_development(): bool {
+    $host = strtolower((string) ($_SERVER['HTTP_HOST'] ?? ''));
+    $remoteAddr = trim((string) ($_SERVER['REMOTE_ADDR'] ?? ''));
+
+    if (in_array($host, ['localhost', '127.0.0.1', '::1'], true)) {
+        return true;
+    }
+
+    if (in_array($remoteAddr, ['127.0.0.1', '::1'], true)) {
+        return true;
+    }
+
+    return strpos($host, '.local') !== false;
+}
+
+function sync_booking_debug_mode(): void {
+    if (!is_local_development()) {
+        return;
+    }
+
+    $flag = $_GET['debug_booking'] ?? $_POST['debug_booking'] ?? null;
+    if ($flag === '1') {
+        $_SESSION['booking_debug'] = true;
+    } elseif ($flag === '0') {
+        unset($_SESSION['booking_debug']);
+    }
+}
+
+function booking_debug_enabled(): bool {
+    return is_local_development() && !empty($_SESSION['booking_debug']);
+}
+
 function resolve_post_login_redirect(string $requestUri): string {
     $requestUri = trim($requestUri);
     if ($requestUri === '') {
@@ -218,8 +250,14 @@ function guest_friendly_error_message(\Exception $e, string $fallback = 'Somethi
     }
 
     if (strpos($normalized, 'sqlstate') !== false || $e instanceof PDOException) {
-        if (strpos($normalized, 'party size exceeds table capacity') !== false) {
+        if (strpos($normalized, 'party size exceeds table capacity') !== false
+            || strpos($normalized, 'cannot fit this party size') !== false
+            || strpos($normalized, 'reduce the number of guests') !== false) {
             return 'The selected table cannot fit this party size. Please choose another table or reduce the number of guests.';
+        }
+        if (strpos($normalized, 'the selected table is no longer available') !== false
+            || strpos($normalized, 'choose another seating preference or time') !== false) {
+            return 'That table is no longer available. Please choose another seating preference or time.';
         }
         if (strpos($normalized, 'time slot conflicts with an existing table booking') !== false) {
             return 'That time is already booked for the selected table. Please choose another time.';
@@ -245,8 +283,15 @@ function guest_friendly_error_message(\Exception $e, string $fallback = 'Somethi
         if (strpos($normalized, 'maximum active bookings') !== false || strpos($normalized, 'limit: 12') !== false) {
             return 'You already have 12 active reservations. Please complete or cancel one before creating a new booking.';
         }
+        if (strpos($normalized, 'you already have 12 active reservations') !== false) {
+            return 'You already have 12 active reservations. Please complete or cancel one before creating a new booking.';
+        }
         if (strpos($normalized, 'time slot conflicts') !== false || strpos($normalized, 'conflicts with an existing') !== false) {
             return 'That time is already booked. Please choose another time.';
+        }
+        if (strpos($normalized, 'uq_appointments_exact_table_slot') !== false
+            || strpos($normalized, 'uq_appointments_exact_zone_slot') !== false) {
+            return 'That reservation slot was just booked. Please review your reservations or choose another time.';
         }
         if (strpos($normalized, 'duplicate') !== false) {
             return 'This reservation already exists or was just submitted. Please review your bookings and try another time if needed.';
@@ -264,11 +309,23 @@ function guest_friendly_error_message(\Exception $e, string $fallback = 'Somethi
 }
 
 function booking_error_message(\Exception $e): string {
-    return guest_friendly_error_message($e, 'We could not complete your reservation right now. Please try again or choose another time.');
+    $message = guest_friendly_error_message($e, 'We could not complete your reservation right now. Please try again or choose another time.');
+    if (booking_debug_enabled()) {
+        $debugMessage = trim((string) $e->getMessage());
+        $debugCode = trim((string) $e->getCode());
+        return $message . "\n\nDebug: " . ($debugCode !== '' ? '[' . $debugCode . '] ' : '') . $debugMessage;
+    }
+    return $message;
 }
 
 function admin_booking_error_message(\Exception $e): string {
-    return guest_friendly_error_message($e, 'We could not complete this reservation right now. Please review the details and try again.');
+    $message = guest_friendly_error_message($e, 'We could not complete this reservation right now. Please review the details and try again.');
+    if (booking_debug_enabled()) {
+        $debugMessage = trim((string) $e->getMessage());
+        $debugCode = trim((string) $e->getCode());
+        return $message . "\n\nDebug: " . ($debugCode !== '' ? '[' . $debugCode . '] ' : '') . $debugMessage;
+    }
+    return $message;
 }
 
 function enforce_session_timeout(): void {
@@ -377,8 +434,19 @@ function booking_is_open(): bool {
     return !is_maintenance_mode();
 }
 
-function require_booking_open(bool $jsonResponse = false): void {
-    if (booking_is_open()) {
+function floor_manual_occupied_minutes(): int {
+    $value = (int) get_setting('floor_manual_occupied_minutes', '120');
+    if ($value < 5) {
+        return 5;
+    }
+    if ($value > 720) {
+        return 720;
+    }
+    return $value;
+}
+
+function require_booking_open(bool $jsonResponse = false, bool $allowAdmin = true): void {
+    if (booking_is_open() || ($allowAdmin && (($_SESSION['role_name'] ?? '') === 'admin'))) {
         return;
     }
 

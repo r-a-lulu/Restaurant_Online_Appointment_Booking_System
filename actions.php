@@ -3,12 +3,17 @@ require_once __DIR__ . '/includes/security.php';
 
 start_secure_session();
 
+$action = $_GET['action'] ?? '';
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    if ($action === 'logout') {
+        header('Location: pages/login.php');
+        exit;
+    }
     header('HTTP/1.1 405 Method Not Allowed');
     exit;
 }
 
-$action = $_GET['action'] ?? '';
 $routes = [
     'login' => __DIR__ . '/actions/process_login.php',
     'register' => __DIR__ . '/actions/process_register.php',
@@ -20,6 +25,7 @@ $routes = [
     'admin_master_data' => __DIR__ . '/actions/admin_master_data.php',
     'admin_floor_update' => __DIR__ . '/actions/admin_floor_update.php',
     'admin_floor_status' => __DIR__ . '/actions/admin_floor_status.php',
+    'admin_floor_details' => __DIR__ . '/actions/admin_floor_details.php',
     'admin_reserve_table' => __DIR__ . '/actions/admin_reserve_table.php',
     'update_profile' => __DIR__ . '/actions/update_profile.php',
     'update_password' => __DIR__ . '/actions/update_password.php',
@@ -32,6 +38,10 @@ if (!$action || empty($routes[$action])) {
 }
 
 if (!verify_action_token($action, $_POST['action_token'] ?? '')) {
+    if ($action === 'logout') {
+        header('Location: pages/login.php');
+        exit;
+    }
     header('HTTP/1.1 403 Forbidden');
     exit;
 }

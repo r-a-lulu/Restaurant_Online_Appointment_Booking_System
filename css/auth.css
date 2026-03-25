@@ -114,7 +114,7 @@
 
 /* Header */
 .auth-heading {
-  margin-bottom: var(--space-8);
+  margin-bottom: var(--space-6);
 }
 
 .auth-heading .section-label {
@@ -278,17 +278,48 @@
 
 /* Alert / error message */
 .auth-alert {
+  position: relative;
   display: flex;
   align-items: flex-start;
-  gap: var(--space-2);
-  padding: var(--space-4) var(--space-4);
-  background-color: #fef2f2;
-  color: #991b1b;
-  border-radius: var(--radius-lg);
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5) var(--space-4) calc(var(--space-5) + 2.35rem);
+  background:
+    linear-gradient(135deg, rgba(127, 29, 29, 0.04), rgba(248, 113, 113, 0.12)),
+    #fff8f8;
+  color: #7f1d1d;
+  border-radius: var(--radius-xl);
   font-size: var(--text-sm);
   font-weight: 500;
-  border: 1px solid #fca5a5;
-  box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(185, 28, 28, 0.14);
+  box-shadow: 0 14px 28px rgba(127, 29, 29, 0.06);
+  overflow: hidden;
+}
+
+.auth-alert::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  background: linear-gradient(180deg, #dc2626, #f97316);
+}
+
+.auth-alert::after {
+  content: '';
+  position: absolute;
+  top: calc(var(--space-4) - 0.25rem);
+  left: calc(var(--space-5) - 0.05rem);
+  display: block;
+  width: 1.9rem;
+  height: 1.9rem;
+  border-radius: 999px;
+  background: rgba(220, 38, 38, 0.12);
+  box-shadow: inset 0 0 0 1px rgba(220, 38, 38, 0.08);
+  background-image:
+    linear-gradient(#b91c1c, #b91c1c),
+    radial-gradient(circle, #b91c1c 0 100%, transparent 100%);
+  background-repeat: no-repeat, no-repeat;
+  background-size: 0.17rem 0.66rem, 0.2rem 0.2rem;
+  background-position: center 0.34rem, center 1.2rem;
 }
 
 .auth-alert svg {
@@ -308,6 +339,14 @@
   border-color: #f59e0b;
   box-shadow: 0 10px 24px rgba(180, 83, 9, 0.10);
   align-items: center;
+}
+
+.auth-alert-booking::before {
+  background: linear-gradient(180deg, #d97706, #f59e0b);
+}
+
+.auth-alert-booking::after {
+  display: none;
 }
 
 .auth-alert-icon {
@@ -342,10 +381,35 @@
 }
 
 .auth-alert.auth-success {
-  background-color: #f0fdf4;
+  background:
+    linear-gradient(135deg, rgba(21, 128, 61, 0.05), rgba(74, 222, 128, 0.12)),
+    #f4fff7;
   color: #166534;
-  border-color: #86efac;
-  box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.08);
+  border-color: rgba(22, 101, 52, 0.16);
+  box-shadow: 0 14px 28px rgba(21, 128, 61, 0.06);
+}
+
+.auth-alert.auth-success::before {
+  background: linear-gradient(180deg, #15803d, #4ade80);
+}
+
+.auth-alert.auth-success::after {
+  content: '✓';
+  background: rgba(22, 163, 74, 0.12);
+  color: #15803d;
+}
+
+/* Override pseudo-text icons with drawn marks so auth alerts render cleanly across encodings */
+.auth-alert.auth-success::after {
+  content: '';
+  box-shadow: inset 0 0 0 1px rgba(21, 128, 61, 0.08);
+  background:
+    linear-gradient(45deg, transparent 44%, #15803d 44%, #15803d 58%, transparent 58%),
+    linear-gradient(-45deg, transparent 46%, #15803d 46%, #15803d 60%, transparent 60%),
+    rgba(22, 163, 74, 0.12);
+  background-repeat: no-repeat, no-repeat, no-repeat;
+  background-size: 0.42rem 0.18rem, 0.75rem 0.18rem, auto;
+  background-position: 0.48rem 0.94rem, 0.82rem 0.84rem, center;
 }
 
 /* ===== RESPONSIVE ===== */

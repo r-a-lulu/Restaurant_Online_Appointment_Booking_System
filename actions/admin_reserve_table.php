@@ -60,6 +60,9 @@ if ($date !== '') {
         $errors[] = 'Please enter a valid reservation date.';
     } else {
         $date = $dateObj->format('Y-m-d');
+        if ($date < date('Y-m-d')) {
+            $errors[] = 'Reservations cannot be created for a past date.';
+        }
     }
 }
 if ($time !== '') {
@@ -99,93 +102,38 @@ try {
 
     $tableRow = null;
     if ($tableId > 0) {
-        $tableStmt = $pdo->prepare(
-            "SELECT table_id, zone_id, seating_preference, capacity, current_status
-             FROM `tables`
-             WHERE table_id = :table_id
-             LIMIT 1"
-        );
-        $tableStmt->execute([':table_id' => $tableId]);
-        $tableRow = $tableStmt->fetch(PDO::FETCH_ASSOC) ?: null;
+        $tableStmt = $pdo->prepare('CALL sp_validate_table(:table_id, :zone_id, :seating_preference, :party_size)');
+        $tableStmt->execute([
+            ':table_id' => $tableId,
+            ':zone_id' => $zoneId,
+            ':seating_preference' => $seatingPref,
+            ':party_size' => $partySize,
+        ]);
+        $tableRow = $tableStmt->fetch(PDO::FETCH_ASSOC) ?: [];
         $tableStmt->closeCursor();
 
-        if (!$tableRow) {
+        if (!(int) ($tableRow['is_valid'] ?? 0)) {
+            $errorMessage = (string) ($tableRow['error_message'] ?? 'The selected table is not available.');
             if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
                 header('Content-Type: application/json');
-                echo json_encode(['ok' => false, 'error' => 'The selected table could not be found.']);
+                echo json_encode(['ok' => false, 'error' => $errorMessage]);
                 exit();
             }
-            set_flash('admin_error', 'The selected table could not be found.');
-            header('Location: ../pages/admin/floor.php');
-            exit();
-        }
-
-        if ((int) $tableRow['zone_id'] !== $zoneId) {
-            if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
-                header('Content-Type: application/json');
-                echo json_encode(['ok' => false, 'error' => 'The selected table does not belong to the chosen dining zone.']);
-                exit();
-            }
-            set_flash('admin_error', 'The selected table does not belong to the chosen dining zone.');
-            header('Location: ../pages/admin/floor.php');
-            exit();
-        }
-
-        $tablePref = clean_string($tableRow['seating_preference'] ?? '');
-        if ($tablePref !== '' && strcasecmp($tablePref, $seatingPref) !== 0) {
-            if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
-                header('Content-Type: application/json');
-                echo json_encode(['ok' => false, 'error' => 'The selected table does not match the selected seating preference.']);
-                exit();
-            }
-            set_flash('admin_error', 'The selected table does not match the selected seating preference.');
-            header('Location: ../pages/admin/floor.php');
-            exit();
-        }
-
-        if (!empty($tableRow['current_status']) && $tableRow['current_status'] !== 'available') {
-            if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
-                header('Content-Type: application/json');
-                echo json_encode(['ok' => false, 'error' => 'That table is no longer available. Please choose another seating preference or time.']);
-                exit();
-            }
-            set_flash('admin_error', 'That table is no longer available. Please choose another seating preference or time.');
-            header('Location: ../pages/admin/floor.php');
-            exit();
-        }
-
-        if ((int) $tableRow['capacity'] < $partySize) {
-            if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
-                header('Content-Type: application/json');
-                echo json_encode(['ok' => false, 'error' => 'The selected seating preference cannot fit this party size. Please choose another one or reduce the guest count.']);
-                exit();
-            }
-            set_flash('admin_error', 'The selected seating preference cannot fit this party size. Please choose another one or reduce the guest count.');
+            set_flash('admin_error', $errorMessage);
             header('Location: ../pages/admin/floor.php');
             exit();
         }
     } else {
-        $tableStmt = $pdo->prepare(
-            "SELECT t.table_id, t.capacity
-             FROM `tables` t
-             WHERE t.zone_id = :zone_id
-               AND t.capacity >= :party_size
-               AND (t.current_status IS NULL OR t.current_status = 'available')
-               AND t.seating_preference = :seating_pref
-               AND fn_is_slot_available(:appointment_date, :start_time, :end_time, t.table_id, :zone_id_fn, NULL) = 1
-             ORDER BY t.capacity ASC, t.table_id ASC
-             LIMIT 1"
-        );
+        $tableStmt = $pdo->prepare('CALL sp_find_available_table(:zone_id, :party_size, :seating_preference, :appointment_date, :start_time, :end_time)');
         $tableStmt->execute([
             ':zone_id' => $zoneId,
             ':party_size' => $partySize,
-            ':seating_pref' => $seatingPref,
+            ':seating_preference' => $seatingPref,
             ':appointment_date' => $date,
             ':start_time' => $startTime,
             ':end_time' => $endTime,
-            ':zone_id_fn' => $zoneId,
         ]);
-        $tableRow = $tableStmt->fetch(PDO::FETCH_ASSOC) ?: null;
+        $tableRow = $tableStmt->fetch(PDO::FETCH_ASSOC) ?: [];
         $tableStmt->closeCursor();
         $tableId = (int) ($tableRow['table_id'] ?? 0);
 
@@ -201,8 +149,42 @@ try {
         }
     }
 
+    $slotStmt = $pdo->prepare(
+        'SELECT
+            fn_is_slot_available(:slot_appointment_date, :slot_start_time, :slot_end_time, :slot_table_id, NULL, NULL) AS is_available,
+            fn_table_has_conflict(:conflict_table_id, :conflict_appointment_date, :conflict_start_time, :conflict_end_time, NULL) AS table_conflict'
+    );
+    $slotStmt->execute([
+        ':slot_appointment_date' => $date,
+        ':slot_start_time' => $startTime,
+        ':slot_end_time' => $endTime,
+        ':slot_table_id' => $tableId,
+        ':conflict_table_id' => $tableId,
+        ':conflict_appointment_date' => $date,
+        ':conflict_start_time' => $startTime,
+        ':conflict_end_time' => $endTime,
+    ]);
+    $slotRow = $slotStmt->fetch(PDO::FETCH_ASSOC) ?: [];
+    $slotStmt->closeCursor();
+
+    if (!(int) ($slotRow['is_available'] ?? 0)) {
+        $errorMessage = 'That time is no longer available. Please choose another time.';
+        if ((int) ($slotRow['table_conflict'] ?? 0) === 1) {
+            $errorMessage = 'That time is already booked for the selected table. Please choose another time.';
+        }
+
+        if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+            header('Content-Type: application/json');
+            echo json_encode(['ok' => false, 'error' => $errorMessage]);
+            exit();
+        }
+        set_flash('admin_error', $errorMessage);
+        header('Location: ../pages/admin/floor.php');
+        exit();
+    }
+
     // Get status_id for 'pending'
-    $stmt = $pdo->prepare("SELECT status_id FROM appointment_status WHERE status_name = 'pending' LIMIT 1");
+    $stmt = $pdo->prepare("SELECT fn_status_id_by_name('pending') AS status_id");
     $stmt->execute();
     $statusId = $stmt->fetchColumn();
     $stmt->closeCursor();
@@ -272,8 +254,9 @@ try {
     
     $statusStmt = $pdo->prepare('SELECT current_status FROM `tables` WHERE table_id = :table_id LIMIT 1');
     $statusStmt->execute([':table_id' => $tableId]);
-    $newTableStatus = $statusStmt->fetchColumn() ?: 'available';
+    $newTableStatus = $statusStmt->fetchColumn();
     $statusStmt->closeCursor();
+    $newTableStatus = ($newTableStatus === 'occupied') ? 'occupied' : 'available';
     
     $guestName = trim(($userRow['first_name'] ?? '') . ' ' . ($userRow['last_name'] ?? ''));
     $successMessage = $guestName !== ''

@@ -10,6 +10,30 @@
   const floorSelect = document.getElementById('floorStatusSelect');
   const floorTableId = document.getElementById('floorStatusTableId');
   const floorTableLabel = document.getElementById('floorStatusTableLabel');
+  const selectedFloorDate = floorMeta ? (floorMeta.dataset.selectedDate || '') : '';
+  const todayFloorDate = floorMeta ? (floorMeta.dataset.todayDate || '') : '';
+  const isTodayFloorView = !!selectedFloorDate && selectedFloorDate === todayFloorDate;
+  const isPastFloorView = !!floorMeta && floorMeta.dataset.isPastView === '1';
+  const floorDetailModal = document.getElementById('floorDetailModal');
+  const floorDetailLoading = document.getElementById('floorDetailLoading');
+  const floorDetailContent = document.getElementById('floorDetailContent');
+  const floorDetailError = document.getElementById('floorDetailError');
+  const floorDetailListWrap = document.getElementById('floorDetailListWrap');
+  const floorDetailList = document.getElementById('floorDetailList');
+  const floorDetailTitle = document.getElementById('floorDetailTitle');
+  const floorDetailSubtitle = document.getElementById('floorDetailSubtitle');
+  const floorDetailTableLabel = document.getElementById('floorDetailTableLabel');
+  const floorDetailZoneLabel = document.getElementById('floorDetailZoneLabel');
+  const floorDetailStatusBadge = document.getElementById('floorDetailStatusBadge');
+  const floorDetailGuestName = document.getElementById('floorDetailGuestName');
+  const floorDetailGuestEmail = document.getElementById('floorDetailGuestEmail');
+  const floorDetailPartySize = document.getElementById('floorDetailPartySize');
+  const floorDetailDate = document.getElementById('floorDetailDate');
+  const floorDetailTime = document.getElementById('floorDetailTime');
+  const floorDetailService = document.getElementById('floorDetailService');
+  const floorDetailReference = document.getElementById('floorDetailReference');
+  const floorDetailCreated = document.getElementById('floorDetailCreated');
+  const floorDetailNotes = document.getElementById('floorDetailNotes');
 
   const FLOOR_STATUS = ['available', 'reserved', 'occupied'];
 
@@ -94,6 +118,8 @@
     tile.setAttribute('data-status', status);
     const lbl = tile.querySelector('.floor-tile-new-status');
     if (lbl) lbl.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+    const reserveBtn = tile.querySelector('[data-reserve-table]');
+    if (reserveBtn) reserveBtn.disabled = status !== 'available';
   }
 
   function updatePanelStats(panel) {
@@ -125,6 +151,163 @@
 
   function isReserveButtonClick(event) {
     return !!(event && event.target && event.target.closest && event.target.closest('[data-reserve-table]'));
+  }
+
+  function setFloorDetailText(element, value) {
+    if (!element) return;
+    element.textContent = value || '-';
+  }
+
+  function escapeHtml(value) {
+    return String(value || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  function resetFloorDetailState() {
+    if (floorDetailLoading) floorDetailLoading.style.display = 'block';
+    if (floorDetailContent) floorDetailContent.style.display = 'none';
+    if (floorDetailListWrap) floorDetailListWrap.style.display = 'none';
+    if (floorDetailList) floorDetailList.innerHTML = '';
+    if (floorDetailError) {
+      floorDetailError.style.display = 'none';
+      const errorText = floorDetailError.querySelector('span');
+      if (errorText) errorText.textContent = '';
+    }
+  }
+
+  function showFloorDetailError(message) {
+    if (floorDetailLoading) floorDetailLoading.style.display = 'none';
+    if (floorDetailContent) floorDetailContent.style.display = 'none';
+    if (floorDetailError) {
+      floorDetailError.style.display = 'flex';
+      const errorText = floorDetailError.querySelector('span');
+      if (errorText) errorText.textContent = message || 'Could not load the table details right now.';
+    }
+  }
+
+  function showFloorDetailContent(payload) {
+    const table = payload && payload.table ? payload.table : {};
+    const detail = payload && payload.detail ? payload.detail : {};
+
+    if (floorDetailTitle) {
+      floorDetailTitle.textContent = (detail.type === 'occupied' ? 'Occupied Table Details' : 'Reserved Table Details');
+    }
+    if (floorDetailSubtitle) {
+      floorDetailSubtitle.textContent = 'Reservation details for ' + (table.label || 'this table') + ' on ' + (detail.date_label || selectedFloorDate || 'the selected date') + '.';
+    }
+
+    setFloorDetailText(floorDetailTableLabel, table.label || 'Table');
+    setFloorDetailText(floorDetailZoneLabel, (table.zone_name || '') + (table.capacity ? (' • ' + table.capacity + ' seats') : ''));
+    setFloorDetailText(floorDetailGuestName, detail.guest_name || 'Guest');
+    setFloorDetailText(floorDetailGuestEmail, detail.guest_email || 'No email provided');
+    setFloorDetailText(floorDetailPartySize, detail.party_size ? String(detail.party_size) : (detail.manual_override ? 'Manual floor state' : '-'));
+    setFloorDetailText(floorDetailDate, detail.date_label || '-');
+    setFloorDetailText(floorDetailTime, detail.time_label || '-');
+    setFloorDetailText(floorDetailService, detail.service_label || 'Standard reservation');
+    setFloorDetailText(floorDetailReference, detail.appointment_id ? ('#' + detail.appointment_id) : 'Manual override');
+    setFloorDetailText(floorDetailCreated, detail.created_label || '-');
+    setFloorDetailText(floorDetailNotes, detail.special_requests || 'No special requests.');
+
+    if (floorDetailStatusBadge) {
+      floorDetailStatusBadge.className = 'badge ' + (detail.status_badge || '');
+      floorDetailStatusBadge.textContent = detail.status_label || 'Reserved';
+    }
+
+    if (floorDetailLoading) floorDetailLoading.style.display = 'none';
+    if (floorDetailError) floorDetailError.style.display = 'none';
+    if (floorDetailContent) floorDetailContent.style.display = 'block';
+  }
+
+  function renderFloorDetailList(payload) {
+    const details = payload && Array.isArray(payload.details) ? payload.details : [];
+    const table = payload && payload.table ? payload.table : {};
+    if (!floorDetailListWrap || !floorDetailList) return;
+
+    if (details.length <= 1) {
+      floorDetailListWrap.style.display = 'none';
+      floorDetailList.innerHTML = '';
+      return;
+    }
+
+    floorDetailList.innerHTML = '';
+    details.forEach(function (entry, index) {
+      const tableMeta = [
+        table.label || 'Table',
+        entry.appointment_id ? ('Ref #' + entry.appointment_id) : 'Manual override'
+      ].join(' • ');
+      const item = document.createElement('button');
+      item.type = 'button';
+      item.className = 'floor-detail-list-item' + (index === 0 ? ' active' : '');
+      item.setAttribute('data-detail-index', String(index));
+      item.innerHTML =
+        '<div class="floor-detail-list-main">' +
+          '<div>' +
+            '<div class="floor-detail-list-name">' + escapeHtml(entry.guest_name || 'Guest') + '</div>' +
+            '<div class="floor-detail-list-time">' + escapeHtml(entry.time_label || '-') + '</div>' +
+            '<div class="floor-detail-list-meta">' + escapeHtml(tableMeta) + '</div>' +
+          '</div>' +
+          '<span class="badge ' + escapeHtml(entry.status_badge || '') + '">' + escapeHtml(entry.status_label || 'Reserved') + '</span>' +
+        '</div>';
+
+      item.addEventListener('click', function () {
+        floorDetailList.querySelectorAll('.floor-detail-list-item').forEach(function (button) {
+          button.classList.remove('active');
+        });
+        item.classList.add('active');
+        showFloorDetailContent({
+          table: payload.table || {},
+          detail: entry,
+        });
+      });
+
+      floorDetailList.appendChild(item);
+    });
+    floorDetailListWrap.style.display = 'block';
+  }
+
+  function openFloorDetailForTile(tile) {
+    if (!floorMeta || !floorDetailModal || !tile) return;
+
+    const tableId = tile.getAttribute('data-table-id') || '';
+    const csrf = floorMeta.dataset.csrf || '';
+    const detailsToken = floorMeta.dataset.detailsToken || '';
+
+    if (!tableId || !csrf || !detailsToken) return;
+
+    resetFloorDetailState();
+    floorDetailModal.classList.add('open');
+
+    const body = new URLSearchParams();
+    body.set('csrf_token', csrf);
+    body.set('action_token', detailsToken);
+    body.set('table_id', tableId);
+    body.set('floor_date', selectedFloorDate);
+
+    fetch(actionUrl('admin_floor_details'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: body.toString(),
+    })
+      .then(function (res) { return res.json(); })
+      .then(function (data) {
+        if (!data || !data.ok || !data.detail) {
+          showFloorDetailError(data && data.error ? data.error : 'Could not load the table details right now.');
+          return;
+        }
+        renderFloorDetailList(data);
+        showFloorDetailContent(data);
+      })
+      .catch(function () {
+        showFloorDetailError('Could not load the table details right now.');
+      });
+  }
+
+  function pastFloorReserveMessage() {
+    return 'Reservations cannot be created while viewing a past floor date.';
   }
 
   function resetReserveModalFields() {
@@ -170,6 +353,7 @@
   if (floorMeta) {
     const csrf = floorMeta.dataset.csrf || '';
     const actionToken = floorMeta.dataset.actionToken || '';
+    const statusToken = floorMeta.dataset.statusToken || '';
 
     document.querySelectorAll('.floor-tile-new[data-status]').forEach(function (tile) {
       tile.addEventListener('click', function (event) {
@@ -183,6 +367,11 @@
         }
         const tableId = tile.getAttribute('data-table-id');
         const currentStatus = tile.getAttribute('data-status') || 'available';
+        if (currentStatus === 'reserved' || currentStatus === 'occupied') {
+          openFloorDetailForTile(tile);
+          return;
+        }
+        if (!isTodayFloorView) return;
         if (currentStatus !== 'available') return;
         if (!window.confirm || !window.confirm('Mark this table as occupied now?')) return;
         const nextStatus = 'occupied';
@@ -197,6 +386,7 @@
         body.set('action_token', actionToken);
         body.set('table_id', tableId);
         body.set('status', nextStatus);
+        body.set('floor_date', selectedFloorDate);
 
         fetch(actionUrl('admin_floor_update'), {
           method: 'POST',
@@ -217,7 +407,49 @@
             console.error('Error updating status:', err);
           });
       });
+
+      tile.addEventListener('keydown', function (event) {
+        if (!event || (event.key !== 'Enter' && event.key !== ' ')) return;
+        const currentStatus = tile.getAttribute('data-status') || 'available';
+        if (currentStatus !== 'reserved' && currentStatus !== 'occupied') return;
+        event.preventDefault();
+        openFloorDetailForTile(tile);
+      });
     });
+
+    setInterval(function () {
+      const body = new URLSearchParams();
+      body.set('csrf_token', csrf);
+      body.set('action_token', statusToken);
+      body.set('floor_date', selectedFloorDate);
+      fetch(actionUrl('admin_floor_status'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: body.toString(),
+      })
+        .then(function (res) { return res.json(); })
+        .then(function (data) {
+          if (!data || !data.tables) return;
+          const now = Date.now();
+          const PROTECT_MS = 30000;
+
+          data.tables.forEach(function (t) {
+            const tile = document.querySelector('.floor-tile-new[data-table-id="' + t.table_id + '"]');
+            if (!tile) return;
+
+            const lastChanged = tile.getAttribute('data-last-changed');
+            if (lastChanged && (now - parseInt(lastChanged, 10)) < PROTECT_MS) {
+              return;
+            }
+
+            setTileStatus(tile, t.status);
+          });
+          document.querySelectorAll('.admin-panel').forEach(function (panel) {
+            updatePanelStats(panel);
+          });
+        })
+        .catch(function () { });
+    }, 10000);
   }
 
   if (floorMeta && floorModal && floorForm) {
@@ -249,12 +481,14 @@
       const tableId = floorTableId ? floorTableId.value : '';
       const status = floorSelect ? floorSelect.value : '';
       if (!tableId || FLOOR_STATUS.indexOf(status) === -1) return;
+      if (!isTodayFloorView) return;
 
       const body = new URLSearchParams();
       body.set('csrf_token', csrf);
       body.set('action_token', actionToken);
       body.set('table_id', tableId);
       body.set('status', status);
+      body.set('floor_date', selectedFloorDate);
 
       fetch(actionUrl('admin_floor_update'), {
         method: 'POST',
@@ -280,6 +514,7 @@
       const body = new URLSearchParams();
       body.set('csrf_token', csrf);
       body.set('action_token', statusToken);
+      body.set('floor_date', selectedFloorDate);
       fetch(actionUrl('admin_floor_status'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -429,117 +664,6 @@
 
       editMode.style.display = 'none';
       viewMode.style.display = 'flex';
-    });
-  }
-
-  /* ------------------------------------------------------------------
-     Add New Table Flow (Floor Management)
-  ------------------------------------------------------------------ */
-  const addTableForm = document.getElementById('addTableForm');
-  if (addTableForm) {
-    addTableForm.addEventListener('submit', function (e) {
-      e.preventDefault();
-
-      const zone = document.getElementById('newTableZone').value;
-      const name = document.getElementById('newTableName').value;
-      const seats = document.getElementById('newTableSeats').value;
-
-      const panel = document.querySelector('[data-panel="' + zone + '"]');
-      const grid = panel ? panel.querySelector('.floor-grid-new') : null;
-
-      if (grid) {
-        // Create the new tile element
-        const tile = document.createElement('div');
-        tile.className = 'floor-tile-new floor-tile-new--available';
-        tile.setAttribute('data-status', 'available');
-        tile.setAttribute('tabindex', '0');
-
-        tile.innerHTML = `
-          <div class="floor-tile-new-top">
-            <span class="floor-tile-new-number">${name}</span>
-            <svg class="floor-tile-new-edit" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-          </div>
-          <div class="floor-tile-new-capacity">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-            ${seats} seats
-          </div>
-          <div class="floor-tile-new-status">Available</div>
-        `;
-
-        // Attach the critical click handler so the new tile behaves like natively rendered ones
-        tile.addEventListener('click', function () {
-          const tableId = tile.getAttribute('data-table-id');
-          const currentStatus = tile.getAttribute('data-status') || 'available';
-          const STATUS_CYCLE = ['available', 'occupied'];
-          const nextStatus = STATUS_CYCLE[(STATUS_CYCLE.indexOf(currentStatus) + 1) % STATUS_CYCLE.length];
-
-          // Update UI immediately
-          STATUS_CYCLE.forEach(function (s) { tile.classList.remove('floor-tile-new--' + s); });
-          tile.classList.add('floor-tile-new--' + nextStatus);
-          tile.setAttribute('data-status', nextStatus);
-
-          const lbl = tile.querySelector('.floor-tile-new-status');
-          if (lbl) {
-            lbl.textContent = nextStatus.charAt(0).toUpperCase() + nextStatus.slice(1);
-          }
-
-          // Update stats
-          if (panel) {
-            let avail = 0, res = 0, occ = 0;
-            panel.querySelectorAll('.floor-tile-new').forEach(function (t) {
-              const st = t.getAttribute('data-status');
-              if (st === 'available') avail++;
-              if (st === 'reserved') res++;
-              if (st === 'occupied') occ++;
-            });
-            const statVals = panel.querySelectorAll('.floor-stat-val');
-            if (statVals.length >= 3) {
-              statVals[0].textContent = avail;
-              statVals[1].textContent = res;
-              statVals[2].textContent = occ;
-            }
-          }
-
-          // Save to database if we have the CSRF token
-          const floorMeta = document.getElementById('floor-csrf-container');
-          if (floorMeta && tableId) {
-            const csrf = floorMeta.dataset.csrf || '';
-            const actionToken = floorMeta.dataset.actionToken || '';
-
-            const body = new URLSearchParams();
-            body.set('csrf_token', csrf);
-            body.set('action_token', actionToken);
-            body.set('table_id', tableId);
-            body.set('status', nextStatus);
-
-            fetch('../../actions.php?action=admin_floor_update', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-              body: body.toString(),
-            })
-              .then(function (res) { return res.json(); })
-              .catch(function () { });
-          }
-        });
-
-        // Render it to the DOM
-        grid.appendChild(tile);
-
-        // Instantly increment the parent panel's Available counter since new tables are always Available
-        let avail = 0;
-        panel.querySelectorAll('.floor-tile-new').forEach(function (t) {
-          if (t.getAttribute('data-status') === 'available') avail++;
-        });
-        const statVals = panel.querySelectorAll('.floor-stat-val');
-        if (statVals.length > 0) {
-          statVals[0].textContent = avail;
-        }
-      }
-
-      // Clear up the form and shut the modal safely
-      addTableForm.reset();
-      const modal = document.getElementById('addTableModal');
-      if (modal) modal.classList.remove('open');
     });
   }
 
@@ -1019,6 +1143,10 @@
 
   function openReserveModalFromButton(btn) {
     if (!btn) return;
+    if (isPastFloorView) {
+      if (window.alert) window.alert(pastFloorReserveMessage());
+      return;
+    }
 
     const tableId = btn.getAttribute('data-table-id') || '';
     const zoneKey = btn.getAttribute('data-zone-key') || '';
@@ -1048,6 +1176,10 @@
   }
 
   window.adminOpenReserveTable = function (btn) {
+    if (isPastFloorView) {
+      if (window.alert) window.alert(pastFloorReserveMessage());
+      return false;
+    }
     openReserveModalFromButton(btn);
     return false;
   };

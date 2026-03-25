@@ -105,7 +105,7 @@ include '../../includes/header.php';
       <?php if ($adminError): ?>
         <div class="auth-alert"><span><?= e($adminError) ?></span></div>
       <?php elseif ($adminSuccess): ?>
-        <div class="auth-alert" style="border-color: var(--clr-success, #2e7d32); color: var(--clr-success, #2e7d32);"><span><?= e($adminSuccess) ?></span></div>
+        <div class="auth-alert auth-success"><span><?= e($adminSuccess) ?></span></div>
       <?php endif; ?>
 
       <!-- Page Header -->

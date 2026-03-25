@@ -37,7 +37,8 @@ try {
                 'restaurant_email',
                 'restaurant_phone',
                 'restaurant_address',
-                'restaurant_description'
+                'restaurant_description',
+                'reservation_confirmation_note'
             ];
             break;
             
@@ -61,6 +62,20 @@ try {
             // Checkbox - set to 0 if not present
             $_POST['maintenance_mode'] = isset($_POST['maintenance_mode']) ? '1' : '0';
             break;
+
+        case 'floor':
+            $fields = [
+                'floor_manual_occupied_minutes'
+            ];
+            $minutes = isset($_POST['floor_manual_occupied_minutes']) ? (int) $_POST['floor_manual_occupied_minutes'] : 120;
+            if ($minutes < 5) {
+                $minutes = 5;
+            }
+            if ($minutes > 720) {
+                $minutes = 720;
+            }
+            $_POST['floor_manual_occupied_minutes'] = (string) $minutes;
+            break;
             
         default:
             set_flash('settings_error', 'Invalid settings section.');
@@ -73,7 +88,7 @@ try {
                           VALUES (?, ?) 
                           ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)");
 
-    $textareaFields = ['restaurant_description', 'maintenance_message'];
+    $textareaFields = ['restaurant_description', 'maintenance_message', 'reservation_confirmation_note'];
     
     foreach ($fields as $field) {
         $value = $_POST[$field] ?? '';

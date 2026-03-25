@@ -51,7 +51,7 @@ include '../../includes/header.php';
           <div class="admin-header-row">
             <div>
               <h1 class="admin-page-title">Reservations</h1>
-              <p class="admin-page-subtitle">Review, approve, and manage all guest reservations. Confirmed visits are auto-completed after their end time unless staff updates them earlier.</p>
+              <p class="admin-page-subtitle">Review, approve, and manage all guest reservations.</p>
             </div>
           </div>
         </header>
@@ -59,7 +59,7 @@ include '../../includes/header.php';
         <?php if ($adminError): ?>
           <div class="auth-alert"><span><?= e($adminError) ?></span></div>
         <?php elseif ($adminSuccess): ?>
-          <div class="auth-alert" style="border-color: var(--clr-success, #2e7d32); color: var(--clr-success, #2e7d32);"><span><?= e($adminSuccess) ?></span></div>
+          <div class="auth-alert auth-success"><span><?= e($adminSuccess) ?></span></div>
         <?php endif; ?>
 
         <div class="admin-section">
@@ -124,7 +124,7 @@ include '../../includes/header.php';
                                 <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
                                 <input type="hidden" name="action_token" value="<?= e(action_token('admin_update_status')) ?>">
                                 <input type="hidden" name="appointment_id" value="<?= e($r['appointment_id']) ?>">
-                                <button class="btn btn-outline btn-sm" style="color:var(--clr-destructive);border-color:var(--clr-destructive);" name="action" value="reject">Reject</button>
+                                <button class="btn btn-outline btn-sm" style="color:var(--clr-destructive);border-color:var(--clr-destructive);" name="action" value="reject" onclick="return confirm('Are you sure you want to reject this reservation?');">Reject</button>
                               </form>
                               <?php if ($status === 'pending' && !$canApprove): ?>
                                 <span style="display:inline-block;margin-top:6px;font-size:var(--text-xs);color:var(--clr-muted-fg);">Limit reached</span>
@@ -140,7 +140,7 @@ include '../../includes/header.php';
                                 <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
                                 <input type="hidden" name="action_token" value="<?= e(action_token('admin_update_status')) ?>">
                                 <input type="hidden" name="appointment_id" value="<?= e($r['appointment_id']) ?>">
-                                <button class="btn btn-outline btn-sm" style="color:var(--clr-destructive);border-color:var(--clr-destructive);" name="action" value="cancel">Cancel</button>
+                                <button class="btn btn-outline btn-sm" style="color:var(--clr-destructive);border-color:var(--clr-destructive);" name="action" value="cancel" onclick="return confirm('Are you sure you want to cancel this reservation?');">Cancel</button>
                               </form>
                             <?php else: ?>
                               <span style="color:var(--clr-muted-fg);font-size:var(--text-xs);">No actions</span>

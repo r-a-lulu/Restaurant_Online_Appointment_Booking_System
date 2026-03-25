@@ -20,6 +20,17 @@ if (!isset($_SESSION['user_id'])) {
 
 $siteName = get_setting('restaurant_name', 'Eudaimonia');
 $hideLogout = (isset($_GET['source']) && $_GET['source'] === 'dashboard');
+$fromDashboard = (isset($_GET['source']) && $_GET['source'] === 'dashboard');
+$contactPhone = get_setting('restaurant_phone', '(555) 123-4567');
+$contactEmail = get_setting('restaurant_email', 'hello@eudaimonia.com');
+$confirmationNoteTemplate = get_setting(
+  'reservation_confirmation_note',
+  'A confirmation email will be sent to your address within 1 hour. If you have any questions, please call us at {phone} or email {email}.'
+);
+$confirmationNote = strtr($confirmationNoteTemplate, [
+  '{phone}' => $contactPhone,
+  '{email}' => $contactEmail,
+]);
 
 $appointment = [];
 $confError = '';
@@ -114,6 +125,20 @@ include '../includes/nav.php';
             </div>
           </div>
         </div>
+
+        <div class="confirm-actions" style="margin-top: var(--space-6);">
+          <?php if ($fromDashboard): ?>
+            <a href="<?= $basePath ?>pages/dashboard/index.php" class="btn btn-primary">Return to Dashboard</a>
+            <a href="<?= $basePath ?>pages/dashboard/reservations.php" class="btn btn-outline">View My Reservations</a>
+          <?php else: ?>
+            <a href="<?= $basePath ?>pages/dashboard/reservations.php" class="btn btn-primary">View My Reservations</a>
+            <a href="<?= $basePath ?>pages/dashboard/index.php" class="btn btn-outline">Return to Dashboard</a>
+          <?php endif; ?>
+        </div>
+
+        <p class="confirm-note" style="margin-top: var(--space-5);">
+          <?= nl2br(e($confirmationNote)) ?>
+        </p>
       </div>
     </div>
   </div>

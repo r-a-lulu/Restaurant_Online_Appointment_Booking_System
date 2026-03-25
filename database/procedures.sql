@@ -41,6 +41,8 @@
 -- Procedure #34: sp_status_list
 -- Procedure #35: sp_seed_default_statuses
 -- Procedure #36: sp_update_appointment_status
+-- Procedure #37: sp_find_available_table
+-- Procedure #38: sp_validate_table
 
 USE restaurant_booking_v1;
 
@@ -323,6 +325,114 @@ BEGIN
   SELECT ROW_COUNT() AS rows_affected;
 END$$
 
+DROP PROCEDURE IF EXISTS sp_find_available_table$$
+CREATE PROCEDURE sp_find_available_table(
+  IN p_zone_id INT,
+  IN p_party_size INT,
+  IN p_seating_preference VARCHAR(100),
+  IN p_appointment_date DATE,
+  IN p_start_time TIME,
+  IN p_end_time TIME
+)
+BEGIN
+  SELECT
+    t.table_id,
+    t.zone_id,
+    t.capacity,
+    t.seating_preference,
+    CASE WHEN t.current_status = 'occupied' THEN 'occupied' ELSE 'available' END AS current_status
+  FROM `tables` t
+  WHERE t.zone_id = p_zone_id
+    AND t.capacity >= p_party_size
+    AND COALESCE(t.current_status, 'available') <> 'occupied'
+    AND (p_seating_preference = '' OR t.seating_preference = p_seating_preference)
+    AND fn_is_slot_available(p_appointment_date, p_start_time, p_end_time, t.table_id, p_zone_id, NULL) = 1
+  ORDER BY t.capacity ASC, t.seating_preference ASC, t.table_id ASC
+  LIMIT 1;
+END$$
+
+DROP PROCEDURE IF EXISTS sp_validate_table$$
+CREATE PROCEDURE sp_validate_table(
+  IN p_table_id INT,
+  IN p_zone_id INT,
+  IN p_seating_preference VARCHAR(100),
+  IN p_party_size INT
+)
+BEGIN
+  DECLARE v_zone_id INT DEFAULT NULL;
+  DECLARE v_capacity INT DEFAULT NULL;
+  DECLARE v_seating_preference VARCHAR(100) DEFAULT NULL;
+  DECLARE v_current_status VARCHAR(20) DEFAULT NULL;
+
+  SELECT zone_id, capacity, seating_preference, CASE WHEN current_status = 'occupied' THEN 'occupied' ELSE 'available' END
+  INTO v_zone_id, v_capacity, v_seating_preference, v_current_status
+  FROM `tables`
+  WHERE table_id = p_table_id
+  LIMIT 1;
+
+  IF v_zone_id IS NULL THEN
+    SELECT
+      0 AS is_valid,
+      'TABLE_NOT_FOUND' AS error_code,
+      'The selected table could not be found.' AS error_message,
+      NULL AS table_id,
+      NULL AS zone_id,
+      NULL AS seating_preference,
+      NULL AS capacity,
+      NULL AS current_status;
+  ELSEIF v_zone_id <> p_zone_id THEN
+    SELECT
+      0 AS is_valid,
+      'ZONE_MISMATCH' AS error_code,
+      'The selected table does not belong to the chosen dining zone.' AS error_message,
+      p_table_id AS table_id,
+      v_zone_id AS zone_id,
+      v_seating_preference AS seating_preference,
+      v_capacity AS capacity,
+      v_current_status AS current_status;
+  ELSEIF p_seating_preference <> '' AND LOWER(TRIM(v_seating_preference)) <> LOWER(TRIM(p_seating_preference)) THEN
+    SELECT
+      0 AS is_valid,
+      'SEATING_MISMATCH' AS error_code,
+      'The selected table does not match the selected seating preference.' AS error_message,
+      p_table_id AS table_id,
+      v_zone_id AS zone_id,
+      v_seating_preference AS seating_preference,
+      v_capacity AS capacity,
+      v_current_status AS current_status;
+  ELSEIF v_capacity < p_party_size THEN
+    SELECT
+      0 AS is_valid,
+      'CAPACITY_TOO_SMALL' AS error_code,
+      'The selected seating preference cannot fit this party size. Please choose another one or reduce the guest count.' AS error_message,
+      p_table_id AS table_id,
+      v_zone_id AS zone_id,
+      v_seating_preference AS seating_preference,
+      v_capacity AS capacity,
+      v_current_status AS current_status;
+  ELSEIF v_current_status = 'occupied' THEN
+    SELECT
+      0 AS is_valid,
+      'TABLE_UNAVAILABLE' AS error_code,
+      'That table is no longer available. Please choose another seating preference or time.' AS error_message,
+      p_table_id AS table_id,
+      v_zone_id AS zone_id,
+      v_seating_preference AS seating_preference,
+      v_capacity AS capacity,
+      v_current_status AS current_status;
+  ELSE
+    SELECT
+      1 AS is_valid,
+      NULL AS error_code,
+      NULL AS error_message,
+      p_table_id AS table_id,
+      v_zone_id AS zone_id,
+      v_seating_preference AS seating_preference,
+      v_capacity AS capacity,
+      v_current_status AS current_status;
+  END IF;
+END$$
+
 -- ---------------------------------------------------------
 -- APPOINTMENTS
 -- ---------------------------------------------------------
@@ -353,12 +463,6 @@ BEGIN
     p_appointment_date, p_start_time, p_end_time, p_party_size, p_status_id, p_special_requests
   );
 
-  IF p_table_id IS NOT NULL AND p_table_id > 0 THEN
-    UPDATE `tables`
-    SET current_status = fn_table_current_status(p_table_id)
-    WHERE table_id = p_table_id;
-  END IF;
-
   COMMIT;
 
   SELECT LAST_INSERT_ID() AS appointment_id;
@@ -378,13 +482,6 @@ CREATE PROCEDURE sp_appointment_update(
   IN p_status_id INT
 )
 BEGIN
-  DECLARE v_old_table_id INT DEFAULT NULL;
-
-  SELECT table_id INTO v_old_table_id
-  FROM appointments
-  WHERE appointment_id = p_appointment_id
-  LIMIT 1;
-
   UPDATE appointments
   SET service_id = p_service_id,
       table_id = p_table_id,
@@ -397,18 +494,6 @@ BEGIN
       status_id = p_status_id
   WHERE appointment_id = p_appointment_id;
 
-  IF v_old_table_id IS NOT NULL THEN
-    UPDATE `tables`
-    SET current_status = fn_table_current_status(v_old_table_id)
-    WHERE table_id = v_old_table_id;
-  END IF;
-
-  IF p_table_id IS NOT NULL AND p_table_id > 0 AND p_table_id <> v_old_table_id THEN
-    UPDATE `tables`
-    SET current_status = fn_table_current_status(p_table_id)
-    WHERE table_id = p_table_id;
-  END IF;
-
   SELECT ROW_COUNT() AS rows_affected;
 END$$
 
@@ -418,22 +503,9 @@ CREATE PROCEDURE sp_appointment_cancel(
   IN p_cancelled_status_id INT
 )
 BEGIN
-  DECLARE v_table_id INT DEFAULT NULL;
-
-  SELECT table_id INTO v_table_id
-  FROM appointments
-  WHERE appointment_id = p_appointment_id
-  LIMIT 1;
-
   UPDATE appointments
   SET status_id = p_cancelled_status_id
   WHERE appointment_id = p_appointment_id;
-
-  IF v_table_id IS NOT NULL THEN
-    UPDATE `tables`
-    SET current_status = fn_table_current_status(v_table_id)
-    WHERE table_id = v_table_id;
-  END IF;
 
   SELECT ROW_COUNT() AS rows_affected;
 END$$
@@ -584,12 +656,6 @@ CREATE PROCEDURE sp_update_appointment_status(
 )
 BEGIN
   DECLARE v_status_id INT;
-  DECLARE v_table_id INT DEFAULT NULL;
-
-  SELECT table_id INTO v_table_id
-  FROM appointments
-  WHERE appointment_id = p_appointment_id
-  LIMIT 1;
 
   SELECT status_id INTO v_status_id
   FROM appointment_status
@@ -604,12 +670,6 @@ BEGIN
   UPDATE appointments
   SET status_id = v_status_id
   WHERE appointment_id = p_appointment_id;
-
-  IF v_table_id IS NOT NULL THEN
-    UPDATE `tables`
-    SET current_status = fn_table_current_status(v_table_id)
-    WHERE table_id = v_table_id;
-  END IF;
 
   SELECT ROW_COUNT() AS rows_affected;
 END$$
