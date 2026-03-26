@@ -1,24 +1,23 @@
 <?php
 
 /**
- * Admin Reservations Manager — pages/admin/reservations.php
+ * Admin Reservations Manager - pages/admin/reservations.php
  */
 
 require_once '../../includes/security.php';
 start_secure_session();
 require_admin();
 
-$pageTitle        = 'Reservations — Admin';
+$pageTitle = 'Reservations - Admin';
 $pageCSS = ['dashboard.css', 'admin.css'];
 $currentAdminPage = 'reservations';
-$basePath         = '../../';
+$basePath = '../../';
 
 $adminError = get_flash('admin_error');
 $adminSuccess = get_flash('admin_success');
-
 try {
   $pdo = db();
-  $stmt = $pdo->prepare("SELECT v.appointment_id, v.customer_name, v.customer_email, v.zone_name, v.table_label, v.appointment_date, v.start_time, v.party_size, v.status_name, a.user_id, (SELECT COUNT(*) FROM appointments a2 WHERE a2.user_id = a.user_id AND a2.appointment_id <> v.appointment_id AND a2.status_id IN (SELECT status_id FROM appointment_status WHERE status_name IN ('pending','confirmed'))) AS active_count FROM vw_admin_appointments v JOIN appointments a ON a.appointment_id = v.appointment_id");
+  $stmt = $pdo->prepare("SELECT v.appointment_id, v.customer_name, v.customer_email, v.zone_name, v.table_label, v.appointment_date, v.start_time, v.end_time, v.party_size, v.status_name, a.user_id, (SELECT COUNT(*) FROM appointments a2 WHERE a2.user_id = a.user_id AND a2.appointment_id <> v.appointment_id AND a2.status_id IN (SELECT status_id FROM appointment_status WHERE status_name IN ('pending','confirmed'))) AS active_count FROM vw_admin_appointments v JOIN appointments a ON a.appointment_id = v.appointment_id");
   $stmt->execute();
   $reservations = $stmt->fetchAll();
   $stmt->closeCursor();
@@ -27,7 +26,7 @@ try {
   $reservations = [];
 }
 
-$byStatus = ['pending' => [], 'confirmed' => [], 'cancelled' => [], 'completed' => []];
+$byStatus = ['pending' => [], 'confirmed' => [], 'cancelled' => [], 'completed' => [], 'no_show' => []];
 foreach ($reservations as $r) {
   $status = $r['status_name'];
   if (!isset($byStatus[$status])) {
@@ -70,8 +69,9 @@ include '../../includes/header.php';
 
           <div class="admin-tabs" data-admin-tabs>
             <?php foreach ($byStatus as $key => $rows): ?>
+              <?php $tabLabel = $key === 'no_show' ? 'No Show' : ucfirst($key); ?>
               <button class="admin-tab <?= $key === 'pending' ? 'active' : '' ?>" data-tab="<?= e($key) ?>" aria-selected="<?= $key === 'pending' ? 'true' : 'false' ?>">
-                <?= ucfirst($key) ?> <span class="admin-tab-count">(<?= count($rows) ?>)</span>
+                <?= e($tabLabel) ?> <span class="admin-tab-count">(<?= count($rows) ?>)</span>
               </button>
             <?php endforeach; ?>
           </div>
@@ -94,23 +94,30 @@ include '../../includes/header.php';
                     </tr>
                   </thead>
                   <tbody>
-                    <?php foreach ($rows as $r):
-                      $badgeClass = $status === 'confirmed' ? 'badge-confirmed' : ($status === 'pending' ? 'badge-pending' : ($status === 'completed' ? 'badge-completed' : 'badge-cancelled'));
-                      $activeCount = (int) ($r['active_count'] ?? 0);
-                      $canApprove = ($status === 'pending') && ($activeCount < 5);
-                    ?>
+                    <?php foreach ($rows as $r): ?>
+                      <?php
+                        $badgeClass = $status === 'confirmed' ? 'badge-confirmed' : ($status === 'pending' ? 'badge-pending' : ($status === 'completed' ? 'badge-completed' : 'badge-cancelled'));
+                        $badgeLabel = $status === 'no_show' ? 'No Show' : ucfirst($status);
+                        $activeCount = (int) ($r['active_count'] ?? 0);
+                        $canApprove = ($status === 'pending') && ($activeCount < 12);
+                        $canMarkNoShow = false;
+                        if ($status === 'confirmed') {
+                          $reservationStartTs = strtotime($r['appointment_date'] . ' ' . $r['start_time']);
+                          $canMarkNoShow = $reservationStartTs !== false && $reservationStartTs <= time();
+                        }
+                      ?>
                       <tr>
                         <td style="font-size:var(--text-xs);color:var(--clr-muted-fg)">#<?= e($r['appointment_id']) ?></td>
                         <td>
                           <span class="admin-guest-name"><?= e($r['customer_name']) ?></span>
                           <br><span class="admin-guest-email"><?= e($r['customer_email']) ?></span>
                         </td>
-                        <td><?= e($r['zone_name'] ?? '�') ?></td>
-                        <td><?= e($r['table_label'] ?? '—') ?></td>
+                        <td><?= e($r['zone_name'] ?? '-') ?></td>
+                        <td><?= e($r['table_label'] ?? '-') ?></td>
                         <td><?= e(date('d M Y', strtotime($r['appointment_date']))) ?></td>
                         <td><?= e(date('g:i A', strtotime($r['start_time']))) ?></td>
                         <td><?= e((string) $r['party_size']) ?></td>
-                        <td><span class="badge <?= $badgeClass ?>"><?= e(ucfirst($status)) ?></span></td>
+                        <td><span class="badge <?= $badgeClass ?>"><?= e($badgeLabel) ?></span></td>
                         <td class="admin-row-actions">
                           <div class="admin-row-actions-inner">
                             <?php if ($status === 'pending'): ?>
@@ -118,7 +125,7 @@ include '../../includes/header.php';
                                 <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
                                 <input type="hidden" name="action_token" value="<?= e(action_token('admin_update_status')) ?>">
                                 <input type="hidden" name="appointment_id" value="<?= e($r['appointment_id']) ?>">
-                                <button class="btn btn-primary btn-sm" name="action" value="approve" <?php echo $canApprove ? '' : 'disabled title="User has reached the 5 active bookings limit."'; ?>>Approve</button>
+                                <button class="btn btn-primary btn-sm" name="action" value="approve" <?= $canApprove ? '' : 'disabled title="User has reached the 12 active bookings limit."' ?>>Approve</button>
                               </form>
                               <form method="post" action="<?= $basePath ?>actions.php?action=admin_update_status" style="display:inline;">
                                 <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
@@ -126,7 +133,7 @@ include '../../includes/header.php';
                                 <input type="hidden" name="appointment_id" value="<?= e($r['appointment_id']) ?>">
                                 <button class="btn btn-outline btn-sm" style="color:var(--clr-destructive);border-color:var(--clr-destructive);" name="action" value="reject" onclick="return confirm('Are you sure you want to reject this reservation?');">Reject</button>
                               </form>
-                              <?php if ($status === 'pending' && !$canApprove): ?>
+                              <?php if (!$canApprove): ?>
                                 <span style="display:inline-block;margin-top:6px;font-size:var(--text-xs);color:var(--clr-muted-fg);">Limit reached</span>
                               <?php endif; ?>
                             <?php elseif ($status === 'confirmed'): ?>
@@ -135,6 +142,12 @@ include '../../includes/header.php';
                                 <input type="hidden" name="action_token" value="<?= e(action_token('admin_update_status')) ?>">
                                 <input type="hidden" name="appointment_id" value="<?= e($r['appointment_id']) ?>">
                                 <button class="btn btn-outline btn-sm" name="action" value="complete">Mark Complete</button>
+                              </form>
+                              <form method="post" action="<?= $basePath ?>actions.php?action=admin_update_status" style="display:inline;">
+                                <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+                                <input type="hidden" name="action_token" value="<?= e(action_token('admin_update_status')) ?>">
+                                <input type="hidden" name="appointment_id" value="<?= e($r['appointment_id']) ?>">
+                                <button class="btn btn-outline btn-sm" style="color:var(--clr-muted-fg);" name="action" value="no_show" onclick="return confirm('Mark this reservation as no show?');" <?= $canMarkNoShow ? '' : 'disabled title="You can mark a reservation as no show only after its start time has passed."' ?>>No Show</button>
                               </form>
                               <form method="post" action="<?= $basePath ?>actions.php?action=admin_update_status" style="display:inline;">
                                 <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">

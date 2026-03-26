@@ -53,7 +53,8 @@ try {
     set_flash('dash_success', 'Reservation cancelled.');
     redirect('pages/dashboard/reservations.php');
 } catch (PDOException $e) {
-    set_flash('dash_error', safe_error_message($e));
+    error_log('Reservation cancel failed for user ' . (int) $_SESSION['user_id'] . ', appointment ' . $appointmentId . ': ' . $e->getMessage());
+    set_flash('dash_error', 'We could not cancel your reservation right now. Please try again.');
     redirect('pages/dashboard/reservations.php');
 }
 

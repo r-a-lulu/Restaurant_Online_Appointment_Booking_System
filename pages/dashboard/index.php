@@ -1,16 +1,16 @@
 <?php
 /**
- * Dashboard Overview � pages/dashboard/index.php
+ * Dashboard Overview - pages/dashboard/index.php
  */
 
 require_once '../../includes/security.php';
 start_secure_session();
 require_login();
 
-$pageTitle       = 'My Dashboard';
-$pageCSS         = ['dashboard.css'];
+$pageTitle = 'My Dashboard';
+$pageCSS = ['dashboard.css'];
 $currentDashPage = 'overview';
-$basePath        = '../../';
+$basePath = '../../';
 
 $dashError = get_flash('dash_error');
 $dashSuccess = get_flash('dash_success');
@@ -19,7 +19,7 @@ $stats = [
   'total' => 0,
   'upcoming' => 0,
   'completed' => 0,
-  'favorite_zone' => '�',
+  'favorite_zone' => '-',
 ];
 $upcoming = [];
 
@@ -31,19 +31,19 @@ try {
   $stats['total'] = (int) $stmt->fetchColumn();
   $stmt->closeCursor();
 
-  $stmt = $pdo->prepare("SELECT COUNT(*) FROM appointments a JOIN appointment_status s ON s.status_id = a.status_id WHERE a.user_id = :uid AND a.status_id = (SELECT status_id FROM appointment_status WHERE status_name = 'confirmed' LIMIT 1) AND a.appointment_date >= CURDATE()");
+  $stmt = $pdo->prepare("SELECT COUNT(*) FROM appointments a WHERE a.user_id = :uid AND a.status_id = (SELECT status_id FROM appointment_status WHERE status_name = 'confirmed' LIMIT 1) AND a.appointment_date >= CURDATE()");
   $stmt->execute([':uid' => (int) $_SESSION['user_id']]);
   $stats['upcoming'] = (int) $stmt->fetchColumn();
   $stmt->closeCursor();
 
-  $stmt = $pdo->prepare("SELECT COUNT(*) FROM appointments a JOIN appointment_status s ON s.status_id = a.status_id WHERE a.user_id = :uid AND a.status_id = (SELECT status_id FROM appointment_status WHERE status_name = 'completed' LIMIT 1)");
+  $stmt = $pdo->prepare("SELECT COUNT(*) FROM appointments a WHERE a.user_id = :uid AND a.status_id = (SELECT status_id FROM appointment_status WHERE status_name = 'completed' LIMIT 1)");
   $stmt->execute([':uid' => (int) $_SESSION['user_id']]);
   $stats['completed'] = (int) $stmt->fetchColumn();
   $stmt->closeCursor();
 
   $stmt = $pdo->prepare("SELECT dz.zone_name, COUNT(*) AS cnt FROM appointments a LEFT JOIN `tables` t ON t.table_id = a.table_id JOIN dining_zones dz ON dz.zone_id = COALESCE(a.zone_id, t.zone_id) WHERE a.user_id = :uid GROUP BY dz.zone_id ORDER BY cnt DESC LIMIT 1");
   $stmt->execute([':uid' => (int) $_SESSION['user_id']]);
-  $stats['favorite_zone'] = $stmt->fetchColumn() ?: '�';
+  $stats['favorite_zone'] = $stmt->fetchColumn() ?: '-';
   $stmt->closeCursor();
 
   $stmt = $pdo->prepare("SELECT appointment_id, zone_name, appointment_date, start_time, party_size, status_name FROM vw_appointments_detail WHERE user_id = :uid AND status_id IN (SELECT status_id FROM appointment_status WHERE status_name IN ('pending','confirmed')) AND appointment_date >= CURDATE() ORDER BY appointment_date ASC, start_time ASC LIMIT 5");
@@ -119,7 +119,7 @@ include '../../includes/header.php';
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
           </div>
           <div class="stat-card-body">
-            <p class="stat-card-label">Favourite Zone</p>
+            <p class="stat-card-label">Favorite Zone</p>
             <p class="stat-card-value" style="font-size: var(--text-xl);"><?= e($stats['favorite_zone']) ?></p>
             <p class="stat-card-sub">Most visited</p>
           </div>
@@ -139,10 +139,10 @@ include '../../includes/header.php';
               <span class="reservation-date-month"><?= e(date('M', strtotime($row['appointment_date']))) ?></span>
             </div>
             <div class="reservation-info">
-              <p class="reservation-zone"><?= e($row['zone_name'] ?? '�') ?></p>
-              <p class="reservation-meta"><?= e(date('g:i A', strtotime($row['start_time']))) ?> � <?= e((string) $row['party_size']) ?> Guests � #<?= e((string) $row['appointment_id']) ?></p>
+              <p class="reservation-zone"><?= e($row['zone_name'] ?? '-') ?></p>
+              <p class="reservation-meta"><?= e(date('g:i A', strtotime($row['start_time']))) ?> | <?= e((string) $row['party_size']) ?> Guests | #<?= e((string) $row['appointment_id']) ?></p>
             </div>
-            <span class="badge badge-<?= $row['status_name'] === 'confirmed' ? 'confirmed' : 'pending' ?>"><?= e(ucfirst($row['status_name'])) ?></span>
+            <span class="badge badge-<?= $row['status_name'] === 'confirmed' ? 'confirmed' : 'pending' ?>"><?= e($row['status_name'] === 'confirmed' ? 'Upcoming' : 'Pending') ?></span>
             <div class="reservation-actions">
               <a href="reservations.php" class="btn btn-outline btn-sm">Details</a>
             </div>
@@ -190,4 +190,3 @@ include '../../includes/header.php';
 <script src="<?= $basePath ?>js/dashboard.js"></script>
 </body>
 </html>
-

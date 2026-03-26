@@ -100,7 +100,8 @@ try {
     }
 
 } catch (PDOException $e) {
-    set_flash('error', 'Authentication service unavailable: ' . safe_error_message($e));
+    error_log('Login failed: ' . $e->getMessage());
+    set_flash('error', 'Authentication service is temporarily unavailable. Please try again shortly.');
     header("Location: pages/login.php");
     exit;
 }

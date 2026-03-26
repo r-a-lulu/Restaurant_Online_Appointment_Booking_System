@@ -76,6 +76,20 @@ try {
             }
             $_POST['floor_manual_occupied_minutes'] = (string) $minutes;
             break;
+
+        case 'booking':
+            $fields = [
+                'reservation_duration_minutes'
+            ];
+            $minutes = isset($_POST['reservation_duration_minutes']) ? (int) $_POST['reservation_duration_minutes'] : 90;
+            if ($minutes < 30) {
+                $minutes = 30;
+            }
+            if ($minutes > 240) {
+                $minutes = 240;
+            }
+            $_POST['reservation_duration_minutes'] = (string) $minutes;
+            break;
             
         default:
             set_flash('settings_error', 'Invalid settings section.');

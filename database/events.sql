@@ -14,9 +14,6 @@
 -- NOTE:
 -- Ensure the event scheduler is enabled:
 --   SET GLOBAL event_scheduler = ON;
---
--- Ensure default appointment statuses exist:
---   CALL sp_seed_default_statuses();
 
 USE restaurant_booking_v1;
 

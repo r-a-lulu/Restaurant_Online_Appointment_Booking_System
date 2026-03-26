@@ -4,6 +4,12 @@
  */
 require_once __DIR__ . '/../secure/db.php';
 
+if (!ini_get('date.timezone')) {
+    date_default_timezone_set('Asia/Manila');
+} else {
+    date_default_timezone_set((string) ini_get('date.timezone'));
+}
+
 function start_secure_session() {
     if (session_status() === PHP_SESSION_NONE) {
         // Enforce cookie-based sessions only
@@ -238,7 +244,11 @@ function apply_security_headers(): void {
 }
 
 function safe_error_message(\Exception $e) {
-    return $e->getMessage();
+    if ($e instanceof PDOException) {
+        return 'Something went wrong while loading this page. Please try again.';
+    }
+    $message = trim((string) $e->getMessage());
+    return $message !== '' ? $message : 'Something went wrong while loading this page. Please try again.';
 }
 
 function guest_friendly_error_message(\Exception $e, string $fallback = 'Something went wrong. Please try again.'): string {
@@ -443,6 +453,31 @@ function floor_manual_occupied_minutes(): int {
         return 720;
     }
     return $value;
+}
+
+function reservation_duration_minutes(): int {
+    $value = (int) get_setting('reservation_duration_minutes', '90');
+    if ($value < 30) {
+        return 30;
+    }
+    if ($value > 240) {
+        return 240;
+    }
+    return $value;
+}
+
+function reservation_duration_label(): string {
+    $minutes = reservation_duration_minutes();
+    $hours = intdiv($minutes, 60);
+    $remainingMinutes = $minutes % 60;
+
+    if ($hours > 0 && $remainingMinutes > 0) {
+        return $hours . ' hour' . ($hours === 1 ? '' : 's') . ' ' . $remainingMinutes . ' minutes';
+    }
+    if ($hours > 0) {
+        return $hours . ' hour' . ($hours === 1 ? '' : 's');
+    }
+    return $minutes . ' minutes';
 }
 
 function require_booking_open(bool $jsonResponse = false, bool $allowAdmin = true): void {

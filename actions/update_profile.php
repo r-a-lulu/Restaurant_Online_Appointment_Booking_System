@@ -43,6 +43,7 @@ try {
     redirect('pages/dashboard/profile.php');
 
 } catch (PDOException $e) {
-    set_flash('dash_error', safe_error_message($e));
+    error_log('Profile update failed for user ' . (int) $_SESSION['user_id'] . ': ' . $e->getMessage());
+    set_flash('dash_error', 'We could not update your profile right now. Please try again.');
     redirect('pages/dashboard/profile.php');
 }

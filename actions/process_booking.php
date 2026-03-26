@@ -87,8 +87,9 @@ if (!$startDt || (is_array($timeErrors) && (($timeErrors['warning_count'] ?? 0) 
 }
 $startTime = $startDt->format('H:i:s');
 
+$reservationDurationMinutes = reservation_duration_minutes();
 $endDt = clone $startDt;
-$endDt->modify('+2 hours');
+$endDt->modify('+' . $reservationDurationMinutes . ' minutes');
 $endTime = $endDt->format('H:i:s');
 
 $redirectToConfirmation = static function (int $appointmentId) use ($source): void {

@@ -322,11 +322,6 @@
       reserveSeating.disabled = false;
     }
     if (reservePartySize) reservePartySize.removeAttribute('max');
-    if (reserveTable) {
-      reserveTable.innerHTML = '<option value="">-- Select zone first --</option>';
-      reserveTable.disabled = true;
-    }
-    if (reserveTableLabel) reserveTableLabel.value = '';
     if (reserveDate) reserveDate.value = '';
     if (reserveTime) reserveTime.value = '';
     if (reserveGuestSearch) reserveGuestSearch.value = '';
@@ -684,8 +679,6 @@
   const reserveZone = document.getElementById('reserveZone');
   const reserveService = document.getElementById('reserveService');
   const reservePackage = document.getElementById('reservePackage');
-  const reserveTable = document.getElementById('reserveTable');
-  const reserveTableLabel = document.getElementById('reserveTableLabel');
   const reserveSeating = document.getElementById('reserveSeating');
   const reserveDate = document.getElementById('reserveDate');
   const reserveTime = document.getElementById('reserveTime');
@@ -841,7 +834,7 @@
       const selectedOpt = reserveZone.options[reserveZone.selectedIndex];
       if (selectedOpt && selectedOpt.disabled) {
         reserveZone.value = '';
-        clearReserveTables('-- Select zone first --');
+        clearReserveSeating('-- Select zone first --');
       }
     }
   }
@@ -879,6 +872,9 @@
     body.set('zone_id', String(zoneDbId));
     body.set('seating_preference', seatingVal);
     body.set('party_size', String(partySize));
+    if (reserveTableId && reserveTableId.value) {
+      body.set('table_id', String(reserveTableId.value));
+    }
 
     fetch(actionUrl('check_availability'), {
       method: 'POST',
@@ -891,69 +887,6 @@
         updateReserveTimeSlots(data.availability, data.assigned_tables || {});
       })
       .catch(function () { });
-  }
-
-  function clearReserveTables(message) {
-    if (!reserveTable) return;
-    reserveTable.innerHTML = '<option value="">' + (message || '-- Select table --') + '</option>';
-    reserveTable.disabled = true;
-    if (reserveTableLabel) reserveTableLabel.value = '';
-  }
-
-  function syncReserveTableLabel() {
-    if (!reserveTable || !reserveTableLabel) return;
-    const selected = reserveTable.options[reserveTable.selectedIndex];
-    reserveTableLabel.value = selected && selected.value ? (selected.getAttribute('data-display-label') || selected.textContent || '') : '';
-  }
-
-  function populateReserveTables(zoneKey, seatingPref, preferredTableId) {
-    if (!reserveTable) return;
-
-    clearReserveTables('-- Select table --');
-
-    const zoneTables = (window.ALL_TABLES && window.ALL_TABLES[zoneKey]) ? window.ALL_TABLES[zoneKey] : [];
-    const pref = normalizeText(seatingPref);
-
-    const availableTables = zoneTables.filter(function (table) {
-      const tableStatus = normalizeStatus(table.status);
-      const tablePref = getTablePreference(table);
-      const matchesPref = !pref || tablePref === pref;
-      return tableStatus === 'available' && matchesPref;
-    });
-
-    if (!availableTables.length) {
-      reserveTable.innerHTML = '<option value="">No available tables for this preference</option>';
-      reserveTable.disabled = true;
-      if (reserveTableLabel) reserveTableLabel.value = '';
-      return;
-    }
-
-    reserveTable.innerHTML = '<option value="">-- Select table --</option>';
-    availableTables.forEach(function (table) {
-      const opt = document.createElement('option');
-      opt.value = table.table_id;
-      const seatingLabel = table.seating_preference || table.label || 'Unassigned';
-      opt.textContent = seatingLabel + ' (' + table.cap + ' seats)';
-      opt.setAttribute('data-display-label', seatingLabel);
-      opt.setAttribute('data-seating-preference', table.seating_preference || '');
-      reserveTable.appendChild(opt);
-    });
-
-    reserveTable.disabled = false;
-
-    const targetId = preferredTableId ? String(preferredTableId) : '';
-    if (targetId) {
-      const match = Array.from(reserveTable.options).find(function (opt) {
-        return opt.value === targetId;
-      });
-      if (match) {
-        reserveTable.value = targetId;
-        const matchedPref = match.getAttribute('data-seating-preference') || '';
-        if (reserveSeating) reserveSeating.value = matchedPref;
-      }
-    }
-
-    syncReserveTableLabel();
   }
 
   function fillGuestFieldsFromOption(option) {

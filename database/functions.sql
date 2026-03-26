@@ -9,26 +9,20 @@
 -- Function #2:  fn_status_id_by_name(status_name)
 -- Function #3:  fn_is_terminal_status(status_id)
 -- Function #4:  fn_is_active_status(status_id)
--- Function #5:  fn_user_full_name(user_id)
--- Function #6:  fn_user_active_booking_count(user_id)
--- Function #7:  fn_can_book_more(user_id, max_active)
--- Function #8:  fn_is_past_datetime(date, time)
--- Function #9:  fn_overlaps(start1, end1, start2, end2)
--- Function #10: fn_table_capacity(table_id)
--- Function #11: fn_party_fits_table(table_id, party_size)
--- Function #12: fn_table_has_conflict(table_id, date, start, end, exclude_appt_id)
--- Function #13: fn_zone_has_conflict(zone_id, date, start, end, exclude_appt_id)
--- Function #14: fn_is_slot_available(date, start, end, table_id, zone_id, exclude_appt_id)
--- Function #15: fn_service_price(service_id)
--- Function #16: fn_package_price(package_id)
--- Function #17: fn_add_on_price(add_on_id)
--- Function #18: fn_appointment_subtotal(appointment_id)
--- Function #19: fn_appointment_total(appointment_id)
--- Function #20: fn_daily_booking_count(date)
--- Function #21: fn_daily_revenue(date)
--- Function #22: fn_zone_booking_count(zone_id, date_from, date_to)
--- Function #23: fn_service_booking_count(service_id, date_from, date_to)
--- Function #24: fn_is_valid_status_transition(old_status_id, new_status_id)
+-- Function #5:  fn_user_active_booking_count(user_id)
+-- Function #6:  fn_can_book_more(user_id, max_active)
+-- Function #7:  fn_is_past_datetime(date, time)
+-- Function #8:  fn_overlaps(start1, end1, start2, end2)
+-- Function #9:  fn_table_capacity(table_id)
+-- Function #10: fn_party_fits_table(table_id, party_size)
+-- Function #11: fn_table_has_conflict(table_id, date, start, end, exclude_appt_id)
+-- Function #12: fn_zone_has_conflict(zone_id, date, start, end, exclude_appt_id)
+-- Function #13: fn_is_slot_available(date, start, end, table_id, zone_id, exclude_appt_id)
+-- Function #14: fn_appointment_subtotal(appointment_id)
+-- Function #15: fn_appointment_total(appointment_id)
+-- Function #16: fn_daily_booking_count(date)
+-- Function #17: fn_daily_revenue(date)
+-- Function #18: fn_is_valid_status_transition(old_status_id, new_status_id)
 
 USE restaurant_booking_v1;
 
@@ -81,17 +75,6 @@ BEGIN
   DECLARE v_name VARCHAR(30);
   SET v_name = fn_status_name(p_status_id);
   RETURN IF(v_name IN ('pending','confirmed'), 1, 0);
-END$$
-
-DROP FUNCTION IF EXISTS fn_user_full_name$$
-CREATE FUNCTION fn_user_full_name(p_user_id INT)
-RETURNS VARCHAR(201)
-READS SQL DATA
-BEGIN
-  DECLARE v_full VARCHAR(201);
-  SELECT CONCAT(first_name, ' ', last_name) INTO v_full
-  FROM users WHERE user_id = p_user_id;
-  RETURN v_full;
 END$$
 
 DROP FUNCTION IF EXISTS fn_user_active_booking_count$$
@@ -229,40 +212,6 @@ BEGIN
   RETURN 0;
 END$$
 
--- ---------------------------------------------------------
--- PRICING HELPERS
--- ---------------------------------------------------------
-
-DROP FUNCTION IF EXISTS fn_service_price$$
-CREATE FUNCTION fn_service_price(p_service_id INT)
-RETURNS DECIMAL(10,2)
-READS SQL DATA
-BEGIN
-  DECLARE v_price DECIMAL(10,2);
-  SELECT price INTO v_price FROM services WHERE service_id = p_service_id;
-  RETURN IFNULL(v_price, 0);
-END$$
-
-DROP FUNCTION IF EXISTS fn_package_price$$
-CREATE FUNCTION fn_package_price(p_package_id INT)
-RETURNS DECIMAL(10,2)
-READS SQL DATA
-BEGIN
-  DECLARE v_price DECIMAL(10,2);
-  SELECT base_price INTO v_price FROM event_packages WHERE package_id = p_package_id;
-  RETURN IFNULL(v_price, 0);
-END$$
-
-DROP FUNCTION IF EXISTS fn_add_on_price$$
-CREATE FUNCTION fn_add_on_price(p_add_on_id INT)
-RETURNS DECIMAL(10,2)
-READS SQL DATA
-BEGIN
-  DECLARE v_price DECIMAL(10,2);
-  SELECT price INTO v_price FROM add_ons WHERE add_on_id = p_add_on_id;
-  RETURN IFNULL(v_price, 0);
-END$$
-
 DROP FUNCTION IF EXISTS fn_appointment_subtotal$$
 CREATE FUNCTION fn_appointment_subtotal(p_appointment_id INT)
 RETURNS DECIMAL(10,2)
@@ -325,32 +274,6 @@ BEGIN
   RETURN v_total;
 END$$
 
-DROP FUNCTION IF EXISTS fn_zone_booking_count$$
-CREATE FUNCTION fn_zone_booking_count(p_zone_id INT, p_date_from DATE, p_date_to DATE)
-RETURNS INT
-READS SQL DATA
-BEGIN
-  DECLARE v_count INT DEFAULT 0;
-  SELECT COUNT(*) INTO v_count
-  FROM appointments
-  WHERE zone_id = p_zone_id
-    AND appointment_date BETWEEN p_date_from AND p_date_to;
-  RETURN v_count;
-END$$
-
-DROP FUNCTION IF EXISTS fn_service_booking_count$$
-CREATE FUNCTION fn_service_booking_count(p_service_id INT, p_date_from DATE, p_date_to DATE)
-RETURNS INT
-READS SQL DATA
-BEGIN
-  DECLARE v_count INT DEFAULT 0;
-  SELECT COUNT(*) INTO v_count
-  FROM appointments
-  WHERE service_id = p_service_id
-    AND appointment_date BETWEEN p_date_from AND p_date_to;
-  RETURN v_count;
-END$$
-
 -- ---------------------------------------------------------
 -- STATUS FLOW
 -- ---------------------------------------------------------
@@ -377,33 +300,6 @@ BEGIN
   END IF;
 
   RETURN 0;
-END$$
-
-DROP FUNCTION IF EXISTS fn_table_current_status$$
-CREATE FUNCTION fn_table_current_status(p_table_id INT)
-RETURNS VARCHAR(20)
-READS SQL DATA
-BEGIN
-  DECLARE v_count INT DEFAULT 0;
-
-  IF p_table_id IS NULL OR p_table_id <= 0 THEN
-    RETURN 'available';
-  END IF;
-
-  SELECT COUNT(*) INTO v_count
-  FROM appointments a
-  JOIN appointment_status s ON s.status_id = a.status_id
-  WHERE a.table_id = p_table_id
-    AND s.status_name IN ('pending', 'confirmed')
-    AND a.appointment_date = CURDATE()
-    AND a.start_time <= CURTIME()
-    AND a.end_time > CURTIME();
-
-  IF v_count > 0 THEN
-    RETURN 'occupied';
-  END IF;
-
-  RETURN 'available';
 END$$
 
 DELIMITER ;

@@ -27,6 +27,7 @@ try {
 
 $saveSuccess = get_flash('settings_success');
 $saveError = get_flash('settings_error');
+$reservationDurationMinutes = (int) ($settings['reservation_duration_minutes'] ?? '90');
 
 include '../../includes/header.php';
 ?>
@@ -107,7 +108,7 @@ include '../../includes/header.php';
                 </div>
                 <div class="form-group" style="margin-bottom: var(--space-6);">
                   <label for="reservationConfirmationNote" class="form-label">Reservation Confirmation Note</label>
-                  <textarea id="reservationConfirmationNote" name="reservation_confirmation_note" class="form-textarea" rows="3"><?= e($settings['reservation_confirmation_note'] ?? 'A confirmation email will be sent to your address within 1 hour. If you have any questions, please call us at {phone} or email {email}.') ?></textarea>
+                  <textarea id="reservationConfirmationNote" name="reservation_confirmation_note" class="form-textarea" rows="3"><?= e($settings['reservation_confirmation_note'] ?? 'We will review your reservation request and contact you if anything needs attention. If you have any questions, please call us at {phone} or email {email}.') ?></textarea>
                   <p class="profile-section-desc" style="margin-top: var(--space-2);">Use <code>{phone}</code> and <code>{email}</code> to insert the current contact details automatically.</p>
                 </div>
                 <div style="display:flex; justify-content:flex-end;">
@@ -192,6 +193,39 @@ include '../../includes/header.php';
                 </div>
                 <div style="display:flex; justify-content:flex-end;">
                   <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <div class="profile-section">
+            <div class="profile-section-header">
+              <h2 class="profile-section-title">Booking Rules</h2>
+              <p class="profile-section-desc">Set the default duration used for guest and admin reservations.</p>
+            </div>
+            <div class="profile-section-body">
+              <form method="post" action="../../actions.php?action=save_settings" id="bookingSettingsForm">
+                <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+                <input type="hidden" name="action_token" value="<?= e(action_token('save_settings')) ?>">
+                <input type="hidden" name="section" value="booking">
+                <div class="form-group" style="margin-bottom: var(--space-5); max-width: 16rem;">
+                  <label for="reservationDurationMinutes" class="form-label">Reservation Duration</label>
+                  <div style="display:flex; align-items:center; gap:var(--space-3);">
+                    <input
+                      type="number"
+                      id="reservationDurationMinutes"
+                      name="reservation_duration_minutes"
+                      class="form-input"
+                      min="30"
+                      max="240"
+                      step="15"
+                      value="<?= e((string) $reservationDurationMinutes) ?>"
+                      style="max-width: 8rem;">
+                    <span class="text-muted text-sm">minutes</span>
+                  </div>
+                </div>
+                <div style="display:flex; justify-content:flex-end;">
+                  <button type="submit" class="btn btn-primary">Save Booking Rules</button>
                 </div>
               </form>
             </div>

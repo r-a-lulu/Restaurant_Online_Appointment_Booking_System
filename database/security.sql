@@ -1,5 +1,5 @@
 -- =========================================================
--- Database Security Roles, Users, and Masking
+-- Database Security Roles and Users
 -- Database: restaurant_booking_v1
 -- =========================================================
 --
@@ -32,8 +32,6 @@ GRANT ALL PRIVILEGES ON restaurant_booking_v1.* TO app_admin;
 GRANT EVENT ON restaurant_booking_v1.* TO app_events;
 GRANT EXECUTE ON restaurant_booking_v1.* TO app_events;
 GRANT SELECT, UPDATE, DELETE ON restaurant_booking_v1.* TO app_events;
-
-GRANT SELECT ON restaurant_booking_v1.vw_users_masked TO app_readonly;
 
 -- ---------------------------
 -- Users (replace passwords)

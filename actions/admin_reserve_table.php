@@ -96,9 +96,10 @@ try {
     $userRow = $userStmt->fetch(PDO::FETCH_ASSOC) ?: [];
     $userStmt->closeCursor();
     
-    // Calculate end time (2 hours default)
+    // Calculate end time from booking settings
     $startTime = $time;
-    $endTime = date('H:i:s', strtotime($time . ' +2 hours'));
+    $reservationDurationMinutes = reservation_duration_minutes();
+    $endTime = date('H:i:s', strtotime($time . ' +' . $reservationDurationMinutes . ' minutes'));
 
     $tableRow = null;
     if ($tableId > 0) {

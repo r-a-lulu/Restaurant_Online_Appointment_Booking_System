@@ -38,6 +38,7 @@ $timeSlots = [
 
 try {
     $pdo = db();
+    $reservationDurationMinutes = reservation_duration_minutes();
 
     $tableSql = "SELECT t.table_id
       FROM `tables` t
@@ -112,7 +113,7 @@ try {
 
     foreach ($timeSlots as $time) {
         $slotStart = $time . ':00';
-        $slotEnd = date('H:i:s', strtotime($slotStart . ' +2 hours'));
+        $slotEnd = date('H:i:s', strtotime($slotStart . ' +' . $reservationDurationMinutes . ' minutes'));
         $matchedTableId = null;
 
         foreach ($candidateTables as $candidateTableId) {

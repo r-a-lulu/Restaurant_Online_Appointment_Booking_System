@@ -314,13 +314,3 @@ include '../includes/header.php';
 <?php include '../includes/footer.php'; ?>
 
 <script src="<?= $basePath ?>js/nav.js"></script>
-
-
-</xai:function_call">
-
-
-<xai:function_call name="edit_file">
-  <parameter name="path">TODO.md
-    </body>
-
-    </html>

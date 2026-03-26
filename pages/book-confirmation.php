@@ -1,14 +1,14 @@
-﻿<?php
+<?php
 /**
  * Booking Confirmation - Restaurant
  * Success state with reservation details loaded from DB.
  */
 
-$pageTitle   = 'Reservation Confirmed';
-$pageCSS     = ['book.css'];
+$pageTitle = 'Reservation Request Received';
+$pageCSS = ['book.css'];
 $currentPage = 'book';
-$navStyle    = 'solid';
-$basePath    = '../';
+$navStyle = 'solid';
+$basePath = '../';
 
 require_once '../includes/security.php';
 start_secure_session();
@@ -25,12 +25,13 @@ $contactPhone = get_setting('restaurant_phone', '(555) 123-4567');
 $contactEmail = get_setting('restaurant_email', 'hello@eudaimonia.com');
 $confirmationNoteTemplate = get_setting(
   'reservation_confirmation_note',
-  'A confirmation email will be sent to your address within 1 hour. If you have any questions, please call us at {phone} or email {email}.'
+  'We will review your reservation request and contact you if anything needs attention. If you have any questions, please call us at {phone} or email {email}.'
 );
 $confirmationNote = strtr($confirmationNoteTemplate, [
   '{phone}' => $contactPhone,
   '{email}' => $contactEmail,
 ]);
+$reservationDurationLabel = reservation_duration_label();
 
 $appointment = [];
 $confError = '';
@@ -64,7 +65,7 @@ include '../includes/nav.php';
         </div>
 
         <h1>Request Received!</h1>
-        <p>Thank you for choosing <?= e($siteName) ?>. Your reservation request has been submitted.</p>
+        <p>Thank you for choosing <?= e($siteName) ?>. Your reservation request has been submitted for review.</p>
 
         <span class="confirm-ref" id="conf-ref">EUD-<?= e((string) ($appointment['appointment_id'] ?? 'XXXXXXXX')) ?></span>
       </div>
@@ -122,6 +123,16 @@ include '../includes/nav.php';
             <div class="confirm-detail-text">
               <span class="confirm-detail-label">Time</span>
               <span class="confirm-detail-value" id="conf-time"><?= $appointment ? e(date('g:i A', strtotime($appointment['start_time']))) : '' ?></span>
+            </div>
+          </div>
+
+          <div class="confirm-detail-row">
+            <div class="confirm-detail-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v4"/><path d="M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18"/><path d="M10 14h4"/><path d="M12 12v4"/></svg>
+            </div>
+            <div class="confirm-detail-text">
+              <span class="confirm-detail-label">Reservation Duration</span>
+              <span class="confirm-detail-value"><?= e($reservationDurationLabel) ?></span>
             </div>
           </div>
         </div>

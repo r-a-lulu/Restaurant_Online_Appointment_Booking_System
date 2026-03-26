@@ -1,16 +1,16 @@
 <?php
 /**
- * Admin Reports & Analytics — pages/admin/reports.php
+ * Admin Reports & Analytics - pages/admin/reports.php
  */
 
 require_once '../../includes/security.php';
 start_secure_session();
 require_admin();
 
-$pageTitle        = 'Reports — Admin';
+$pageTitle = 'Reports - Admin';
 $pageCSS = ['dashboard.css', 'admin.css'];
 $currentAdminPage = 'reports';
-$basePath         = '../../';
+$basePath = '../../';
 
 $adminError = get_flash('admin_error');
 
@@ -18,20 +18,24 @@ $daily_stats = [];
 $peak_hours = [];
 $trends = [];
 $zones = [];
+$top_days = [];
 $summary = [
   'total_res' => 0,
   'total_guests' => 0,
   'avg_party' => 0,
-  'peak_hour' => '—',
+  'peak_hour' => '-',
   'cancel_rate' => '0.0',
+  'no_show_count' => 0,
+  'no_show_rate' => '0.0',
 ];
-$top_days = [];
-$peak_message = 'Peak dining hours are between 7:00 PM and 8:00 PM';
+$peak_message = 'Peak dining hours will appear once enough reservation data is available.';
 
 try {
   $pdo = db();
+  $operationalStatusSql = "(SELECT status_id FROM appointment_status WHERE status_name IN ('pending','confirmed','completed'))";
+  $allStatusSql = "(SELECT status_id FROM appointment_status WHERE status_name IN ('pending','confirmed','completed','cancelled','no_show'))";
 
-  $stmt = $pdo->prepare("SELECT appointment_date, COALESCE(SUM(party_size),0) AS guests FROM appointments WHERE appointment_date >= DATE_SUB(CURDATE(), INTERVAL 6 DAY) AND status_id IN (SELECT status_id FROM appointment_status WHERE status_name IN ('pending','confirmed','completed')) GROUP BY appointment_date");
+  $stmt = $pdo->prepare("SELECT appointment_date, COALESCE(SUM(party_size), 0) AS guests FROM appointments WHERE appointment_date >= DATE_SUB(CURDATE(), INTERVAL 6 DAY) AND status_id IN $operationalStatusSql GROUP BY appointment_date");
   $stmt->execute();
   $rows = $stmt->fetchAll() ?: [];
   $stmt->closeCursor();
@@ -45,19 +49,23 @@ try {
     $date = (new DateTime())->modify('-' . $i . ' days')->format('Y-m-d');
     $label = date('D', strtotime($date));
 
-    $proc = $pdo->prepare('CALL sp_reports_daily_summary(:p_date)');
-    $proc->execute([':p_date' => $date]);
-    $row = $proc->fetch() ?: [];
-    $proc->closeCursor();
+    $dayStmt = $pdo->prepare("SELECT COUNT(*) FROM appointments WHERE appointment_date = :p_date AND status_id IN $operationalStatusSql");
+    $dayStmt->execute([':p_date' => $date]);
+    $val = (int) $dayStmt->fetchColumn();
+    $dayStmt->closeCursor();
 
-    $val = (int) ($row['total_bookings'] ?? 0);
     $guests = $guestMap[$date] ?? 0;
     $daily_stats[] = ['day' => $label, 'val' => $val, 'guests' => $guests];
   }
   $summary['total_res'] = array_sum(array_column($daily_stats, 'val'));
 
-  $timeSlots = ['17:00','17:30','18:00','18:30','19:00','19:30','20:00','20:30','21:00','21:30'];
-  $stmt = $pdo->prepare('SELECT DATE_FORMAT(start_time, "%H:%i") AS slot, COUNT(*) AS val FROM appointments WHERE appointment_date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY) GROUP BY slot');
+  $stmt = $pdo->prepare("SELECT COUNT(*) FROM appointments WHERE appointment_date >= DATE_SUB(CURDATE(), INTERVAL 6 DAY) AND status_id IN $allStatusSql");
+  $stmt->execute();
+  $allReservationsCount = (int) $stmt->fetchColumn();
+  $stmt->closeCursor();
+
+  $timeSlots = ['17:00', '17:30', '18:00', '18:30', '19:00', '19:30', '20:00', '20:30', '21:00', '21:30'];
+  $stmt = $pdo->prepare("SELECT DATE_FORMAT(start_time, '%H:%i') AS slot, COUNT(*) AS val FROM appointments WHERE appointment_date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY) AND status_id IN $operationalStatusSql GROUP BY slot");
   $stmt->execute();
   $rows = $stmt->fetchAll() ?: [];
   $stmt->closeCursor();
@@ -70,13 +78,13 @@ try {
   foreach ($timeSlots as $slot) {
     $val = $slotMap[$slot] ?? 0;
     $max_peak = max($max_peak, $val);
-    if ($val > 0 && ($summary['peak_hour'] === '—' || $val > ($slotMap[$summary['peak_hour']] ?? 0))) {
+    if ($val > 0 && ($summary['peak_hour'] === '-' || $val > ($slotMap[$summary['peak_hour']] ?? 0))) {
       $summary['peak_hour'] = $slot;
     }
     $peak_hours[] = ['time' => $slot, 'val' => $val];
   }
 
-  $stmt = $pdo->prepare('SELECT DATE_FORMAT(appointment_date, "%b") AS month, COUNT(*) AS val, YEAR(appointment_date) AS yr, MONTH(appointment_date) AS mo FROM appointments WHERE appointment_date >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH) GROUP BY yr, mo ORDER BY yr, mo');
+  $stmt = $pdo->prepare("SELECT DATE_FORMAT(appointment_date, '%b') AS month, COUNT(*) AS val, YEAR(appointment_date) AS yr, MONTH(appointment_date) AS mo FROM appointments WHERE appointment_date >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH) AND status_id IN $operationalStatusSql GROUP BY yr, mo ORDER BY yr, mo");
   $stmt->execute();
   $rows = $stmt->fetchAll() ?: [];
   $stmt->closeCursor();
@@ -88,19 +96,21 @@ try {
     $trends[] = ['month' => $r['month'], 'val' => $val];
   }
 
-  $stmt = $pdo->prepare('SELECT dz.zone_name, COUNT(*) AS res FROM appointments a LEFT JOIN `tables` t ON t.table_id = a.table_id JOIN dining_zones dz ON dz.zone_id = COALESCE(a.zone_id, t.zone_id) WHERE a.appointment_date >= DATE_SUB(CURDATE(), INTERVAL 6 DAY) GROUP BY dz.zone_id');
+  $stmt = $pdo->prepare("SELECT dz.zone_name, COUNT(*) AS res FROM appointments a LEFT JOIN `tables` t ON t.table_id = a.table_id JOIN dining_zones dz ON dz.zone_id = COALESCE(a.zone_id, t.zone_id) WHERE a.appointment_date >= DATE_SUB(CURDATE(), INTERVAL 6 DAY) AND a.status_id IN $operationalStatusSql GROUP BY dz.zone_id");
   $stmt->execute();
   $rows = $stmt->fetchAll() ?: [];
   $stmt->closeCursor();
 
   $totalZone = 0;
-  foreach ($rows as $r) { $totalZone += (int) $r['res']; }
+  foreach ($rows as $r) {
+    $totalZone += (int) $r['res'];
+  }
   foreach ($rows as $r) {
     $pct = $totalZone > 0 ? (int) round(((int) $r['res'] / $totalZone) * 100) : 0;
     $zones[] = ['name' => $r['zone_name'], 'pct' => $pct, 'res' => (int) $r['res']];
   }
 
-  $stmt = $pdo->prepare("SELECT COALESCE(SUM(party_size),0) AS total_guests, COALESCE(AVG(party_size),0) AS avg_party FROM appointments WHERE appointment_date >= DATE_SUB(CURDATE(), INTERVAL 6 DAY) AND status_id IN (SELECT status_id FROM appointment_status WHERE status_name IN ('pending','confirmed','completed'))");
+  $stmt = $pdo->prepare("SELECT COALESCE(SUM(party_size), 0) AS total_guests, COALESCE(AVG(party_size), 0) AS avg_party FROM appointments WHERE appointment_date >= DATE_SUB(CURDATE(), INTERVAL 6 DAY) AND status_id IN $operationalStatusSql");
   $stmt->execute();
   $row = $stmt->fetch() ?: [];
   $stmt->closeCursor();
@@ -108,14 +118,21 @@ try {
   $summary['total_guests'] = (int) ($row['total_guests'] ?? 0);
   $summary['avg_party'] = number_format((float) ($row['avg_party'] ?? 0), 1);
 
-  $stmt = $pdo->prepare("SELECT COUNT(*) FROM appointments a JOIN appointment_status s ON s.status_id = a.status_id WHERE a.appointment_date >= DATE_SUB(CURDATE(), INTERVAL 6 DAY) AND a.status_id = (SELECT status_id FROM appointment_status WHERE status_name = 'cancelled' LIMIT 1)");
+  $stmt = $pdo->prepare("SELECT COUNT(*) FROM appointments WHERE appointment_date >= DATE_SUB(CURDATE(), INTERVAL 6 DAY) AND status_id = (SELECT status_id FROM appointment_status WHERE status_name = 'cancelled' LIMIT 1)");
   $stmt->execute();
   $cancelled = (int) $stmt->fetchColumn();
   $stmt->closeCursor();
-  $summary['cancel_rate'] = $summary['total_res'] > 0 ? number_format(($cancelled / $summary['total_res']) * 100, 1) : '0.0';
+  $summary['cancel_rate'] = $allReservationsCount > 0 ? number_format(($cancelled / $allReservationsCount) * 100, 1) : '0.0';
 
-  if ($summary['peak_hour'] !== '—') {
+  $stmt = $pdo->prepare("SELECT COUNT(*) FROM appointments WHERE appointment_date >= DATE_SUB(CURDATE(), INTERVAL 6 DAY) AND status_id = (SELECT status_id FROM appointment_status WHERE status_name = 'no_show' LIMIT 1)");
+  $stmt->execute();
+  $summary['no_show_count'] = (int) $stmt->fetchColumn();
+  $stmt->closeCursor();
+  $summary['no_show_rate'] = $allReservationsCount > 0 ? number_format(($summary['no_show_count'] / $allReservationsCount) * 100, 1) : '0.0';
+
+  if ($summary['peak_hour'] !== '-') {
     $summary['peak_hour'] = date('g:i A', strtotime($summary['peak_hour']));
+    $peak_message = 'Peak dining activity currently centers around ' . $summary['peak_hour'] . '.';
   }
 
   $top_days = $daily_stats;
@@ -153,11 +170,11 @@ include '../../includes/header.php';
       <div class="reports-stats-grid">
         <div class="report-stat-card">
           <div class="r-stat-top">
-             <span class="r-stat-title">Total Reservations</span>
+             <span class="r-stat-title">Operational Reservations</span>
              <div class="r-stat-icon-wrap"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/><path d="M16 18h.01"/></svg></div>
           </div>
           <div class="r-stat-val"><?= e((string) $summary['total_res']) ?></div>
-          <div class="r-stat-trend up">Last 7 days</div>
+          <div class="r-stat-trend up">Pending, confirmed, completed</div>
         </div>
         <div class="report-stat-card">
           <div class="r-stat-top">
@@ -183,6 +200,14 @@ include '../../includes/header.php';
           <div class="r-stat-val"><?= e((string) $summary['peak_hour']) ?></div>
           <div class="r-stat-sub">Based on last 30 days</div>
         </div>
+        <div class="report-stat-card">
+          <div class="r-stat-top">
+             <span class="r-stat-title">No Shows</span>
+             <div class="r-stat-icon-wrap"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+          </div>
+          <div class="r-stat-val"><?= e((string) $summary['no_show_count']) ?></div>
+          <div class="r-stat-trend neutral">Last 7 days</div>
+        </div>
       </div>
 
       <div class="segmented-tabs" data-admin-tabs style="margin-top:var(--space-8); width:100%; max-width:500px; display:flex;">
@@ -196,10 +221,10 @@ include '../../includes/header.php';
         <div class="admin-panel active" data-panel="daily">
            <div class="daily-split">
              <div class="report-card">
-               <div class="report-card-title">Daily Reservations</div>
+               <div class="report-card-title">Daily Operational Reservations</div>
                <div class="daily-chart-list">
-                  <?php $max_daily = 0; foreach ($daily_stats as $d) { if ($d['val'] > $max_daily) $max_daily = $d['val']; } ?>
-                  <?php foreach($daily_stats as $d): ?>
+                  <?php $max_daily = 0; foreach ($daily_stats as $d) { if ($d['val'] > $max_daily) { $max_daily = $d['val']; } } ?>
+                  <?php foreach ($daily_stats as $d): ?>
                   <div class="daily-chart-row">
                      <div class="dc-label"><?= e($d['day']) ?></div>
                      <div class="dc-track-wrap">
@@ -219,9 +244,9 @@ include '../../includes/header.php';
              </div>
 
              <div class="report-card">
-               <div class="report-card-title">Zone Breakdown</div>
+               <div class="report-card-title">Zone Breakdown (Operational)</div>
                <div class="zone-breakdown-list">
-                  <?php foreach($zones as $z): ?>
+                  <?php foreach ($zones as $z): ?>
                   <div class="zb-item">
                      <div class="zb-top">
                         <span class="zb-name"><?= e($z['name']) ?></span>
@@ -242,11 +267,11 @@ include '../../includes/header.php';
            <div class="report-card">
              <div class="report-card-title">Reservations by Hour</div>
              <div class="peak-bars-wrap">
-                <?php foreach($peak_hours as $p): ?>
+                <?php foreach ($peak_hours as $p): ?>
                 <div class="peak-bar-col">
                    <div class="peak-b-val"><?= e((string) $p['val']) ?></div>
                    <div class="peak-b-track">
-                      <div class="peak-b-fill" style="height:<?= $max_peak > 0 ? e((string) (($p['val']/$max_peak)*100)) : '0' ?>%"></div>
+                      <div class="peak-b-fill" style="height:<?= $max_peak > 0 ? e((string) (($p['val'] / $max_peak) * 100)) : '0' ?>%"></div>
                    </div>
                    <div class="peak-b-label"><?= e($p['time']) ?></div>
                 </div>
@@ -260,11 +285,11 @@ include '../../includes/header.php';
            <div class="report-card" style="margin-bottom:var(--space-6);">
              <div class="report-card-title">Monthly Reservation Trends</div>
              <div class="trend-bars-wrap">
-                <?php foreach($trends as $t): ?>
+                <?php foreach ($trends as $t): ?>
                 <div class="trend-bar-col">
                    <span class="trend-b-val"><?= e((string) $t['val']) ?></span>
                    <div class="trend-b-track">
-                      <div class="trend-b-fill" style="height:<?= $max_trend > 0 ? e((string) (($t['val']/$max_trend)*100)) : '0' ?>%"></div>
+                      <div class="trend-b-fill" style="height:<?= $max_trend > 0 ? e((string) (($t['val'] / $max_trend) * 100)) : '0' ?>%"></div>
                    </div>
                    <span class="trend-b-label"><?= e($t['month']) ?></span>
                 </div>
@@ -283,16 +308,27 @@ include '../../includes/header.php';
                  <?php if (empty($top_days)): ?>
                  <div class="top-day-row">
                     <span class="td-name">No data</span>
-                    <span class="td-val">—</span>
+                    <span class="td-val">-</span>
                  </div>
                  <?php else: ?>
-                 <?php foreach($top_days as $d): ?>
+                 <?php foreach ($top_days as $d): ?>
                  <div class="top-day-row">
                     <span class="td-name"><?= e($d['day']) ?></span>
                     <span class="td-val"><?= e((string) $d['val']) ?></span>
                  </div>
                  <?php endforeach; ?>
                  <?php endif; ?>
+               </div>
+             </div>
+             <div class="report-card">
+               <div class="report-card-title">No Show Rate</div>
+               <div class="cancel-rate-content">
+                 <div class="cr-big-val"><?= e((string) $summary['no_show_rate']) ?>%</div>
+                 <div class="cr-lbl">Average no show rate</div>
+                 <div class="cr-sub">Last 7 days</div>
+                 <div class="cr-warning-box">
+                    Track missed reservations to spot reminder or attendance issues.
+                 </div>
                </div>
              </div>
              <div class="report-card">
@@ -309,7 +345,7 @@ include '../../includes/header.php';
            </div>
         </div>
 
-      </div><!-- End Panels -->
+      </div>
 
     </div>
   </main>

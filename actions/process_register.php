@@ -26,6 +26,7 @@ $email     = trim($_POST['email'] ?? '');
 $phone     = trim($_POST['phone'] ?? '');
 $password  = $_POST['password'] ?? '';
 $confirm   = $_POST['confirm_password'] ?? '';
+$termsAccepted = isset($_POST['terms']) && $_POST['terms'] === 'on';
 
 if (empty($firstName) || empty($lastName) || empty($email) || empty($password)) {
     set_flash('error', 'All fields are required.');
@@ -65,6 +66,18 @@ if (strlen($password) < 8) {
 
 if ($password !== $confirm) {
     set_flash('error', 'Passwords do not match.');
+    set_flash('form_data', [
+        'first_name' => $firstName,
+        'last_name' => $lastName,
+        'email' => $email,
+        'phone' => $phone
+    ]);
+    header("Location: pages/register.php");
+    exit;
+}
+
+if (!$termsAccepted) {
+    set_flash('error', 'Please agree to the Terms of Service and Privacy Policy to continue.');
     set_flash('form_data', [
         'first_name' => $firstName,
         'last_name' => $lastName,
@@ -139,7 +152,8 @@ try {
     exit;
 
 } catch (PDOException $e) {
-    set_flash('error', 'Database error: ' . safe_error_message($e));
+    error_log('Registration failed for ' . $email . ': ' . $e->getMessage());
+    set_flash('error', 'We could not complete your registration right now. Please try again.');
     set_flash('form_data', [
         'first_name' => $firstName,
         'last_name' => $lastName,

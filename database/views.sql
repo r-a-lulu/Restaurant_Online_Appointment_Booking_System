@@ -9,9 +9,8 @@
 -- View #2:  vw_upcoming_appointments
 -- View #3:  vw_admin_appointments
 -- View #4:  vw_active_services
--- View #5:  vw_available_tables
--- View #6:  vw_active_event_packages
--- View #7:  vw_active_add_ons
+-- View #5:  vw_active_event_packages
+-- View #6:  vw_active_add_ons
 
 USE restaurant_booking_v1;
 
@@ -96,21 +95,7 @@ FROM services
 ORDER BY service_name;
 
 -- ---------------------------------------------------------
--- View #5: Available tables (static list; availability enforced by triggers)
--- ---------------------------------------------------------
-CREATE OR REPLACE VIEW vw_available_tables AS
-SELECT
-  t.table_id,
-  t.capacity,
-  t.seating_preference AS table_label,
-  dz.zone_id,
-  dz.zone_name
-FROM `tables` t
-JOIN dining_zones dz ON dz.zone_id = t.zone_id
-ORDER BY dz.zone_name, t.seating_preference, t.capacity;
-
--- ---------------------------------------------------------
--- View #6: Active event packages
+-- View #5: Active event packages
 -- ---------------------------------------------------------
 CREATE OR REPLACE VIEW vw_active_event_packages AS
 SELECT package_id, package_name, base_price, description
@@ -118,25 +103,9 @@ FROM event_packages
 ORDER BY package_name;
 
 -- ---------------------------------------------------------
--- View #7: Active add-ons
+-- View #6: Active add-ons
 -- ---------------------------------------------------------
 CREATE OR REPLACE VIEW vw_active_add_ons AS
 SELECT add_on_id, category, name, description, price
 FROM add_ons
 ORDER BY category, name;
-
--- ---------------------------------------------------------
--- View #8: Masked users for reporting
--- ---------------------------------------------------------
-CREATE OR REPLACE VIEW vw_users_masked AS
-SELECT
-  user_id,
-  role_id,
-  CONCAT(LEFT(first_name, 1), REPEAT('*', 2)) AS first_name_masked,
-  CONCAT(LEFT(last_name, 1), REPEAT('*', 2)) AS last_name_masked,
-  CONCAT(LEFT(email, 2), '***', SUBSTRING(email, LOCATE('@', email))) AS email_masked,
-  is_active,
-  created_by,
-  created_at,
-  last_login
-FROM users;

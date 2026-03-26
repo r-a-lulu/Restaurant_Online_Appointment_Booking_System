@@ -27,6 +27,7 @@ if (!$floorDateObj || (is_array($floorDateErrors) && (($floorDateErrors['warning
 $todayDate = date('Y-m-d');
 $isViewingToday = ($selectedFloorDate === $todayDate);
 $isPastFloorDate = ($selectedFloorDate < $todayDate);
+$reservationDurationLabel = reservation_duration_label();
 
 try {
   $pdo = db();
@@ -346,6 +347,7 @@ include '../../includes/header.php';
       <div>
         <h2 class="admin-modal-title" style="margin-bottom:var(--space-1);">Reserve Table</h2>
         <p class="admin-modal-subtitle" style="color:var(--clr-muted-fg);font-size:var(--text-sm);">Create a reservation for a guest</p>
+        <p class="text-muted text-sm" style="margin-top:var(--space-2);">Reservation duration: <?= e($reservationDurationLabel) ?>.</p>
       </div>
       <button class="admin-modal-close" data-modal-close aria-label="Close">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>

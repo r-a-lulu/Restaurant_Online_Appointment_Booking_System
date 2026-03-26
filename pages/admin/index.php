@@ -1,16 +1,16 @@
 <?php
 /**
- * Admin Dashboard Overview ? pages/admin/index.php
+ * Admin Dashboard Overview - pages/admin/index.php
  */
 
 require_once '../../includes/security.php';
 start_secure_session();
 require_admin();
 
-$pageTitle        = 'Admin Dashboard';
-$pageCSS          = ['dashboard.css', 'admin.css'];
+$pageTitle = 'Admin Dashboard';
+$pageCSS = ['dashboard.css', 'admin.css'];
 $currentAdminPage = 'dashboard';
-$basePath         = '../../';
+$basePath = '../../';
 
 $adminError = get_flash('admin_error');
 $adminSuccess = get_flash('admin_success');
@@ -32,7 +32,7 @@ try {
   $stats['today_reservations'] = (int) $stmt->fetchColumn();
   $stmt->closeCursor();
 
-  $stmt = $pdo->prepare("SELECT COUNT(*) FROM appointments a JOIN appointment_status s ON s.status_id = a.status_id WHERE a.appointment_date >= CURDATE() AND a.status_id = (SELECT status_id FROM appointment_status WHERE status_name = 'pending' LIMIT 1)");
+  $stmt = $pdo->prepare("SELECT COUNT(*) FROM appointments a WHERE a.appointment_date >= CURDATE() AND a.status_id = (SELECT status_id FROM appointment_status WHERE status_name = 'pending' LIMIT 1)");
   $stmt->execute();
   $stats['pending'] = (int) $stmt->fetchColumn();
   $stmt->closeCursor();
@@ -47,7 +47,7 @@ try {
   $totalTables = (int) $stmt->fetchColumn();
   $stmt->closeCursor();
 
-  $stmt = $pdo->prepare("SELECT COUNT(DISTINCT a.table_id) + SUM(CASE WHEN a.table_id IS NULL THEN 1 ELSE 0 END) FROM appointments a JOIN appointment_status s ON s.status_id = a.status_id WHERE a.appointment_date = CURDATE() AND a.status_id IN (SELECT status_id FROM appointment_status WHERE status_name IN ('pending','confirmed'))");
+  $stmt = $pdo->prepare("SELECT COUNT(DISTINCT a.table_id) + SUM(CASE WHEN a.table_id IS NULL THEN 1 ELSE 0 END) FROM appointments a WHERE a.appointment_date = CURDATE() AND a.status_id IN (SELECT status_id FROM appointment_status WHERE status_name IN ('pending','confirmed'))");
   $stmt->execute();
   $bookedTables = (int) $stmt->fetchColumn();
   $stmt->closeCursor();
@@ -55,8 +55,6 @@ try {
   if ($totalTables > 0) {
     $bookedTables = min($bookedTables, $totalTables);
     $stats['occupancy'] = (int) round(($bookedTables / $totalTables) * 100);
-  } else {
-    $stats['occupancy'] = 0;
   }
 
   $stmt = $pdo->prepare("SELECT v.appointment_id, v.customer_name, v.zone_name, v.party_size, v.start_time, v.status_name, a.user_id, (SELECT COUNT(*) FROM appointments a2 WHERE a2.user_id = a.user_id AND a2.appointment_id <> v.appointment_id AND a2.status_id IN (SELECT status_id FROM appointment_status WHERE status_name IN ('pending','confirmed'))) AS active_count FROM vw_upcoming_appointments v JOIN appointments a ON a.appointment_id = v.appointment_id ORDER BY v.appointment_date ASC, v.start_time ASC LIMIT 5");
@@ -69,7 +67,7 @@ try {
   $zones = $stmt->fetchAll() ?: [];
   $stmt->closeCursor();
 
-  $stmt = $pdo->prepare("SELECT dz.zone_id, COUNT(DISTINCT a.table_id) + SUM(CASE WHEN a.table_id IS NULL THEN 1 ELSE 0 END) AS booked_tables FROM appointments a JOIN appointment_status s ON s.status_id = a.status_id LEFT JOIN `tables` t ON t.table_id = a.table_id JOIN dining_zones dz ON dz.zone_id = COALESCE(a.zone_id, t.zone_id) WHERE a.appointment_date = CURDATE() AND a.status_id IN (SELECT status_id FROM appointment_status WHERE status_name IN ('pending','confirmed')) GROUP BY dz.zone_id");
+  $stmt = $pdo->prepare("SELECT dz.zone_id, COUNT(DISTINCT a.table_id) + SUM(CASE WHEN a.table_id IS NULL THEN 1 ELSE 0 END) AS booked_tables FROM appointments a LEFT JOIN `tables` t ON t.table_id = a.table_id JOIN dining_zones dz ON dz.zone_id = COALESCE(a.zone_id, t.zone_id) WHERE a.appointment_date = CURDATE() AND a.status_id IN (SELECT status_id FROM appointment_status WHERE status_name IN ('pending','confirmed')) GROUP BY dz.zone_id");
   $stmt->execute();
   $bookedRows = $stmt->fetchAll() ?: [];
   $stmt->closeCursor();
@@ -108,7 +106,6 @@ include '../../includes/header.php';
         <div class="auth-alert auth-success"><span><?= e($adminSuccess) ?></span></div>
       <?php endif; ?>
 
-      <!-- Page Header -->
       <header class="admin-header">
         <div class="admin-header-row">
           <div>
@@ -118,7 +115,6 @@ include '../../includes/header.php';
         </div>
       </header>
 
-      <!-- Stat Cards -->
       <div class="admin-stat-cards">
 
         <div class="admin-stat-card">
@@ -175,10 +171,8 @@ include '../../includes/header.php';
 
       </div>
 
-      <!-- Overview Grid -->
       <div class="admin-overview-grid">
 
-        <!-- Recent Reservations -->
         <div class="admin-section">
           <div class="admin-section-header">
             <h2 class="admin-section-title">Upcoming Reservations</h2>
@@ -192,23 +186,26 @@ include '../../includes/header.php';
           <div class="admin-res-list">
 
             <?php foreach ($recent as $row): ?>
-              <?php $canApprove = ($row['status_name'] === 'pending') && ((int) ($row['active_count'] ?? 0) < 5); ?>
-              <?php $badge = $row['status_name'] === 'pending' ? 'badge-pending' : ($row['status_name'] === 'confirmed' ? 'badge-confirmed' : 'badge-cancelled'); ?>
+              <?php
+                $canApprove = ($row['status_name'] === 'pending') && ((int) ($row['active_count'] ?? 0) < 12);
+                $badge = $row['status_name'] === 'pending' ? 'badge-pending' : ($row['status_name'] === 'confirmed' ? 'badge-confirmed' : 'badge-cancelled');
+                $badgeLabel = $row['status_name'] === 'confirmed' ? 'Upcoming' : ucfirst($row['status_name']);
+              ?>
               <div class="admin-res-row" data-status="<?= e($row['status_name']) ?>">
                 <div class="admin-res-info">
                   <div class="admin-res-name-row">
                     <span class="admin-res-name"><?= e($row['customer_name']) ?></span>
-                    <span class="badge <?= $badge ?>"><?= e($row['status_name']) ?></span>
+                    <span class="badge <?= $badge ?>"><?= e($badgeLabel) ?></span>
                   </div>
-                  <p class="admin-res-meta"><?= e($row['zone_name'] ?? '?') ?> ? <?= e((string) $row['party_size']) ?> guests ? <?= e(date('g:i A', strtotime($row['start_time']))) ?></p>
+                  <p class="admin-res-meta"><?= e($row['zone_name'] ?? '-') ?> | <?= e((string) $row['party_size']) ?> guests | <?= e(date('g:i A', strtotime($row['start_time']))) ?></p>
                 </div>
                 <?php if ($row['status_name'] === 'pending'): ?>
                   <div class="admin-res-actions">
                     <form method="post" action="<?= $basePath ?>actions.php?action=admin_update_status">
                       <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
-                    <input type="hidden" name="action_token" value="<?= e(action_token('admin_update_status')) ?>">
+                      <input type="hidden" name="action_token" value="<?= e(action_token('admin_update_status')) ?>">
                       <input type="hidden" name="appointment_id" value="<?= e($row['appointment_id']) ?>">
-                      <button class="admin-res-btn admin-res-btn--approve" name="action" value="approve" aria-label="Approve" <?php echo $canApprove ? '' : 'disabled title="User has reached the 5 active bookings limit."'; ?>>
+                      <button class="admin-res-btn admin-res-btn--approve" name="action" value="approve" aria-label="Approve" <?= $canApprove ? '' : 'disabled title="User has reached the 12 active bookings limit."' ?>>
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                           <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
                         </svg>
@@ -216,7 +213,7 @@ include '../../includes/header.php';
                     </form>
                     <form method="post" action="<?= $basePath ?>actions.php?action=admin_update_status">
                       <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
-                    <input type="hidden" name="action_token" value="<?= e(action_token('admin_update_status')) ?>">
+                      <input type="hidden" name="action_token" value="<?= e(action_token('admin_update_status')) ?>">
                       <input type="hidden" name="appointment_id" value="<?= e($row['appointment_id']) ?>">
                       <button class="admin-res-btn admin-res-btn--reject" name="action" value="reject" aria-label="Reject">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -236,7 +233,6 @@ include '../../includes/header.php';
           </div>
         </div>
 
-        <!-- Zone Status -->
         <div class="admin-section">
           <div class="admin-section-header">
             <h2 class="admin-section-title">Zone Status</h2>
@@ -274,17 +270,13 @@ include '../../includes/header.php';
           </div>
         </div>
 
-      </div><!-- /.admin-overview-grid -->
+      </div>
 
-    </div><!-- /.admin-content -->
+    </div>
   </main>
 
-</div><!-- /.admin-layout -->
+</div>
 
 <script src="<?= $basePath ?>js/admin.js"></script>
 </body>
 </html>
-
-
-
-

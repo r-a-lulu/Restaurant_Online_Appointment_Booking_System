@@ -1,47 +1,14 @@
-# Database Security Setup - `restaurant_booking_v1`
+# Database Security Support Note
 
-**Script:** [`security.sql`](security.sql)
+This file is documentation only.
 
----
+The current runnable security setup lives in:
+- `database/security.sql`
 
-## What This Script Does
+The current import order lives in:
+- `database/README.md`
 
-1. Creates database roles:
-   - `app_readonly`
-   - `app_readwrite`
-   - `app_admin`
-   - `app_events`
-
-2. Grants schema-wide permissions per role (short form).
-
-3. Creates a masked PII view:
-   - `vw_users_masked` (safe for reporting and non‑production access)
-
-4. Creates DB users and assigns roles:
-   - `app_reader`
-   - `app_writer`
-   - `app_admin`
-   - `app_events`
-
----
-
-## Before You Run
-
-- Replace all placeholder passwords (`REPLACE_ME_*`) in `security.sql`.
-- Ensure the server supports roles (MariaDB 10.0+ / MySQL 8.0+).
-
----
-
-## How To Run
-
-```sql
-SOURCE security.sql;
-```
-
----
-
-## Notes
-
-- Password hashing (`bcrypt`) must be done in the application layer.
-- Encryption (TLS, disk-at-rest) is infrastructure-level and not defined in SQL.
-- For reporting, always use `vw_users_masked` instead of `users`.
+Important:
+- The root `database/` files are the source of truth for the active project.
+- Archived or optional security-related objects were moved to `database/archive/`.
+- Older notes that mention `vw_users_masked` are no longer authoritative for the cleaned core setup.

@@ -4,6 +4,7 @@ This folder is now organized into two parts:
 
 - Core runtime SQL in the root
 - Documentation in `support/`
+- Archived non-core objects in `archive/`
 
 ## Core Files
 
@@ -30,5 +31,6 @@ This folder is now organized into two parts:
 ## Notes
 
 - The root files are kept to the runnable database set.
+- Archived or optional database objects are stored in `archive/`.
 - Readme files stay in `support/`.
 - If you want a full fresh install, run the schema first, then the module files, then seed and security if needed.

@@ -26,6 +26,7 @@ $map = [
     'reject' => 'cancelled',
     'cancel' => 'cancelled',
     'complete' => 'completed',
+    'no_show' => 'no_show',
 ];
 
 if ($appointmentId <= 0 || !isset($map[$action])) {
@@ -35,6 +36,30 @@ if ($appointmentId <= 0 || !isset($map[$action])) {
 
 try {
     $pdo = db();
+    $statusLookup = $pdo->prepare('SELECT a.appointment_date, a.start_time, s.status_name FROM appointments a JOIN appointment_status s ON s.status_id = a.status_id WHERE a.appointment_id = :appointment_id LIMIT 1');
+    $statusLookup->execute([':appointment_id' => $appointmentId]);
+    $appointment = $statusLookup->fetch();
+    $statusLookup->closeCursor();
+
+    if (!$appointment) {
+        set_flash('admin_error', 'Reservation not found.');
+        redirect('pages/admin/reservations.php');
+    }
+
+    if ($action === 'no_show') {
+        if (($appointment['status_name'] ?? '') !== 'confirmed') {
+            set_flash('admin_error', 'Only confirmed reservations can be marked as no show.');
+            redirect('pages/admin/reservations.php');
+        }
+
+        $appointmentStart = DateTime::createFromFormat('Y-m-d H:i:s', $appointment['appointment_date'] . ' ' . $appointment['start_time']);
+        $now = new DateTime();
+        if (!$appointmentStart || $appointmentStart > $now) {
+            set_flash('admin_error', 'You can only mark a reservation as no show after its start time has passed.');
+            redirect('pages/admin/reservations.php');
+        }
+    }
+
     $stmt = $pdo->prepare('CALL sp_update_appointment_status(:appointment_id, :status_name)');
     $stmt->execute([
         ':appointment_id' => $appointmentId,
