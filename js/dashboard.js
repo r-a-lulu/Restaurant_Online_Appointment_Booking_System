@@ -141,6 +141,17 @@
       }
 
       if (sumTime) sumTime.textContent = state.timeVal ? formatTime(state.timeVal) : '—';
+
+      const submitBtn = document.getElementById('btnConfirmReservation');
+      if (submitBtn) {
+        if (!state.zoneId || !state.date || !state.timeVal || !state.tableId || !state.seatingPref) {
+          submitBtn.style.opacity = '0.5';
+          submitBtn.style.pointerEvents = 'none';
+        } else {
+          submitBtn.style.opacity = '1';
+          submitBtn.style.pointerEvents = 'auto';
+        }
+      }
     }
 
     /* 1. Zone Selection */
@@ -215,13 +226,16 @@
     }
 
     if (datePicker) {
-      datePicker.addEventListener('change', function () {
+      function handleDateSelect() {
+        if (!datePicker.value) return;
         state.date = datePicker.value;
         state.timeVal = '';
         state.tableId = '';
         updateSummary();
         fetchAvailability();
-      });
+      }
+      datePicker.addEventListener('change', handleDateSelect);
+      datePicker.addEventListener('input', handleDateSelect);
     }
 
     /* 4. Fetch Availability Ajax */

@@ -441,42 +441,49 @@
         }
         if (!isTodayFloorView) return;
         if (currentStatus !== 'available') return;
-        if (!window.confirm || !window.confirm('Mark this table as occupied now?')) return;
-        const nextStatus = 'occupied';
+        const performUpdate = function() {
+          const nextStatus = 'occupied';
 
-        // Update UI immediately and mark as recently changed
-        setTileStatus(tile, nextStatus);
-        tile.setAttribute('data-last-changed', Date.now().toString());
-        updatePanelStats(tile.closest('.admin-panel'));
+          // Update UI immediately and mark as recently changed
+          setTileStatus(tile, nextStatus);
+          tile.setAttribute('data-last-changed', Date.now().toString());
+          updatePanelStats(tile.closest('.admin-panel'));
 
-        const body = new URLSearchParams();
-        body.set('csrf_token', csrf);
-        body.set('action_token', actionToken);
-        body.set('table_id', tableId);
-        body.set('status', nextStatus);
-        body.set('floor_date', selectedFloorDate);
+          const body = new URLSearchParams();
+          body.set('csrf_token', csrf);
+          body.set('action_token', actionToken);
+          body.set('table_id', tableId);
+          body.set('status', nextStatus);
+          body.set('floor_date', selectedFloorDate);
 
-        fetch(actionUrl('admin_floor_update'), {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: body.toString(),
-        })
-          .then(function (res) { return res.json(); })
-          .then(function (data) {
-            if (!data || !data.ok) {
+          fetch(actionUrl('admin_floor_update'), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: body.toString(),
+          })
+            .then(function (res) { return res.json(); })
+            .then(function (data) {
+              if (!data || !data.ok) {
+                setTileStatus(tile, currentStatus);
+                updatePanelStats(tile.closest('.admin-panel'));
+                console.error('Failed to update status:', data);
+                refreshFloorSnapshot();
+                return;
+              }
+              refreshFloorSnapshot();
+            })
+            .catch(function (err) {
               setTileStatus(tile, currentStatus);
               updatePanelStats(tile.closest('.admin-panel'));
-              console.error('Failed to update status:', data);
-              refreshFloorSnapshot();
-              return;
-            }
-            refreshFloorSnapshot();
-          })
-          .catch(function (err) {
-            setTileStatus(tile, currentStatus);
-            updatePanelStats(tile.closest('.admin-panel'));
-            console.error('Error updating status:', err);
-          });
+              console.error('Error updating status:', err);
+            });
+        };
+
+        if (window.uiConfirm) {
+          window.uiConfirm('Mark this table as occupied now?', performUpdate);
+        } else if (window.confirm && window.confirm('Mark this table as occupied now?')) {
+          performUpdate();
+        }
       });
 
       tile.addEventListener('keydown', function (event) {
@@ -849,9 +856,10 @@
       reserveLastName.value = '';
       reserveEmail.value = '';
       reservePhone.value = '';
-      reserveFirstName.required = true;
-      reserveLastName.required = true;
-      reserveEmail.required = true;
+      // Only require fields when creating a brand-new guest (no user account)
+      if (reserveFirstName) reserveFirstName.required = true;
+      if (reserveLastName) reserveLastName.required = true;
+      if (reserveEmail) reserveEmail.required = true;
       return;
     }
 
@@ -861,9 +869,10 @@
       reserveLastName.value = option.dataset.lastName || '';
       reserveEmail.value = option.dataset.email || '';
       reservePhone.value = option.dataset.phone || '';
-      reserveFirstName.required = true;
-      reserveLastName.required = true;
-      reserveEmail.required = true;
+      // Existing user selected — do NOT flag hidden fields as required
+      if (reserveFirstName) reserveFirstName.required = false;
+      if (reserveLastName) reserveLastName.required = false;
+      if (reserveEmail) reserveEmail.required = false;
       return;
     }
 

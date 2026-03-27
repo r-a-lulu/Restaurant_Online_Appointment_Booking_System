@@ -24,7 +24,7 @@ if (!verify_csrf($csrf)) {
         exit();
     }
     set_flash('admin_error', 'Invalid security token.');
-    header('Location: ../pages/admin/floor.php');
+    header('Location: pages/admin/floor.php');
     exit();
 }
 
@@ -82,7 +82,7 @@ if (!empty($errors)) {
         exit();
     }
     set_flash('admin_error', implode(' ', $errors));
-    header('Location: ../pages/admin/floor.php');
+    header('Location: pages/admin/floor.php');
     exit();
 }
 
@@ -110,7 +110,7 @@ try {
             exit();
         }
         set_flash('admin_error', $errorMessage);
-        header('Location: ../pages/admin/floor.php');
+        header('Location: pages/admin/floor.php');
         exit();
     }
     
@@ -139,7 +139,7 @@ try {
                 exit();
             }
             set_flash('admin_error', $errorMessage);
-            header('Location: ../pages/admin/floor.php');
+            header('Location: pages/admin/floor.php');
             exit();
         }
     } else {
@@ -163,7 +163,7 @@ try {
                 exit();
             }
             set_flash('admin_error', 'No available tables were found for that seating preference and time. Please choose another one.');
-            header('Location: ../pages/admin/floor.php');
+            header('Location: pages/admin/floor.php');
             exit();
         }
     }
@@ -198,7 +198,7 @@ try {
             exit();
         }
         set_flash('admin_error', $errorMessage);
-        header('Location: ../pages/admin/floor.php');
+        header('Location: pages/admin/floor.php');
         exit();
     }
 
@@ -308,5 +308,5 @@ try {
     set_flash('admin_error', admin_booking_error_message($e));
 }
 
-header('Location: ../pages/admin/floor.php');
+header('Location: pages/admin/floor.php');
 exit();

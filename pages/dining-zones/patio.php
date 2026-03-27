@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * The Patio - Zone Detail Page
  */
@@ -56,19 +56,42 @@ include '../../includes/nav.php';
   </div>
 </section>
 
+<?php
+// Fetch actual seating options for The Patio from the database
+$patioTables = [];
+try {
+  $pdo = db();
+  $stmt = $pdo->prepare("
+    SELECT t.seating_preference, MAX(t.capacity) AS max_capacity, COUNT(*) AS table_count
+    FROM `tables` t
+    JOIN dining_zones dz ON dz.zone_id = t.zone_id
+    WHERE dz.zone_name = 'The Patio'
+    GROUP BY t.seating_preference
+    ORDER BY max_capacity ASC, t.seating_preference ASC
+  ");
+  $stmt->execute();
+  $patioTables = $stmt->fetchAll();
+  $stmt->closeCursor();
+} catch (PDOException $e) {
+  // Silently fail — seating section simply won't render
+}
+?>
+
 <section class="section-lg" style="background-color: var(--clr-muted);">
   <div class="container">
     <div style="max-width: 48rem; margin-inline: auto; text-align: center;" class="mb-12">
       <p class="section-label">Seating Options</p>
       <h2>Choose Your Perfect Table</h2>
     </div>
+    <?php if (!empty($patioTables)): ?>
     <div class="zone-table-grid zone-table-grid--3col">
-      <div class="zone-table-card"><div class="zone-table-card-body"><div class="zone-table-card-header"><h3>Garden View</h3><span>2 seats</span></div><p>Intimate table beside the rose garden</p></div></div>
-      <div class="zone-table-card"><div class="zone-table-card-body"><div class="zone-table-card-header"><h3>Fountain Side</h3><span>4 seats</span></div><p>Prime location near the centerpiece fountain</p></div></div>
-      <div class="zone-table-card"><div class="zone-table-card-body"><div class="zone-table-card-header"><h3>Pergola</h3><span>6 seats</span></div><p>Covered seating under our wisteria-draped pergola</p></div></div>
-      <div class="zone-table-card"><div class="zone-table-card-body"><div class="zone-table-card-header"><h3>Corner Alcove</h3><span>4 seats</span></div><p>Secluded spot perfect for private conversations</p></div></div>
-      <div class="zone-table-card"><div class="zone-table-card-body"><div class="zone-table-card-header"><h3>Olive Grove</h3><span>8 seats</span></div><p>Our largest outdoor table, ideal for gatherings</p></div></div>
+      <?php foreach ($patioTables as $t): ?>
+      <div class="zone-table-card"><div class="zone-table-card-body"><div class="zone-table-card-header"><h3><?= e($t['seating_preference']) ?></h3><span>Up to <?= e((string) $t['max_capacity']) ?> seats</span></div><p><?= e((string) $t['table_count']) ?> table<?= (int) $t['table_count'] > 1 ? 's' : '' ?> available</p></div></div>
+      <?php endforeach; ?>
     </div>
+    <?php else: ?>
+    <p class="text-muted" style="text-align:center;">No tables are currently configured for this zone.</p>
+    <?php endif; ?>
   </div>
 </section>
 

@@ -77,7 +77,7 @@ include '../../includes/header.php';
                 <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
                 <input type="hidden" name="action_token" value="<?= e(action_token('user_cancel_booking')) ?>">
                 <input type="hidden" name="appointment_id" value="<?= e($row['appointment_id']) ?>">
-                <button class="btn btn-outline btn-sm" type="submit" onclick="return confirm('Are you sure you want to cancel this reservation?');">Cancel</button>
+                <button class="btn btn-outline btn-sm" type="submit" data-confirm="Are you sure you want to cancel this reservation?">Cancel</button>
               </form>
             </div>
           </div>

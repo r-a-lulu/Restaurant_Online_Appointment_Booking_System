@@ -319,8 +319,8 @@
     if (!dateEl) return;
 
     // Set min date to tomorrow (24h lead time)
-    var minDate = new Date();
-    minDate.setDate(minDate.getDate() + 1);
+    var today = new Date();
+    var minDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
     var yyyy = minDate.getFullYear();
     var mm = String(minDate.getMonth() + 1).padStart(2, '0');
     var dd = String(minDate.getDate()).padStart(2, '0');
@@ -328,8 +328,10 @@
 
     dateEl.addEventListener('change', function () {
       if (!dateEl.value) return;
-      var selected = new Date(dateEl.value + 'T00:00:00');
+      var parts = dateEl.value.split('-');
+      var selected = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
       var isMonday = selected.getDay() === 1;
+      // Compare date-only (no time) to avoid false "too soon" for tomorrow
       var tooSoon = selected < minDate;
       if (isMonday) {
         showStepError('We are closed on Mondays. Please choose another date.', dateEl);

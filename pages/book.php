@@ -282,7 +282,7 @@ include '../includes/nav.php';
           <!-- Phone -->
           <div class="form-group">
             <label for="guest-phone" class="form-label">Phone <span style="font-weight:400; color:var(--clr-muted-fg)">(optional)</span></label>
-            <input type="tel" id="guest-phone" name="phone" class="form-input" placeholder="+1 (555) 000-0000" autocomplete="tel" inputmode="tel" maxlength="30" pattern="[0-9+()\-\s]{6,30}" value="<?= e($user['phone'] ?? '') ?>">
+            <input type="tel" id="guest-phone" name="phone" class="form-input" placeholder="+1 (555) 000-0000" autocomplete="tel" inputmode="tel" maxlength="30" pattern="[0-9+() \-]{6,30}" value="<?= e($user['phone'] ?? '') ?>">
           </div>
 
           <!-- Party size -->

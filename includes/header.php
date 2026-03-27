@@ -36,5 +36,7 @@ $siteDescription = get_setting('restaurant_description', 'An exquisite dining ex
   <?php foreach ($pageCSS as $cssFile): ?>
   <link rel="stylesheet" href="<?= $basePath ?>css/<?= htmlspecialchars($cssFile, ENT_QUOTES, 'UTF-8') ?>">
   <?php endforeach; ?>
+
+  <script src="<?= $basePath ?>js/ui-confirm.js" defer></script>
 </head>
 <body>

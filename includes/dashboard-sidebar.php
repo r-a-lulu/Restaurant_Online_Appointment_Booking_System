@@ -99,7 +99,7 @@ $navLinks = [
       </svg>
       <span>Settings</span>
     </a>
-    <form method="post" action="<?= $basePath ?>actions.php?action=logout" class="sidebar-footer-link sidebar-logout" style="margin: 0;" onsubmit="return confirm('Are you sure you want to sign out?');">
+    <form method="post" action="<?= $basePath ?>actions.php?action=logout" class="sidebar-footer-link sidebar-logout" style="margin: 0;" data-confirm="Are you sure you want to sign out?">
       <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
       <input type="hidden" name="action_token" value="<?= e(action_token('logout')) ?>">
       <button type="submit" style="all:unset; cursor:pointer; display:flex; align-items:center; gap:var(--space-4); color:inherit; width:100%; font:inherit;">

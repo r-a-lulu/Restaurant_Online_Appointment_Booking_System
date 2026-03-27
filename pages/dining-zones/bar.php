@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * The Bar - Zone Detail Page
  */
@@ -71,18 +71,42 @@ include '../../includes/nav.php';
   </div>
 </section>
 
+<?php
+// Fetch actual seating options for The Bar from the database
+$barTables = [];
+try {
+  $pdo = db();
+  $stmt = $pdo->prepare("
+    SELECT t.seating_preference, MAX(t.capacity) AS max_capacity, COUNT(*) AS table_count
+    FROM `tables` t
+    JOIN dining_zones dz ON dz.zone_id = t.zone_id
+    WHERE dz.zone_name = 'The Bar'
+    GROUP BY t.seating_preference
+    ORDER BY max_capacity ASC, t.seating_preference ASC
+  ");
+  $stmt->execute();
+  $barTables = $stmt->fetchAll();
+  $stmt->closeCursor();
+} catch (PDOException $e) {
+  // Silently fail — seating section simply won't render
+}
+?>
+
 <section class="section-lg">
   <div class="container">
     <div style="max-width: 48rem; margin-inline: auto; text-align: center;" class="mb-12">
       <p class="section-label">Seating Options</p>
       <h2>Find Your Spot</h2>
     </div>
+    <?php if (!empty($barTables)): ?>
     <div class="zone-table-grid">
-      <div class="zone-table-card"><div class="zone-table-card-body"><div class="zone-table-card-header"><h3>Bar Counter</h3><span>8 seats</span></div><p>Premium seats at our mahogany bar</p></div></div>
-      <div class="zone-table-card"><div class="zone-table-card-body"><div class="zone-table-card-header"><h3>Lounge Booths</h3><span>4 seats</span></div><p>Intimate leather booth seating</p></div></div>
-      <div class="zone-table-card"><div class="zone-table-card-body"><div class="zone-table-card-header"><h3>High Tops</h3><span>4 seats</span></div><p>Casual elevated tables</p></div></div>
-      <div class="zone-table-card"><div class="zone-table-card-body"><div class="zone-table-card-header"><h3>Corner Sofa</h3><span>6 seats</span></div><p>Relaxed seating for larger groups</p></div></div>
+      <?php foreach ($barTables as $t): ?>
+      <div class="zone-table-card"><div class="zone-table-card-body"><div class="zone-table-card-header"><h3><?= e($t['seating_preference']) ?></h3><span>Up to <?= e((string) $t['max_capacity']) ?> seats</span></div><p><?= e((string) $t['table_count']) ?> table<?= (int) $t['table_count'] > 1 ? 's' : '' ?> available</p></div></div>
+      <?php endforeach; ?>
     </div>
+    <?php else: ?>
+    <p class="text-muted" style="text-align:center;">No tables are currently configured for this zone.</p>
+    <?php endif; ?>
   </div>
 </section>
 
