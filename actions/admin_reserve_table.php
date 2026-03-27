@@ -91,10 +91,28 @@ try {
     $userId = (int) $userId;
     $actualUserId = $userId;
 
-    $userStmt = $pdo->prepare('SELECT first_name, last_name FROM users WHERE user_id = :id LIMIT 1');
+    $userStmt = $pdo->prepare("SELECT u.first_name, u.last_name
+        FROM users u
+        JOIN roles r ON r.role_id = u.role_id
+        WHERE u.user_id = :id
+          AND u.is_active = 1
+          AND r.role_name IN ('guest', 'customer')
+        LIMIT 1");
     $userStmt->execute([':id' => $actualUserId]);
     $userRow = $userStmt->fetch(PDO::FETCH_ASSOC) ?: [];
     $userStmt->closeCursor();
+
+    if (empty($userRow)) {
+        $errorMessage = 'Please select an active guest account.';
+        if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+            header('Content-Type: application/json');
+            echo json_encode(['ok' => false, 'error' => $errorMessage]);
+            exit();
+        }
+        set_flash('admin_error', $errorMessage);
+        header('Location: ../pages/admin/floor.php');
+        exit();
+    }
     
     // Calculate end time from booking settings
     $startTime = $time;

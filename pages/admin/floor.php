@@ -1,15 +1,15 @@
-﻿<?php
+<?php
 /**
- * Admin Floor Management — pages/admin/floor.php
+ * Admin Floor Management - pages/admin/floor.php
  */
 require_once '../../includes/security.php';
 start_secure_session();
 require_admin();
 
-$pageTitle        = 'Floor Management — Admin';
+$pageTitle = 'Floor Management - Admin';
 $pageCSS = ['dashboard.css', 'admin.css'];
 $currentAdminPage = 'floor';
-$basePath         = '../../';
+$basePath = '../../';
 
 $adminError = get_flash('admin_error');
 $adminSuccess = get_flash('admin_success');
@@ -18,6 +18,7 @@ $users = [];
 $services = [];
 $packages = [];
 $addOns = [];
+$floorSchedule = [];
 $selectedFloorDate = trim((string) ($_GET['floor_date'] ?? date('Y-m-d')));
 $floorDateObj = DateTime::createFromFormat('Y-m-d', $selectedFloorDate);
 $floorDateErrors = DateTime::getLastErrors();
@@ -31,8 +32,7 @@ $reservationDurationLabel = reservation_duration_label();
 
 try {
   $pdo = db();
-  
-  // Fetch the same guest/customer set shown in the admin guest directory
+
   $stmt = $pdo->prepare("SELECT u.user_id, u.first_name, u.last_name, u.email, u.phone, u.is_active, u.created_at, COUNT(a.appointment_id) AS total_res
     FROM users u
     JOIN roles r ON r.role_id = u.role_id
@@ -43,7 +43,7 @@ try {
   $stmt->execute();
   $users = $stmt->fetchAll() ?: [];
   $stmt->closeCursor();
-  
+
   $stmt = $pdo->prepare('SELECT zone_id, zone_name FROM dining_zones ORDER BY zone_name');
   $stmt->execute();
   $zoneRows = $stmt->fetchAll() ?: [];
@@ -65,26 +65,16 @@ try {
   $stmt->closeCursor();
 
   $stmt = $pdo->prepare("SELECT t.table_id, t.capacity, t.seating_preference, t.current_status, t.manual_status_until, dz.zone_id, dz.zone_name,
-    -- Check if there's a confirmed appointment happening right now on the selected date
     EXISTS(
       SELECT 1 FROM appointments a
       JOIN appointment_status s ON s.status_id = a.status_id
       WHERE a.table_id = t.table_id
       AND a.appointment_date = :floor_date
       AND :is_today = 1
-      AND a.start_time <= CURTIME() 
+      AND a.start_time <= CURTIME()
       AND a.end_time > CURTIME()
       AND s.status_name = 'confirmed'
-    ) AS is_active_now,
-    -- Check if table has any reservation on the selected date
-    EXISTS(
-      SELECT 1 FROM appointments a2
-      JOIN appointment_status s2 ON s2.status_id = a2.status_id
-      WHERE a2.table_id = t.table_id
-      AND a2.appointment_date = :floor_date_reserved
-      AND s2.status_name IN ('pending','confirmed')
-      AND (:is_today_reserved = 0 OR a2.start_time > CURTIME())
-    ) AS is_reserved_for_date
+    ) AS is_active_now
     FROM `tables` t
     JOIN dining_zones dz ON dz.zone_id = t.zone_id
     GROUP BY t.table_id
@@ -92,8 +82,6 @@ try {
   $stmt->execute([
     ':floor_date' => $selectedFloorDate,
     ':is_today' => $isViewingToday ? 1 : 0,
-    ':floor_date_reserved' => $selectedFloorDate,
-    ':is_today_reserved' => $isViewingToday ? 1 : 0,
   ]);
   $tables = $stmt->fetchAll() ?: [];
   $stmt->closeCursor();
@@ -109,8 +97,6 @@ try {
       $status = 'occupied';
     } elseif ($manualOccupiedActive) {
       $status = 'occupied';
-    } elseif ((int) $t['is_reserved_for_date'] === 1) {
-      $status = 'reserved';
     } else {
       $status = 'available';
     }
@@ -137,6 +123,27 @@ try {
       'tables' => $tablesByZone[$z['zone_id']] ?? [],
     ];
   }
+
+  $stmt = $pdo->prepare("SELECT
+      a.appointment_id,
+      CONCAT(u.first_name, ' ', u.last_name) AS guest_name,
+      dz.zone_name,
+      COALESCE(t.seating_preference, 'Unassigned') AS seating_preference,
+      a.party_size,
+      a.start_time,
+      a.end_time,
+      st.status_name
+    FROM appointments a
+    JOIN users u ON u.user_id = a.user_id
+    JOIN appointment_status st ON st.status_id = a.status_id
+    LEFT JOIN `tables` t ON t.table_id = a.table_id
+    LEFT JOIN dining_zones dz ON dz.zone_id = COALESCE(a.zone_id, t.zone_id)
+    WHERE a.appointment_date = :schedule_date
+      AND st.status_name IN ('pending', 'confirmed')
+    ORDER BY a.start_time ASC, dz.zone_name ASC, seating_preference ASC, guest_name ASC");
+  $stmt->execute([':schedule_date' => $selectedFloorDate]);
+  $floorSchedule = $stmt->fetchAll() ?: [];
+  $stmt->closeCursor();
 } catch (PDOException $e) {
   $adminError = safe_error_message($e);
 }
@@ -180,7 +187,6 @@ include '../../includes/header.php';
       <div class="admin-floor-wrap" style="margin-top:var(--space-6); overflow:visible;">
         <div id="floor-csrf-container" data-csrf="<?= e(csrf_token()) ?>" data-action-token="<?= e(action_token('admin_floor_update')) ?>" data-status-token="<?= e(action_token('admin_floor_status')) ?>" data-details-token="<?= e(action_token('admin_floor_details')) ?>" data-availability-token="<?= e(action_token('check_availability')) ?>" data-selected-date="<?= e($selectedFloorDate) ?>" data-today-date="<?= e($todayDate) ?>" data-is-past-view="<?= $isPastFloorDate ? '1' : '0' ?>" style="display:none"></div>
 
-        <!-- Segmented Tabs -->
         <div class="segmented-tabs" data-admin-tabs>
           <?php $first = true; foreach ($zones as $key => $zone): ?>
           <button class="segment-btn <?= $first ? 'active' : '' ?>" data-tab="<?= e($key) ?>" aria-selected="<?= $first ? 'true' : 'false' ?>">
@@ -189,26 +195,18 @@ include '../../includes/header.php';
           <?php $first = false; endforeach; ?>
         </div>
 
-        <!-- Floor Panels -->
         <?php $first = true; foreach ($zones as $key => $zone): 
-          $avail = 0; $reserved = 0; $occupied = 0;
+          $avail = 0; $occupied = 0;
           foreach ($zone['tables'] as $t) {
              if ($t['status'] === 'available') $avail++;
-             elseif ($t['status'] === 'reserved') $reserved++;
              elseif ($t['status'] === 'occupied') $occupied++;
           }
         ?>
         <div class="admin-panel <?= $first ? 'active' : '' ?>" data-panel="<?= e($key) ?>" data-zone-id="<?= e((string)$zone['zone_id']) ?>" data-zone-key="<?= e($key) ?>">
-          
-          <!-- Summary Cards Row -->
-          <div class="floor-stats-grid">
+          <div class="floor-stats-grid floor-stats-grid--compact">
             <div class="floor-stat-card">
               <div class="floor-stat-val text-green"><?= e((string)$avail) ?></div>
               <div class="floor-stat-lbl">Available</div>
-            </div>
-            <div class="floor-stat-card">
-              <div class="floor-stat-val text-yellow"><?= e((string)$reserved) ?></div>
-              <div class="floor-stat-lbl">Reserved</div>
             </div>
             <div class="floor-stat-card">
               <div class="floor-stat-val text-red"><?= e((string)$occupied) ?></div>
@@ -216,7 +214,6 @@ include '../../includes/header.php';
             </div>
           </div>
 
-          <!-- Tables Grid Card -->
           <div class="admin-card" style="margin-top: var(--space-6);">
             <div class="admin-card-header">
               <h2 class="admin-card-title"><?= e($zone['label']) ?> Tables</h2>
@@ -243,31 +240,74 @@ include '../../includes/header.php';
                 <?php endforeach; ?>
               </div>
 
-              <!-- Legend -->
               <div class="floor-legend-new">
                 <div class="legend-item"><span class="legend-box available"></span> Available</div>
-                <div class="legend-item"><span class="legend-box reserved"></span> Reserved</div>
                 <div class="legend-item"><span class="legend-box occupied"></span> Occupied</div>
               </div>
             </div>
-          </div> <!-- /.admin-card -->
-
+          </div>
         </div>
         <?php $first = false; endforeach; ?>
       </div>
+
+      <section class="admin-card floor-schedule-card" style="margin-top:var(--space-6);">
+        <div class="admin-card-header">
+          <div>
+            <h2 class="admin-card-title">Reservation Timetable</h2>
+            <p class="admin-page-subtitle" style="margin-top:var(--space-1);">Showing reservations for <?= e(date('F j, Y', strtotime($selectedFloorDate))) ?>.</p>
+          </div>
+        </div>
+        <div class="admin-card-body">
+          <?php if (!empty($floorSchedule)): ?>
+            <div class="admin-table-wrap">
+              <table class="admin-table floor-schedule-table">
+                <thead>
+                  <tr>
+                    <th>Time</th>
+                    <th>Guest</th>
+                    <th>Zone</th>
+                    <th>Seating</th>
+                    <th>Guests</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="floorScheduleBody">
+                  <?php foreach ($floorSchedule as $entry): ?>
+                    <tr>
+                      <td>
+                        <div class="floor-schedule-time"><?= e(date('g:i A', strtotime((string) $entry['start_time']))) ?></div>
+                        <div class="floor-schedule-time-sub"><?= e(date('g:i A', strtotime((string) $entry['end_time']))) ?></div>
+                      </td>
+                      <td>
+                        <div class="admin-guest-name"><?= e($entry['guest_name']) ?></div>
+                        <div class="floor-schedule-ref">Ref #<?= e((string) $entry['appointment_id']) ?></div>
+                      </td>
+                      <td><?= e($entry['zone_name'] ?: 'Unassigned') ?></td>
+                      <td><?= e($entry['seating_preference'] ?: 'Unassigned') ?></td>
+                      <td><?= e((string) $entry['party_size']) ?></td>
+                      <td><span class="badge <?= e($entry['status_name'] === 'confirmed' ? 'badge-success' : 'badge-warning') ?>"><?= e(ucfirst($entry['status_name'])) ?></span></td>
+                    </tr>
+                  <?php endforeach; ?>
+                </tbody>
+              </table>
+            </div>
+          <?php else: ?>
+            <div class="floor-schedule-empty" id="floorScheduleEmpty">No reservations are scheduled for this day.</div>
+          <?php endif; ?>
+        </div>
+      </section>
 
     </div>
   </main>
 
 </div>
-
 <!-- Floor Details Modal -->
 <div class="admin-modal" id="floorDetailModal">
   <div class="admin-modal-card" style="max-width:34rem;">
     <div class="admin-modal-header" style="align-items:flex-start;">
       <div>
-        <h2 class="admin-modal-title" id="floorDetailTitle" style="margin-bottom:var(--space-1);">Table Details</h2>
-        <p class="admin-modal-subtitle" id="floorDetailSubtitle" style="color:var(--clr-muted-fg);font-size:var(--text-sm);">Reservation details for the selected table</p>
+        <h2 class="admin-modal-title" id="floorDetailTitle" style="margin-bottom:var(--space-1);">Table Reservation Details</h2>
+        <p class="admin-modal-subtitle" id="floorDetailSubtitle" style="color:var(--clr-muted-fg);font-size:var(--text-sm);">Booking details for the selected table</p>
       </div>
       <button class="admin-modal-close" data-modal-close aria-label="Close">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -285,11 +325,11 @@ include '../../includes/header.php';
 
       <div class="floor-detail-highlight">
         <div>
-          <div class="floor-detail-kicker">Current Selection</div>
+          <div class="floor-detail-kicker">Selected Table</div>
           <div class="floor-detail-table" id="floorDetailTableLabel">Table</div>
           <div class="floor-detail-zone" id="floorDetailZoneLabel">Zone</div>
         </div>
-        <span class="badge" id="floorDetailStatusBadge">Reserved</span>
+        <span class="badge" id="floorDetailStatusBadge">Booked</span>
       </div>
 
       <dl class="admin-modal-rows floor-detail-rows">

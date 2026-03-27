@@ -2,14 +2,9 @@
   'use strict';
 
   /* ------------------------------------------------------------------
-     Floor Status Modal + Polling (10s)
+     Floor Snapshot + Polling (10s)
   ------------------------------------------------------------------ */
   const floorMeta = document.getElementById('floor-csrf-container');
-  const floorModal = document.getElementById('floorStatusModal');
-  const floorForm = document.getElementById('floorStatusForm');
-  const floorSelect = document.getElementById('floorStatusSelect');
-  const floorTableId = document.getElementById('floorStatusTableId');
-  const floorTableLabel = document.getElementById('floorStatusTableLabel');
   const selectedFloorDate = floorMeta ? (floorMeta.dataset.selectedDate || '') : '';
   const todayFloorDate = floorMeta ? (floorMeta.dataset.todayDate || '') : '';
   const isTodayFloorView = !!selectedFloorDate && selectedFloorDate === todayFloorDate;
@@ -35,7 +30,7 @@
   const floorDetailCreated = document.getElementById('floorDetailCreated');
   const floorDetailNotes = document.getElementById('floorDetailNotes');
 
-  const FLOOR_STATUS = ['available', 'reserved', 'occupied'];
+  const FLOOR_STATUS = ['available', 'occupied'];
 
   function openModalById(id) {
     const modal = document.getElementById(id);
@@ -124,29 +119,17 @@
 
   function updatePanelStats(panel) {
     if (!panel) return;
-    let avail = 0, res = 0, occ = 0;
+    let avail = 0, occ = 0;
     panel.querySelectorAll('.floor-tile-new').forEach(function (t) {
       const st = t.getAttribute('data-status');
       if (st === 'available') avail++;
-      if (st === 'reserved') res++;
       if (st === 'occupied') occ++;
     });
     const statVals = panel.querySelectorAll('.floor-stat-val');
-    if (statVals.length >= 3) {
+    if (statVals.length >= 2) {
       statVals[0].textContent = avail;
-      statVals[1].textContent = res;
-      statVals[2].textContent = occ;
+      statVals[1].textContent = occ;
     }
-  }
-
-  function markTileReserved(tableId) {
-    const tile = document.querySelector('.floor-tile-new[data-table-id="' + tableId + '"]');
-    if (!tile) return;
-    setTileStatus(tile, 'reserved');
-    tile.setAttribute('data-last-changed', Date.now().toString());
-    const btn = tile.querySelector('[data-reserve-table]');
-    if (btn) btn.disabled = true;
-    updatePanelStats(tile.closest('.admin-panel'));
   }
 
   function isReserveButtonClick(event) {
@@ -189,12 +172,62 @@
     }
   }
 
+  const floorScheduleBody = document.getElementById('floorScheduleBody');
+  const floorScheduleEmpty = document.getElementById('floorScheduleEmpty');
+
+  function escapeScheduleHtml(value) {
+    return String(value || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  function renderFloorSchedule(schedule) {
+    if (!floorScheduleBody) return;
+    const entries = Array.isArray(schedule) ? schedule : [];
+
+    if (!entries.length) {
+      floorScheduleBody.innerHTML = '';
+      if (floorScheduleEmpty) floorScheduleEmpty.style.display = 'block';
+      const tableWrap = floorScheduleBody.closest('.admin-table-wrap');
+      if (tableWrap) tableWrap.style.display = 'none';
+      return;
+    }
+
+    const tableWrap = floorScheduleBody.closest('.admin-table-wrap');
+    if (tableWrap) tableWrap.style.display = 'block';
+    if (floorScheduleEmpty) floorScheduleEmpty.style.display = 'none';
+
+    floorScheduleBody.innerHTML = entries.map(function (entry) {
+      const statusName = String(entry.status_name || '').toLowerCase();
+      const badgeClass = statusName === 'confirmed' ? 'badge-success' : 'badge-warning';
+      const startTime = escapeScheduleHtml(entry.start_time_label || entry.start_time || '');
+      const endTime = escapeScheduleHtml(entry.end_time_label || entry.end_time || '');
+      return '' +
+        '<tr>' +
+          '<td>' +
+            '<div class="floor-schedule-time">' + startTime + '</div>' +
+            '<div class="floor-schedule-time-sub">' + endTime + '</div>' +
+          '</td>' +
+          '<td>' +
+            '<div class="admin-guest-name">' + escapeScheduleHtml(entry.guest_name || 'Guest') + '</div>' +
+            '<div class="floor-schedule-ref">Ref #' + escapeScheduleHtml(entry.appointment_id || '') + '</div>' +
+          '</td>' +
+          '<td>' + escapeScheduleHtml(entry.zone_name || 'Unassigned') + '</td>' +
+          '<td>' + escapeScheduleHtml(entry.seating_preference || 'Unassigned') + '</td>' +
+          '<td>' + escapeScheduleHtml(entry.party_size || '') + '</td>' +
+          '<td><span class="badge ' + badgeClass + '">' + escapeScheduleHtml(statusName ? (statusName.charAt(0).toUpperCase() + statusName.slice(1)) : 'Pending') + '</span></td>' +
+        '</tr>';
+    }).join('');
+  }
   function showFloorDetailContent(payload) {
     const table = payload && payload.table ? payload.table : {};
     const detail = payload && payload.detail ? payload.detail : {};
 
     if (floorDetailTitle) {
-      floorDetailTitle.textContent = (detail.type === 'occupied' ? 'Occupied Table Details' : 'Reserved Table Details');
+      floorDetailTitle.textContent = (detail.type === 'occupied' ? 'Occupied Table Details' : 'Table Reservation Details');
     }
     if (floorDetailSubtitle) {
       floorDetailSubtitle.textContent = 'Reservation details for ' + (table.label || 'this table') + ' on ' + (detail.date_label || selectedFloorDate || 'the selected date') + '.';
@@ -345,10 +378,50 @@
     updateReserveZones();
   }
 
+  let refreshFloorSnapshot = function () {
+    return Promise.resolve(null);
+  };
+
   if (floorMeta) {
     const csrf = floorMeta.dataset.csrf || '';
     const actionToken = floorMeta.dataset.actionToken || '';
     const statusToken = floorMeta.dataset.statusToken || '';
+
+    refreshFloorSnapshot = function () {
+      const body = new URLSearchParams();
+      body.set('csrf_token', csrf);
+      body.set('action_token', statusToken);
+      body.set('floor_date', selectedFloorDate);
+      return fetch(actionUrl('admin_floor_status'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: body.toString(),
+      })
+        .then(function (res) { return res.json(); })
+        .then(function (data) {
+          if (!data || !data.tables) return data;
+          const now = Date.now();
+          const PROTECT_MS = 30000;
+
+          data.tables.forEach(function (t) {
+            const tile = document.querySelector('.floor-tile-new[data-table-id="' + t.table_id + '"]');
+            if (!tile) return;
+
+            const lastChanged = tile.getAttribute('data-last-changed');
+            if (lastChanged && (now - parseInt(lastChanged, 10)) < PROTECT_MS) {
+              return;
+            }
+
+            setTileStatus(tile, t.status);
+          });
+          document.querySelectorAll('.admin-panel').forEach(function (panel) {
+            updatePanelStats(panel);
+          });
+          renderFloorSchedule(data.schedule || []);
+          return data;
+        })
+        .catch(function () { return null; });
+    };
 
     document.querySelectorAll('.floor-tile-new[data-status]').forEach(function (tile) {
       tile.addEventListener('click', function (event) {
@@ -362,7 +435,7 @@
         }
         const tableId = tile.getAttribute('data-table-id');
         const currentStatus = tile.getAttribute('data-status') || 'available';
-        if (currentStatus === 'reserved' || currentStatus === 'occupied') {
+        if (currentStatus === 'occupied') {
           openFloorDetailForTile(tile);
           return;
         }
@@ -394,7 +467,10 @@
               setTileStatus(tile, currentStatus);
               updatePanelStats(tile.closest('.admin-panel'));
               console.error('Failed to update status:', data);
+              refreshFloorSnapshot();
+              return;
             }
+            refreshFloorSnapshot();
           })
           .catch(function (err) {
             setTileStatus(tile, currentStatus);
@@ -406,139 +482,13 @@
       tile.addEventListener('keydown', function (event) {
         if (!event || (event.key !== 'Enter' && event.key !== ' ')) return;
         const currentStatus = tile.getAttribute('data-status') || 'available';
-        if (currentStatus !== 'reserved' && currentStatus !== 'occupied') return;
+        if (currentStatus !== 'occupied') return;
         event.preventDefault();
         openFloorDetailForTile(tile);
       });
     });
 
-    setInterval(function () {
-      const body = new URLSearchParams();
-      body.set('csrf_token', csrf);
-      body.set('action_token', statusToken);
-      body.set('floor_date', selectedFloorDate);
-      fetch(actionUrl('admin_floor_status'), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: body.toString(),
-      })
-        .then(function (res) { return res.json(); })
-        .then(function (data) {
-          if (!data || !data.tables) return;
-          const now = Date.now();
-          const PROTECT_MS = 30000;
-
-          data.tables.forEach(function (t) {
-            const tile = document.querySelector('.floor-tile-new[data-table-id="' + t.table_id + '"]');
-            if (!tile) return;
-
-            const lastChanged = tile.getAttribute('data-last-changed');
-            if (lastChanged && (now - parseInt(lastChanged, 10)) < PROTECT_MS) {
-              return;
-            }
-
-            setTileStatus(tile, t.status);
-          });
-          document.querySelectorAll('.admin-panel').forEach(function (panel) {
-            updatePanelStats(panel);
-          });
-        })
-        .catch(function () { });
-    }, 10000);
-  }
-
-  if (floorMeta && floorModal && floorForm) {
-    const csrf = floorMeta.dataset.csrf || '';
-    const actionToken = floorMeta.dataset.actionToken || '';
-    const statusToken = floorMeta.dataset.statusToken || '';
-
-    document.querySelectorAll('.floor-tile-new[data-status]').forEach(function (tile) {
-      tile.addEventListener('click', function (event) {
-        const reserveBtn = event && event.target && event.target.closest ? event.target.closest('[data-reserve-table]') : null;
-        if (reserveBtn) {
-          event.preventDefault();
-          event.stopImmediatePropagation();
-          event.stopPropagation();
-          openReserveModalFromButton(reserveBtn);
-          return;
-        }
-        const tableId = tile.getAttribute('data-table-id');
-        const labelEl = tile.querySelector('.floor-tile-new-number');
-        if (floorTableId) floorTableId.value = tableId || '';
-        if (floorTableLabel) floorTableLabel.textContent = labelEl ? labelEl.textContent.trim() : 'Table';
-        if (floorSelect) floorSelect.value = tile.getAttribute('data-status') || 'available';
-        floorModal.classList.add('open');
-      });
-    });
-
-    floorForm.addEventListener('submit', function (e) {
-      e.preventDefault();
-      const tableId = floorTableId ? floorTableId.value : '';
-      const status = floorSelect ? floorSelect.value : '';
-      if (!tableId || FLOOR_STATUS.indexOf(status) === -1) return;
-      if (!isTodayFloorView) return;
-
-      const body = new URLSearchParams();
-      body.set('csrf_token', csrf);
-      body.set('action_token', actionToken);
-      body.set('table_id', tableId);
-      body.set('status', status);
-      body.set('floor_date', selectedFloorDate);
-
-      fetch(actionUrl('admin_floor_update'), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: body.toString(),
-      })
-        .then(function (res) { return res.json(); })
-        .then(function (data) {
-          if (data && data.ok) {
-            const tile = document.querySelector('.floor-tile-new[data-table-id="' + tableId + '"]');
-            if (tile) {
-              setTileStatus(tile, status);
-              updatePanelStats(tile.closest('.admin-panel'));
-            }
-            floorModal.classList.remove('open');
-          }
-        })
-        .catch(function () { });
-    });
-
-    // Poll every 10s
-    setInterval(function () {
-      const body = new URLSearchParams();
-      body.set('csrf_token', csrf);
-      body.set('action_token', statusToken);
-      body.set('floor_date', selectedFloorDate);
-      fetch(actionUrl('admin_floor_status'), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: body.toString(),
-      })
-        .then(function (res) { return res.json(); })
-        .then(function (data) {
-          if (!data || !data.tables) return;
-          const now = Date.now();
-          const PROTECT_MS = 30000; // Don't override manual changes for 30 seconds
-
-          data.tables.forEach(function (t) {
-            const tile = document.querySelector('.floor-tile-new[data-table-id="' + t.table_id + '"]');
-            if (!tile) return;
-
-            // Skip if tile was recently clicked (manual override)
-            const lastChanged = tile.getAttribute('data-last-changed');
-            if (lastChanged && (now - parseInt(lastChanged)) < PROTECT_MS) {
-              return; // Don't override recent manual changes
-            }
-
-            setTileStatus(tile, t.status);
-          });
-          document.querySelectorAll('.admin-panel').forEach(function (panel) {
-            updatePanelStats(panel);
-          });
-        })
-        .catch(function () { });
-    }, 10000);
+    setInterval(refreshFloorSnapshot, 10000);
   }
 
   /* ------------------------------------------------------------------
@@ -1162,16 +1112,11 @@
         })
         .then(function (result) {
           if (result && result.data && result.data.ok) {
-            const createdTableId = result && result.data ? String(result.data.table_id || '') : '';
-            if (createdTableId) markTileReserved(createdTableId);
             if (modal) modal.classList.remove('open');
             resetReserveModalFields();
+            refreshFloorSnapshot();
             reserveTableForm.reset();
-            if (window.location && typeof window.location.reload === 'function') {
-              setTimeout(function () {
-                window.location.reload();
-              }, 300);
-            }
+
             return;
           }
 
@@ -1263,3 +1208,6 @@
   }
 
 })();
+
+
+

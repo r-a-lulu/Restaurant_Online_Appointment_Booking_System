@@ -33,7 +33,6 @@ $isToday = ($floorDate === date('Y-m-d')) ? 1 : 0;
 try {
     $pdo = db();
     $stmt = $pdo->prepare("SELECT t.table_id, t.zone_id, t.current_status, t.manual_status_until,
-      -- Check if there's an active appointment right now
       EXISTS(
         SELECT 1 FROM appointments a
         JOIN appointment_status s ON s.status_id = a.status_id
@@ -43,22 +42,11 @@ try {
         AND a.start_time <= CURTIME() 
         AND a.end_time > CURTIME()
         AND s.status_name = 'confirmed'
-      ) AS is_active_now,
-      -- Check if table has a reservation on the selected floor date
-      EXISTS(
-        SELECT 1 FROM appointments a2
-        JOIN appointment_status s2 ON s2.status_id = a2.status_id
-        WHERE a2.table_id = t.table_id 
-        AND a2.appointment_date = :floor_date_reserved
-        AND s2.status_name IN ('pending','confirmed')
-        AND (:is_today_reserved = 0 OR a2.start_time > CURTIME())
-      ) AS is_reserved_later
+      ) AS is_active_now
       FROM `tables` t");
     $stmt->execute([
         ':floor_date' => $floorDate,
         ':is_today' => $isToday,
-        ':floor_date_reserved' => $floorDate,
-        ':is_today_reserved' => $isToday,
     ]);
     $rows = $stmt->fetchAll() ?: [];
     $stmt->closeCursor();
@@ -75,8 +63,6 @@ try {
             $status = 'occupied';
         } elseif ($manualOccupiedActive) {
             $status = 'occupied';
-        } elseif ((int) $r['is_reserved_later'] === 1) {
-            $status = 'reserved';
         } else {
             $status = 'available';
         }
@@ -88,7 +74,7 @@ try {
         ];
 
         if (!isset($zoneStats[$r['zone_id']])) {
-            $zoneStats[$r['zone_id']] = ['available' => 0, 'reserved' => 0, 'occupied' => 0];
+            $zoneStats[$r['zone_id']] = ['available' => 0, 'occupied' => 0];
         }
         $zoneStats[$r['zone_id']][$status] += 1;
     }
@@ -99,3 +85,5 @@ try {
     header('Content-Type: application/json');
     echo json_encode(['error' => admin_booking_error_message($e)]);
 }
+
+

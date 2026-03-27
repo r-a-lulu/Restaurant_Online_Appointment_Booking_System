@@ -1442,15 +1442,42 @@
 }
 
 .floor-tile-new--available .floor-tile-new-status { color: #166534; }
-.floor-tile-new--reserved .floor-tile-new-status { color: #854d0e; }
 .floor-tile-new--occupied .floor-tile-new-status { color: #991b1b; }
 
 /* Floor Grid Legend */
+.floor-stats-grid--compact {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .floor-legend-new {
   display: flex;
   align-items: center;
   gap: var(--space-6);
   margin-top: var(--space-8);
+}
+
+.floor-schedule-card .admin-card-header {
+  align-items: flex-start;
+}
+
+.floor-schedule-time {
+  font-weight: 600;
+  color: var(--clr-fg);
+}
+
+.floor-schedule-time-sub,
+.floor-schedule-ref {
+  font-size: var(--text-xs);
+  color: var(--clr-muted-fg);
+  margin-top: 0.2rem;
+}
+
+.floor-schedule-empty {
+  padding: var(--space-4);
+  border: 1px dashed var(--clr-border);
+  border-radius: var(--radius-lg);
+  color: var(--clr-muted-fg);
+  background: #fffdf9;
 }
 
 .legend-item {
@@ -1469,7 +1496,6 @@
 }
 
 .legend-box.available { background-color: #dcfce7; border-color: #86efac; }
-.legend-box.reserved { background-color: #fef08a; border-color: #eab308; }
 .legend-box.occupied { background-color: #fee2e2; border-color: #fca5a5; }
 /* ═══════════════════════════════════════════════════════════
    Guest Directory & Profile Modal
@@ -2102,3 +2128,4 @@
 .admin-addon-qty {
   width: 5rem;
 }
+
