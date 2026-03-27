@@ -391,7 +391,7 @@ include '../../includes/header.php';
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     </div>
-    <form class="admin-form" id="reserveTableForm" method="post" action="../../actions.php?action=admin_reserve_table">
+    <form class="admin-form" id="reserveTableForm" method="post" action="../../actions.php?action=admin_reserve_table" novalidate>
       <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
       <input type="hidden" name="action_token" value="<?= e(action_token('admin_reserve_table')) ?>">
       
@@ -421,17 +421,17 @@ include '../../includes/header.php';
         <div class="form-row" style="margin-bottom:var(--space-3);">
           <div class="form-group" style="flex:1;">
             <label class="form-label">First Name <span style="color:var(--clr-danger);">*</span></label>
-            <input type="text" class="form-input" id="reserveFirstName" name="first_name" required>
+            <input type="text" class="form-input" id="reserveFirstName" name="first_name">
           </div>
           <div class="form-group" style="flex:1;">
             <label class="form-label">Last Name <span style="color:var(--clr-danger);">*</span></label>
-            <input type="text" class="form-input" id="reserveLastName" name="last_name" required>
+            <input type="text" class="form-input" id="reserveLastName" name="last_name">
           </div>
         </div>
         <div class="form-row" style="margin-bottom:var(--space-3);">
           <div class="form-group" style="flex:1;">
             <label class="form-label">Email <span style="color:var(--clr-danger);">*</span></label>
-            <input type="email" class="form-input" id="reserveEmail" name="email" required>
+            <input type="email" class="form-input" id="reserveEmail" name="email">
           </div>
           <div class="form-group" style="flex:1;">
             <label class="form-label">Phone</label>

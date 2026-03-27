@@ -131,7 +131,7 @@ include '../../includes/header.php';
                                 <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
                                 <input type="hidden" name="action_token" value="<?= e(action_token('admin_update_status')) ?>">
                                 <input type="hidden" name="appointment_id" value="<?= e($r['appointment_id']) ?>">
-                                <button class="btn btn-outline btn-sm" style="color:var(--clr-destructive);border-color:var(--clr-destructive);" name="action" value="reject" onclick="return confirm('Are you sure you want to reject this reservation?');">Reject</button>
+                                <button class="btn btn-outline btn-sm" style="color:var(--clr-destructive);border-color:var(--clr-destructive);" name="action" value="reject" data-confirm="Are you sure you want to reject this reservation?">Reject</button>
                               </form>
                               <?php if (!$canApprove): ?>
                                 <span style="display:inline-block;margin-top:6px;font-size:var(--text-xs);color:var(--clr-muted-fg);">Limit reached</span>
@@ -147,13 +147,13 @@ include '../../includes/header.php';
                                 <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
                                 <input type="hidden" name="action_token" value="<?= e(action_token('admin_update_status')) ?>">
                                 <input type="hidden" name="appointment_id" value="<?= e($r['appointment_id']) ?>">
-                                <button class="btn btn-outline btn-sm" style="color:var(--clr-muted-fg);" name="action" value="no_show" onclick="return confirm('Mark this reservation as no show?');" <?= $canMarkNoShow ? '' : 'disabled title="You can mark a reservation as no show only after its start time has passed."' ?>>No Show</button>
+                                <button class="btn btn-outline btn-sm" style="color:var(--clr-muted-fg);" name="action" value="no_show" data-confirm="Mark this reservation as no show?" <?= $canMarkNoShow ? '' : 'disabled title="You can mark a reservation as no show only after its start time has passed."' ?>>No Show</button>
                               </form>
                               <form method="post" action="<?= $basePath ?>actions.php?action=admin_update_status" style="display:inline;">
                                 <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
                                 <input type="hidden" name="action_token" value="<?= e(action_token('admin_update_status')) ?>">
                                 <input type="hidden" name="appointment_id" value="<?= e($r['appointment_id']) ?>">
-                                <button class="btn btn-outline btn-sm" style="color:var(--clr-destructive);border-color:var(--clr-destructive);" name="action" value="cancel" onclick="return confirm('Are you sure you want to cancel this reservation?');">Cancel</button>
+                                <button class="btn btn-outline btn-sm" style="color:var(--clr-destructive);border-color:var(--clr-destructive);" name="action" value="cancel" data-confirm="Are you sure you want to cancel this reservation?">Cancel</button>
                               </form>
                             <?php else: ?>
                               <span style="color:var(--clr-muted-fg);font-size:var(--text-xs);">No actions</span>

@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * Main Dining Room - Zone Detail Page
  */
@@ -56,20 +56,42 @@ include '../../includes/nav.php';
   </div>
 </section>
 
+<?php
+// Fetch actual seating options for Main Dining Room from the database
+$diningTables = [];
+try {
+  $pdo = db();
+  $stmt = $pdo->prepare("
+    SELECT t.seating_preference, MAX(t.capacity) AS max_capacity, COUNT(*) AS table_count
+    FROM `tables` t
+    JOIN dining_zones dz ON dz.zone_id = t.zone_id
+    WHERE dz.zone_name = 'Main Dining Room'
+    GROUP BY t.seating_preference
+    ORDER BY max_capacity ASC, t.seating_preference ASC
+  ");
+  $stmt->execute();
+  $diningTables = $stmt->fetchAll();
+  $stmt->closeCursor();
+} catch (PDOException $e) {
+  // Silently fail — seating section simply won't render
+}
+?>
+
 <section class="section-lg" style="background-color: var(--clr-muted);">
   <div class="container">
     <div style="max-width: 48rem; margin-inline: auto; text-align: center;" class="mb-12">
       <p class="section-label">Seating Options</p>
       <h2>Choose Your Perfect Table</h2>
     </div>
+    <?php if (!empty($diningTables)): ?>
     <div class="zone-table-grid zone-table-grid--3col">
-      <div class="zone-table-card"><div class="zone-table-card-body"><div class="zone-table-card-header"><h3>Chef's View</h3><span>2 seats</span></div><p>Front-row seats to our open kitchen</p></div></div>
-      <div class="zone-table-card"><div class="zone-table-card-body"><div class="zone-table-card-header"><h3>Window Table</h3><span>4 seats</span></div><p>Elegant seating with street views</p></div></div>
-      <div class="zone-table-card"><div class="zone-table-card-body"><div class="zone-table-card-header"><h3>Banquette</h3><span>6 seats</span></div><p>Comfortable booth seating in our main area</p></div></div>
-      <div class="zone-table-card"><div class="zone-table-card-body"><div class="zone-table-card-header"><h3>Fireplace</h3><span>4 seats</span></div><p>Cozy setting near our marble fireplace</p></div></div>
-      <div class="zone-table-card"><div class="zone-table-card-body"><div class="zone-table-card-header"><h3>Private Alcove</h3><span>8 seats</span></div><p>Semi-private space for larger parties</p></div></div>
-      <div class="zone-table-card"><div class="zone-table-card-body"><div class="zone-table-card-header"><h3>Chandelier</h3><span>4 seats</span></div><p>Centered beneath our signature crystal chandelier</p></div></div>
+      <?php foreach ($diningTables as $t): ?>
+      <div class="zone-table-card"><div class="zone-table-card-body"><div class="zone-table-card-header"><h3><?= e($t['seating_preference']) ?></h3><span>Up to <?= e((string) $t['max_capacity']) ?> seats</span></div><p><?= e((string) $t['table_count']) ?> table<?= (int) $t['table_count'] > 1 ? 's' : '' ?> available</p></div></div>
+      <?php endforeach; ?>
     </div>
+    <?php else: ?>
+    <p class="text-muted" style="text-align:center;">No tables are currently configured for this zone.</p>
+    <?php endif; ?>
   </div>
 </section>
 

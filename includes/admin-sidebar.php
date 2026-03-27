@@ -93,11 +93,25 @@ $navLinks = [
 
   <!-- Admin User Info -->
   <div class="sidebar-user">
-    <div class="sidebar-avatar sidebar-avatar--admin">MC</div>
-    <div class="sidebar-user-info">
-      <p class="sidebar-user-name">Marcus Chen</p>
-      <p class="sidebar-user-since">General Manager</p>
+    <div class="sidebar-avatar sidebar-avatar--admin">
+      <?= e(strtoupper(substr($_SESSION['first_name'] ?? 'S', 0, 1) . substr($_SESSION['last_name'] ?? 'A', 0, 1))) ?>
     </div>
+    <div class="sidebar-user-info">
+      <p class="sidebar-user-name"><?= e($_SESSION['first_name'] ?? 'System') ?> <?= e($_SESSION['last_name'] ?? 'Admin') ?></p>
+      <p class="sidebar-user-since">Administrator</p>
+    </div>
+    <!-- Profile Sign out using form POST -->
+    <form method="post" action="<?= $basePath ?>actions.php?action=logout" style="margin: 0; padding: 0;">
+      <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+      <input type="hidden" name="action_token" value="<?= e(action_token('logout')) ?>">
+      <button type="submit" class="sidebar-signout" aria-label="Sign Out" title="Sign Out" style="background:none; border:none; cursor:pointer;" data-confirm="Are you sure you want to sign out?">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+          <polyline points="16 17 21 12 16 7"/>
+          <line x1="21" y1="12" x2="9" y2="12"/>
+        </svg>
+      </button>
+    </form>
   </div>
 
   <hr class="sidebar-divider">
@@ -111,7 +125,7 @@ $navLinks = [
       </svg>
       Settings
     </a>
-    <form method="post" action="<?= $basePath ?>actions.php?action=logout" class="sidebar-footer-link sidebar-logout" style="margin: 0;" onsubmit="return confirm('Are you sure you want to sign out?');">
+    <form method="post" action="<?= $basePath ?>actions.php?action=logout" class="sidebar-footer-link sidebar-logout" style="margin: 0;" data-confirm="Are you sure you want to sign out?">
       <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
       <input type="hidden" name="action_token" value="<?= e(action_token('logout')) ?>">
       <button type="submit" style="all:unset; cursor:pointer; display:flex; align-items:center; gap:var(--space-4); color:inherit; width:100%; font:inherit;">

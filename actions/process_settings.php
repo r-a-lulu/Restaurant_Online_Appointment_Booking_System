@@ -1,6 +1,6 @@
-﻿<?php
+<?php
 /**
- * Process Settings Save — actions/process_settings.php
+ * Process Settings Save � actions/process_settings.php
  */
 if (!defined('FRONT_CONTROLLER')) {
     header('HTTP/1.1 403 Forbidden');
@@ -21,7 +21,7 @@ $actionToken = $_POST['action_token'] ?? '';
 
 if (!verify_csrf($csrf) || !verify_action_token('save_settings', $actionToken)) {
     set_flash('settings_error', 'Security token invalid. Please try again.');
-    header('Location: ../pages/admin/settings.php');
+    header('Location: pages/admin/settings.php');
     exit();
 }
 
@@ -93,7 +93,7 @@ try {
             
         default:
             set_flash('settings_error', 'Invalid settings section.');
-            header('Location: ../pages/admin/settings.php');
+            header('Location: pages/admin/settings.php');
             exit();
     }
     
@@ -120,5 +120,5 @@ try {
     set_flash('settings_error', 'We could not save the settings right now. Please try again.');
 }
 
-header('Location: ../pages/admin/settings.php');
+header('Location: pages/admin/settings.php');
 exit();
