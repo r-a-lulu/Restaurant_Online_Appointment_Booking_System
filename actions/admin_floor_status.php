@@ -51,6 +51,29 @@ try {
     $rows = $stmt->fetchAll() ?: [];
     $stmt->closeCursor();
 
+    $scheduleStmt = $pdo->prepare("SELECT
+        a.appointment_id,
+        CONCAT(u.first_name, ' ', u.last_name) AS guest_name,
+        dz.zone_name,
+        COALESCE(t.seating_preference, 'Unassigned') AS seating_preference,
+        a.party_size,
+        a.start_time,
+        a.end_time,
+        DATE_FORMAT(a.start_time, '%l:%i %p') AS start_time_label,
+        DATE_FORMAT(a.end_time, '%l:%i %p') AS end_time_label,
+        st.status_name
+      FROM appointments a
+      JOIN users u ON u.user_id = a.user_id
+      JOIN appointment_status st ON st.status_id = a.status_id
+      LEFT JOIN `tables` t ON t.table_id = a.table_id
+      LEFT JOIN dining_zones dz ON dz.zone_id = COALESCE(a.zone_id, t.zone_id)
+      WHERE a.appointment_date = :schedule_date
+        AND st.status_name IN ('pending', 'confirmed')
+      ORDER BY a.start_time ASC, dz.zone_name ASC, seating_preference ASC, guest_name ASC");
+    $scheduleStmt->execute([':schedule_date' => $floorDate]);
+    $schedule = $scheduleStmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    $scheduleStmt->closeCursor();
+
     $tables = [];
     $zoneStats = [];
     foreach ($rows as $r) {
@@ -80,7 +103,7 @@ try {
     }
 
     header('Content-Type: application/json');
-    echo json_encode(['tables' => $tables, 'zones' => $zoneStats]);
+    echo json_encode(['tables' => $tables, 'zones' => $zoneStats, 'schedule' => $schedule]);
 } catch (PDOException $e) {
     header('Content-Type: application/json');
     echo json_encode(['error' => admin_booking_error_message($e)]);
