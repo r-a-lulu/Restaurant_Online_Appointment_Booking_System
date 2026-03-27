@@ -16,7 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 $csrf = $_POST['csrf_token'] ?? '';
 $source = $_POST['source'] ?? '';
-$errorRedirect = ($source === 'dashboard') ? 'pages/dashboard/book.php' : 'pages/book.php';
+$errorRedirect = 'pages/book.php';
     $redirectToBooking = static function () use ($errorRedirect): void {
     redirect($errorRedirect);
 };

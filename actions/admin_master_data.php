@@ -148,6 +148,6 @@ try {
     redirect('pages/admin/master-data.php');
 } catch (PDOException $e) {
     set_flash('admin_error', safe_error_message($e));
-    redirect('../pages/admin/master-data.php');
+    redirect('pages/admin/master-data.php');
 }
 

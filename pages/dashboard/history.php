@@ -23,7 +23,8 @@ try {
   $history = $stmt->fetchAll() ?: [];
   $stmt->closeCursor();
 } catch (PDOException $e) {
-  $dashError = safe_error_message($e);
+  error_log('Dashboard history load failed for user ' . (int) ($_SESSION['user_id'] ?? 0) . ': ' . $e->getMessage());
+  $dashError = 'We could not load your reservation history right now. Please try again.';
 }
 
 include '../../includes/header.php';

@@ -65,6 +65,9 @@ function db_is_local_runtime(): bool {
     $remoteAddr = trim((string) ($_SERVER['REMOTE_ADDR'] ?? ''));
     $serverAddr = trim((string) ($_SERVER['SERVER_ADDR'] ?? ''));
     $isCli = PHP_SAPI === 'cli' || PHP_SAPI === 'phpdbg';
+    $cwd = strtolower((string) getcwd());
+    $xamppRoot = strtolower(str_replace('\\', '/', dirname(__DIR__)));
+    $cwdNormalized = str_replace('\\', '/', $cwd);
 
     if (in_array($host, ['localhost', '127.0.0.1', '::1'], true)) {
         return true;
@@ -74,7 +77,7 @@ function db_is_local_runtime(): bool {
         return true;
     }
 
-    if ($isCli) {
+    if ($isCli && str_starts_with($cwdNormalized, $xamppRoot)) {
         return true;
     }
 

@@ -45,7 +45,8 @@ if ($appointmentId > 0) {
     $appointment = $stmt->fetch() ?: [];
     $stmt->closeCursor();
   } catch (PDOException $e) {
-    $confError = safe_error_message($e);
+    error_log('Booking confirmation load failed for user ' . (int) ($_SESSION['user_id'] ?? 0) . ' and appointment ' . $appointmentId . ': ' . $e->getMessage());
+    $confError = 'We could not load your full reservation details right now.';
   }
 }
 

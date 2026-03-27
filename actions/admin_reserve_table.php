@@ -60,9 +60,6 @@ if ($date !== '') {
         $errors[] = 'Please enter a valid reservation date.';
     } else {
         $date = $dateObj->format('Y-m-d');
-        if ($date < date('Y-m-d')) {
-            $errors[] = 'Reservations cannot be created for a past date.';
-        }
     }
 }
 if ($time !== '') {
@@ -88,8 +85,21 @@ if (!empty($errors)) {
 
 try {
     $pdo = db();
+    $dbClock = database_clock($pdo);
     $userId = (int) $userId;
     $actualUserId = $userId;
+
+    if ($date !== '' && $date < (string) $dbClock['date']) {
+        $errorMessage = 'Reservations cannot be created for a past date.';
+        if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+            header('Content-Type: application/json');
+            echo json_encode(['ok' => false, 'error' => $errorMessage]);
+            exit();
+        }
+        set_flash('admin_error', $errorMessage);
+        header('Location: pages/admin/floor.php');
+        exit();
+    }
 
     $userStmt = $pdo->prepare("SELECT u.first_name, u.last_name
         FROM users u
@@ -117,7 +127,19 @@ try {
     // Calculate end time from booking settings
     $startTime = $time;
     $reservationDurationMinutes = reservation_duration_minutes();
-    $endTime = date('H:i:s', strtotime($time . ' +' . $reservationDurationMinutes . ' minutes'));
+    $startDateTime = DateTimeImmutable::createFromFormat('Y-m-d H:i:s', $date . ' ' . $startTime);
+    if (!$startDateTime) {
+        $errorMessage = 'Please enter a valid reservation time.';
+        if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+            header('Content-Type: application/json');
+            echo json_encode(['ok' => false, 'error' => $errorMessage]);
+            exit();
+        }
+        set_flash('admin_error', $errorMessage);
+        header('Location: pages/admin/floor.php');
+        exit();
+    }
+    $endTime = $startDateTime->modify('+' . $reservationDurationMinutes . ' minutes')->format('H:i:s');
 
     $tableRow = null;
     if ($tableId > 0) {

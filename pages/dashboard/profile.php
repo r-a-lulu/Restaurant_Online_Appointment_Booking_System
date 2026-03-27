@@ -18,7 +18,8 @@ try {
     $stmt->execute([$_SESSION['user_id']]);
     $user = $stmt->fetch() ?: [];
 } catch (PDOException $e) {
-    $dashError = safe_error_message($e);
+    error_log('Dashboard profile load failed for user ' . (int) ($_SESSION['user_id'] ?? 0) . ': ' . $e->getMessage());
+    $dashError = 'We could not load your profile right now. Please try again.';
 }
 
 $firstName = $user['first_name'] ?? '';
