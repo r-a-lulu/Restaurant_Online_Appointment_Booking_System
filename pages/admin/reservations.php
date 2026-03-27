@@ -64,7 +64,7 @@ include '../../includes/header.php';
         <div class="admin-section">
 
           <div class="admin-filter-bar">
-            <input type="text" class="admin-search-input" placeholder="Search guest, zone, or ID" data-search-input="resTable" id="resSearch">
+            <input type="text" class="admin-search-input" placeholder="Search guest, zone, date, or ID" data-search-input="resTable" id="resSearch">
           </div>
 
           <div class="admin-tabs" data-admin-tabs>

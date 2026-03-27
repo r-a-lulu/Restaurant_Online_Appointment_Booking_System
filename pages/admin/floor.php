@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * Admin Floor Management — pages/admin/floor.php
  */
@@ -102,10 +102,8 @@ try {
   foreach ($tables as $t) {
     $manualOccupiedActive = $isViewingToday
       && ($t['current_status'] ?? '') === 'occupied'
-      && (
-        empty($t['manual_status_until'])
-        || strtotime((string) $t['manual_status_until']) > time()
-      );
+      && !empty($t['manual_status_until'])
+      && strtotime((string) $t['manual_status_until']) > time();
 
     if ((int) $t['is_active_now'] === 1) {
       $status = 'occupied';

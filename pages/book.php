@@ -150,7 +150,7 @@ include '../includes/nav.php';
     <div class="container book-hero-inner">
       <p class="section-label">Online Reservations</p>
       <h1>Reserve Your Table</h1>
-      <p>Complete in just a few steps. We'll confirm your booking by email.</p>
+      <p>Complete in just a few steps. We'll review your reservation request and follow up if anything needs attention.</p>
     </div>
   </section>
 

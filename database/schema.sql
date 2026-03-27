@@ -8,7 +8,7 @@ CREATE DATABASE IF NOT EXISTS restaurant_booking_v1
 USE restaurant_booking_v1;
 
 SET NAMES utf8mb4;
-SET time_zone = '+00:00';
+SET time_zone = '+08:00';
 
 CREATE TABLE IF NOT EXISTS roles (
   role_id INT AUTO_INCREMENT PRIMARY KEY,

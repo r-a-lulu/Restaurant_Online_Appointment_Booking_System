@@ -68,10 +68,8 @@ try {
     foreach ($rows as $r) {
         $manualOccupiedActive = $isToday === 1
             && ($r['current_status'] ?? '') === 'occupied'
-            && (
-                empty($r['manual_status_until'])
-                || strtotime((string) $r['manual_status_until']) > time()
-            );
+            && !empty($r['manual_status_until'])
+            && strtotime((string) $r['manual_status_until']) > time();
 
         if ((int) $r['is_active_now'] === 1) {
             $status = 'occupied';

@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * Process Settings Save — actions/process_settings.php
  */
@@ -117,7 +117,7 @@ try {
     set_flash('settings_success', 'Settings saved successfully.');
     
 } catch (PDOException $e) {
-    set_flash('settings_error', 'Error saving settings: ' . safe_error_message($e));
+    set_flash('settings_error', 'We could not save the settings right now. Please try again.');
 }
 
 header('Location: ../pages/admin/settings.php');

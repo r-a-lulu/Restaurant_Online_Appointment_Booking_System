@@ -232,11 +232,21 @@ BEGIN
     t.zone_id,
     t.capacity,
     t.seating_preference,
-    CASE WHEN t.current_status = 'occupied' THEN 'occupied' ELSE 'available' END AS current_status
+    CASE
+      WHEN t.current_status = 'occupied'
+        AND t.manual_status_until IS NOT NULL
+        AND t.manual_status_until > NOW()
+      THEN 'occupied'
+      ELSE 'available'
+    END AS current_status
   FROM `tables` t
   WHERE t.zone_id = p_zone_id
     AND t.capacity >= p_party_size
-    AND COALESCE(t.current_status, 'available') <> 'occupied'
+    AND NOT (
+      t.current_status = 'occupied'
+      AND t.manual_status_until IS NOT NULL
+      AND t.manual_status_until > NOW()
+    )
     AND (p_seating_preference = '' OR t.seating_preference = p_seating_preference)
     AND fn_is_slot_available(p_appointment_date, p_start_time, p_end_time, t.table_id, p_zone_id, NULL) = 1
   ORDER BY t.capacity ASC, t.seating_preference ASC, t.table_id ASC
@@ -256,7 +266,17 @@ BEGIN
   DECLARE v_seating_preference VARCHAR(100) DEFAULT NULL;
   DECLARE v_current_status VARCHAR(20) DEFAULT NULL;
 
-  SELECT zone_id, capacity, seating_preference, CASE WHEN current_status = 'occupied' THEN 'occupied' ELSE 'available' END
+  SELECT
+    zone_id,
+    capacity,
+    seating_preference,
+    CASE
+      WHEN current_status = 'occupied'
+        AND manual_status_until IS NOT NULL
+        AND manual_status_until > NOW()
+      THEN 'occupied'
+      ELSE 'available'
+    END
   INTO v_zone_id, v_capacity, v_seating_preference, v_current_status
   FROM `tables`
   WHERE table_id = p_table_id

@@ -43,7 +43,11 @@ try {
     $tableSql = "SELECT t.table_id
       FROM `tables` t
       WHERE t.capacity >= :party_size
-        AND COALESCE(t.current_status, 'available') <> 'occupied'";
+        AND NOT (
+          t.current_status = 'occupied'
+          AND t.manual_status_until IS NOT NULL
+          AND t.manual_status_until > NOW()
+        )";
     $tableParams = [
         ':party_size' => $partySize > 0 ? $partySize : 1,
     ];

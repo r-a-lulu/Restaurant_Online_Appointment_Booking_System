@@ -94,10 +94,8 @@ try {
 
     $manualOverrideActive = $isToday
         && ($table['current_status'] ?? '') === 'occupied'
-        && (
-            empty($table['manual_status_until'])
-            || strtotime((string) $table['manual_status_until']) > time()
-        );
+        && !empty($table['manual_status_until'])
+        && strtotime((string) $table['manual_status_until']) > time();
 
     $response = [
         'ok' => true,
@@ -144,9 +142,7 @@ try {
         }
         $response['detail'] = $response['details'][0];
     } elseif ($manualOverrideActive) {
-        $manualUntil = !empty($table['manual_status_until'])
-            ? date('g:i A', strtotime((string) $table['manual_status_until']))
-            : 'later today';
+        $manualUntil = date('g:i A', strtotime((string) $table['manual_status_until']));
 
         $response['detail'] = [
             'type' => 'occupied',

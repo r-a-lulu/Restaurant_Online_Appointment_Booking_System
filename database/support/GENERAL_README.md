@@ -9,7 +9,7 @@ This file summarizes the key things you must remember before running the SQL scr
 1. **Replace bcrypt placeholders in `seed.sql`**
    - The user passwords are placeholders like:
      - `REPLACE_WITH_BCRYPT_HASH_ADMIN`
-     - `REPLACE_WITH_BCRYPT_HASH_CUST1` … `CUST3`
+     - `REPLACE_WITH_BCRYPT_HASH_CUST1` through `CUST3`
 
 2. **Replace passwords in `security.sql`**
    - Update `REPLACE_ME_*` before running in production.
@@ -24,7 +24,7 @@ This file summarizes the key things you must remember before running the SQL scr
 
 ## Recommended Run Order
 
-1. `setup_xampp_sqlyog.sql`
+1. `schema.sql`
 2. `functions.sql`
 3. `views.sql`
 4. `procedures.sql`
@@ -37,7 +37,7 @@ This file summarizes the key things you must remember before running the SQL scr
 
 ## File Notes
 
-- `setup_xampp_sqlyog.sql` already includes:
+- `schema.sql` already includes:
   - base schema
   - audit tables
   - `updated_at` columns required by triggers
@@ -45,4 +45,4 @@ This file summarizes the key things you must remember before running the SQL scr
 
 ---
 
-If you want this converted into a checklist or a single “master setup” script, say the word.
+If you want this converted into a checklist or a single "master setup" script, say the word.

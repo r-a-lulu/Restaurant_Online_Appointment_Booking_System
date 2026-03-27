@@ -1194,7 +1194,7 @@
   });
 
   /* ------------------------------------------------------------------
-     Admin Reservations Table Search (Guest, Zone, ID)
+     Admin Reservations Table Search (Guest, Zone, Date, ID)
   ------------------------------------------------------------------ */
   const resSearchInput = document.getElementById('resSearch');
   if (resSearchInput) {
@@ -1221,12 +1221,14 @@
           const guestText = cells[1] ? cells[1].textContent.toLowerCase() : '';
           const zoneText = cells[2] ? cells[2].textContent.toLowerCase() : '';
           const seatingText = cells[3] ? cells[3].textContent.toLowerCase() : '';
+          const dateText = cells[4] ? cells[4].textContent.toLowerCase() : '';
 
           const match = !query ||
             idText.includes(query) ||
             guestText.includes(query) ||
             zoneText.includes(query) ||
-            seatingText.includes(query);
+            seatingText.includes(query) ||
+            dateText.includes(query);
 
           row.style.display = match ? '' : 'none';
           if (match) visibleCount++;

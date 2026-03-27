@@ -3,14 +3,26 @@
  * Database connection logic.
  */
 
+function env_or_default(string $key, string $default): string {
+    $value = getenv($key);
+    if ($value === false || $value === '') {
+        return $default;
+    }
+    return (string) $value;
+}
+
 function get_db() {
     static $pdo = null;
     if ($pdo === null) {
-        $host = 'localhost';
-        $db   = 'restaurant_booking_v1';
-        $user = 'root';
-        $pass = ''; // Default XAMPP
-        $charset = 'utf8mb4';
+        $host = env_or_default('DB_HOST', 'localhost');
+        $db   = env_or_default('DB_NAME', 'restaurant_booking_v1');
+        $user = env_or_default('DB_USER', 'root');
+        $pass = getenv('DB_PASS');
+        if ($pass === false) {
+            $pass = ''; // Default XAMPP
+        }
+        $charset = env_or_default('DB_CHARSET', 'utf8mb4');
+        $timeZone = env_or_default('DB_TIMEZONE', '+08:00');
 
         $dsn = "mysql:host=$host;dbname=$db;charset=$charset";
         $options = [
@@ -21,6 +33,8 @@ function get_db() {
 
         try {
             $pdo = new PDO($dsn, $user, $pass, $options);
+            $timeZoneStmt = $pdo->prepare('SET time_zone = ?');
+            $timeZoneStmt->execute([$timeZone]);
         } catch (\PDOException $e) {
             // Re-throw so callers can handle or show an error screen
             throw new \PDOException($e->getMessage(), (int)$e->getCode());

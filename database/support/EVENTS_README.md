@@ -1,6 +1,6 @@
 # Database Events - `restaurant_booking_v1`
 
-**Total: 4 events** | **Script:** [`events.sql`](../events.sql)
+**Total: 5 events** | **Script:** [`events.sql`](../events.sql)
 
 ---
 
@@ -22,6 +22,11 @@
 - Deletes rows from `general_audit_logs` older than 365 days.
 - Runs daily at 02:05.
 
+## Event #5: `ev_clear_expired_manual_occupied_tables`
+- Clears expired manual `occupied` table flags on the floor map.
+- Runs every 10 minutes.
+- Prevents tables from staying blocked after their manual hold should have ended.
+
 ---
 
 ## Execution Order
@@ -39,5 +44,5 @@
 SELECT COUNT(*) AS total_events
 FROM information_schema.events
 WHERE event_schema = 'restaurant_booking_v1';
--- Expected: 4
+-- Expected: 5
 ```
