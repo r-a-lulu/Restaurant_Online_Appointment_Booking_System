@@ -36,6 +36,7 @@ if ($appointmentId <= 0 || !isset($map[$action])) {
 
 try {
     $pdo = db();
+    $dbClock = database_clock($pdo);
     $statusLookup = $pdo->prepare('SELECT a.appointment_date, a.start_time, s.status_name FROM appointments a JOIN appointment_status s ON s.status_id = a.status_id WHERE a.appointment_id = :appointment_id LIMIT 1');
     $statusLookup->execute([':appointment_id' => $appointmentId]);
     $appointment = $statusLookup->fetch();
@@ -52,8 +53,8 @@ try {
             redirect('pages/admin/reservations.php');
         }
 
-        $appointmentStart = DateTime::createFromFormat('Y-m-d H:i:s', $appointment['appointment_date'] . ' ' . $appointment['start_time']);
-        $now = new DateTime();
+        $appointmentStart = DateTimeImmutable::createFromFormat('Y-m-d H:i:s', $appointment['appointment_date'] . ' ' . $appointment['start_time']);
+        $now = DateTimeImmutable::createFromFormat('Y-m-d H:i:s', (string) $dbClock['datetime']);
         if (!$appointmentStart || $appointmentStart > $now) {
             set_flash('admin_error', 'You can only mark a reservation as no show after its start time has passed.');
             redirect('pages/admin/reservations.php');

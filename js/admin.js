@@ -29,6 +29,7 @@
   const floorDetailReference = document.getElementById('floorDetailReference');
   const floorDetailCreated = document.getElementById('floorDetailCreated');
   const floorDetailNotes = document.getElementById('floorDetailNotes');
+  const floorDetailCancelBtn = document.getElementById('floorDetailCancelBtn');
 
   const FLOOR_STATUS = ['available', 'occupied'];
 
@@ -160,11 +161,19 @@
       const errorText = floorDetailError.querySelector('span');
       if (errorText) errorText.textContent = '';
     }
+    if (floorDetailCancelBtn) {
+      floorDetailCancelBtn.style.display = 'none';
+      floorDetailCancelBtn.disabled = false;
+    }
   }
 
   function showFloorDetailError(message) {
     if (floorDetailLoading) floorDetailLoading.style.display = 'none';
     if (floorDetailContent) floorDetailContent.style.display = 'none';
+    if (floorDetailCancelBtn) {
+      floorDetailCancelBtn.style.display = 'none';
+      floorDetailCancelBtn.disabled = false;
+    }
     if (floorDetailError) {
       floorDetailError.style.display = 'flex';
       const errorText = floorDetailError.querySelector('span');
@@ -248,6 +257,17 @@
     if (floorDetailStatusBadge) {
       floorDetailStatusBadge.className = 'badge ' + (detail.status_badge || '');
       floorDetailStatusBadge.textContent = detail.status_label || 'Reserved';
+    }
+
+    if (floorDetailCancelBtn) {
+      const isOccupied = detail.type === 'occupied';
+      floorDetailCancelBtn.style.display = isOccupied ? 'inline-flex' : 'none';
+      floorDetailCancelBtn.disabled = false;
+      floorDetailCancelBtn.textContent = detail.manual_override ? 'Cancel Manual Occupied' : 'Cancel As No Show';
+      floorDetailCancelBtn.setAttribute('data-table-id', table.table_id ? String(table.table_id) : '');
+      floorDetailCancelBtn.setAttribute('data-appointment-id', detail.appointment_id ? String(detail.appointment_id) : '');
+      floorDetailCancelBtn.setAttribute('data-manual-override', detail.manual_override ? '1' : '0');
+      floorDetailCancelBtn.setAttribute('data-detail-type', detail.type || '');
     }
 
     if (floorDetailLoading) floorDetailLoading.style.display = 'none';
@@ -343,6 +363,14 @@
     return 'Reservations cannot be created while viewing a past floor date.';
   }
 
+  function getFloorCancelPrompt(button) {
+    if (!button) return 'Cancel this occupied table?';
+    const isManual = button.getAttribute('data-manual-override') === '1';
+    return isManual
+      ? 'Clear this manual occupied table and mark it available again?'
+      : 'Mark this occupied reservation as no show?';
+  }
+
   function resetReserveModalFields() {
     if (reservePartySize) reservePartySize.value = '2';
     if (reserveZone) reserveZone.value = '';
@@ -381,6 +409,61 @@
   let refreshFloorSnapshot = function () {
     return Promise.resolve(null);
   };
+
+  if (floorDetailCancelBtn && floorMeta) {
+    floorDetailCancelBtn.addEventListener('click', function () {
+      const tableId = floorDetailCancelBtn.getAttribute('data-table-id') || '';
+      const appointmentId = floorDetailCancelBtn.getAttribute('data-appointment-id') || '';
+      const manualOverride = floorDetailCancelBtn.getAttribute('data-manual-override') === '1';
+      const cancelToken = floorMeta.dataset.cancelToken || '';
+      const csrf = floorMeta.dataset.csrf || '';
+
+      if (!tableId || !cancelToken || !csrf) return;
+      if (!window.confirm || !window.confirm(getFloorCancelPrompt(floorDetailCancelBtn))) return;
+
+      floorDetailCancelBtn.disabled = true;
+
+      const body = new URLSearchParams();
+      body.set('csrf_token', csrf);
+      body.set('action_token', cancelToken);
+      body.set('table_id', tableId);
+      body.set('floor_date', selectedFloorDate);
+      body.set('manual_override', manualOverride ? '1' : '0');
+      if (!manualOverride && appointmentId) {
+        body.set('appointment_id', appointmentId);
+      }
+
+      fetch(actionUrl('admin_floor_cancel'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: body.toString(),
+      })
+        .then(function (res) { return res.json(); })
+        .then(function (data) {
+          if (!data || !data.ok) {
+            if (window.alert) window.alert(data && data.error ? data.error : 'Could not cancel the occupied table right now.');
+            floorDetailCancelBtn.disabled = false;
+            return;
+          }
+
+          const tile = document.querySelector('.floor-tile-new[data-table-id="' + tableId + '"]');
+          if (tile) {
+            tile.removeAttribute('data-last-changed');
+            if (manualOverride) {
+              setTileStatus(tile, 'available');
+              updatePanelStats(tile.closest('.admin-panel'));
+            }
+          }
+
+          if (floorDetailModal) floorDetailModal.classList.remove('open');
+          refreshFloorSnapshot();
+        })
+        .catch(function () {
+          if (window.alert) window.alert('Could not cancel the occupied table right now.');
+          floorDetailCancelBtn.disabled = false;
+        });
+    });
+  }
 
   if (floorMeta) {
     const csrf = floorMeta.dataset.csrf || '';

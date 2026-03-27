@@ -18,6 +18,7 @@ $bookingSuccess = get_flash('dash_success');
 $zones = [];
 $tables = [];
 $serviceId = '';
+$minReservationDate = date('Y-m-d', strtotime('+1 day'));
 
 $zoneMeta = [
   'The Patio' => [
@@ -39,6 +40,13 @@ $zoneMeta = [
 
 try {
   $pdo = db();
+  $dbClock = database_clock($pdo);
+  $dbToday = DateTimeImmutable::createFromFormat('Y-m-d H:i:s', (string) $dbClock['datetime']);
+  if (!$dbToday) {
+    $dbToday = new DateTimeImmutable('@' . (int) $dbClock['unix']);
+    $dbToday = $dbToday->setTimezone(new DateTimeZone(date_default_timezone_get()));
+  }
+  $minReservationDate = $dbToday->modify('+1 day')->format('Y-m-d');
 
   // Get default service (e.g. Table Reservation)
   $stmt = $pdo->query("SELECT service_id FROM services ORDER BY price ASC LIMIT 1");
@@ -177,7 +185,7 @@ include '../../includes/header.php';
               <div class="form-group" style="margin-bottom:0; max-width:180px;">
                 <label for="bookDate" class="form-label" style="font-family:var(--font-sans); font-size:0.9rem; font-weight:500; color:#5c4e36;">Select Date</label>
                 <div style="margin-top:var(--space-2);">
-                  <input type="date" id="bookDate" class="form-input custom-soft-select" min="<?= date('Y-m-d', strtotime('+1 day')) ?>">
+                  <input type="date" id="bookDate" class="form-input custom-soft-select" min="<?= e($minReservationDate) ?>">
                 </div>
               </div>
 

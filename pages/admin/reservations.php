@@ -17,6 +17,8 @@ $adminError = get_flash('admin_error');
 $adminSuccess = get_flash('admin_success');
 try {
   $pdo = db();
+  $dbClock = database_clock($pdo);
+  $dbNowUnix = (int) $dbClock['unix'];
   $stmt = $pdo->prepare("SELECT v.appointment_id, v.customer_name, v.customer_email, v.zone_name, v.table_label, v.appointment_date, v.start_time, v.end_time, v.party_size, v.status_name, a.user_id, (SELECT COUNT(*) FROM appointments a2 WHERE a2.user_id = a.user_id AND a2.appointment_id <> v.appointment_id AND a2.status_id IN (SELECT status_id FROM appointment_status WHERE status_name IN ('pending','confirmed'))) AS active_count FROM vw_admin_appointments v JOIN appointments a ON a.appointment_id = v.appointment_id");
   $stmt->execute();
   $reservations = $stmt->fetchAll();
@@ -24,6 +26,7 @@ try {
 } catch (PDOException $e) {
   $adminError = safe_error_message($e);
   $reservations = [];
+  $dbNowUnix = time();
 }
 
 $byStatus = ['pending' => [], 'confirmed' => [], 'cancelled' => [], 'completed' => [], 'no_show' => []];
@@ -103,7 +106,7 @@ include '../../includes/header.php';
                         $canMarkNoShow = false;
                         if ($status === 'confirmed') {
                           $reservationStartTs = strtotime($r['appointment_date'] . ' ' . $r['start_time']);
-                          $canMarkNoShow = $reservationStartTs !== false && $reservationStartTs <= time();
+                          $canMarkNoShow = $reservationStartTs !== false && $reservationStartTs <= $dbNowUnix;
                         }
                       ?>
                       <tr>

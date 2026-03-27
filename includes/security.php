@@ -177,6 +177,30 @@ function redirect(string $path): void {
     exit;
 }
 
+function database_clock(?PDO $pdo = null): array {
+    static $cached = null;
+
+    if ($cached !== null) {
+        return $cached;
+    }
+
+    $pdo = $pdo ?? db();
+    $stmt = $pdo->query("SELECT CURDATE() AS db_date, CURTIME() AS db_time, NOW() AS db_datetime, UNIX_TIMESTAMP(NOW()) AS db_unix");
+    $row = $stmt ? ($stmt->fetch(PDO::FETCH_ASSOC) ?: []) : [];
+    if ($stmt) {
+        $stmt->closeCursor();
+    }
+
+    $cached = [
+        'date' => (string) ($row['db_date'] ?? date('Y-m-d')),
+        'time' => (string) ($row['db_time'] ?? date('H:i:s')),
+        'datetime' => (string) ($row['db_datetime'] ?? date('Y-m-d H:i:s')),
+        'unix' => isset($row['db_unix']) ? (int) $row['db_unix'] : time(),
+    ];
+
+    return $cached;
+}
+
 function set_flash($key, $message) {
     $_SESSION['flash'][$key] = $message;
 }

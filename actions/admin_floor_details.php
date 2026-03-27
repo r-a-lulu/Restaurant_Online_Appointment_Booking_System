@@ -36,10 +36,12 @@ if (!$dateObj || (is_array($dateErrors) && (($dateErrors['warning_count'] ?? 0) 
     exit();
 }
 $floorDate = $dateObj->format('Y-m-d');
-$isToday = ($floorDate === date('Y-m-d'));
 
 try {
     $pdo = db();
+    $dbClock = database_clock($pdo);
+    $isToday = ($floorDate === $dbClock['date']);
+    $dbNowUnix = (int) $dbClock['unix'];
 
     $tableStmt = $pdo->prepare('SELECT t.table_id, t.capacity, t.seating_preference, t.current_status, t.manual_status_until, dz.zone_name
         FROM `tables` t
@@ -95,7 +97,7 @@ try {
     $manualOverrideActive = $isToday
         && ($table['current_status'] ?? '') === 'occupied'
         && !empty($table['manual_status_until'])
-        && strtotime((string) $table['manual_status_until']) > time();
+        && strtotime((string) $table['manual_status_until']) > $dbNowUnix;
 
     $response = [
         'ok' => true,
@@ -117,10 +119,15 @@ try {
                 ? 'badge-confirmed'
                 : ($statusName === 'pending' ? 'badge-pending' : 'badge-cancelled');
 
+            $appointmentStartUnix = strtotime($floorDate . ' ' . (string) $detail['start_time']);
+            $appointmentEndUnix = strtotime($floorDate . ' ' . (string) $detail['end_time']);
+
             $detailPayload = [
                 'type' => ($isToday && $statusName === 'confirmed'
-                    && strtotime($floorDate . ' ' . (string) $detail['start_time']) <= time()
-                    && strtotime($floorDate . ' ' . (string) $detail['end_time']) > time())
+                    && $appointmentStartUnix !== false
+                    && $appointmentEndUnix !== false
+                    && $appointmentStartUnix <= $dbNowUnix
+                    && $appointmentEndUnix > $dbNowUnix)
                     ? 'occupied'
                     : 'reserved',
                 'appointment_id' => (int) $detail['appointment_id'],

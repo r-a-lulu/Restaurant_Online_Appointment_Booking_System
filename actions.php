@@ -26,6 +26,7 @@ $routes = [
     'admin_floor_update' => __DIR__ . '/actions/admin_floor_update.php',
     'admin_floor_status' => __DIR__ . '/actions/admin_floor_status.php',
     'admin_floor_details' => __DIR__ . '/actions/admin_floor_details.php',
+    'admin_floor_cancel' => __DIR__ . '/actions/admin_floor_cancel.php',
     'admin_reserve_table' => __DIR__ . '/actions/admin_reserve_table.php',
     'update_profile' => __DIR__ . '/actions/update_profile.php',
     'update_password' => __DIR__ . '/actions/update_password.php',

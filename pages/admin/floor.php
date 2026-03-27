@@ -22,7 +22,9 @@ $floorSchedule = [];
 $selectedFloorDate = trim((string) ($_GET['floor_date'] ?? date('Y-m-d')));
 $floorDateObj = DateTime::createFromFormat('Y-m-d', $selectedFloorDate);
 $floorDateErrors = DateTime::getLastErrors();
+$selectedFloorDateInvalid = false;
 if (!$floorDateObj || (is_array($floorDateErrors) && (($floorDateErrors['warning_count'] ?? 0) > 0 || ($floorDateErrors['error_count'] ?? 0) > 0))) {
+  $selectedFloorDateInvalid = true;
   $selectedFloorDate = date('Y-m-d');
 }
 $todayDate = date('Y-m-d');
@@ -32,6 +34,14 @@ $reservationDurationLabel = reservation_duration_label();
 
 try {
   $pdo = db();
+  $dbClock = database_clock($pdo);
+  if ($selectedFloorDateInvalid) {
+    $selectedFloorDate = $dbClock['date'];
+  }
+  $todayDate = $dbClock['date'];
+  $isViewingToday = ($selectedFloorDate === $todayDate);
+  $isPastFloorDate = ($selectedFloorDate < $todayDate);
+  $dbNowUnix = (int) $dbClock['unix'];
 
   $stmt = $pdo->prepare("SELECT u.user_id, u.first_name, u.last_name, u.email, u.phone, u.is_active, u.created_at, COUNT(a.appointment_id) AS total_res
     FROM users u
@@ -91,7 +101,7 @@ try {
     $manualOccupiedActive = $isViewingToday
       && ($t['current_status'] ?? '') === 'occupied'
       && !empty($t['manual_status_until'])
-      && strtotime((string) $t['manual_status_until']) > time();
+      && strtotime((string) $t['manual_status_until']) > $dbNowUnix;
 
     if ((int) $t['is_active_now'] === 1) {
       $status = 'occupied';
@@ -185,7 +195,7 @@ include '../../includes/header.php';
       </header>
 
       <div class="admin-floor-wrap" style="margin-top:var(--space-6); overflow:visible;">
-        <div id="floor-csrf-container" data-csrf="<?= e(csrf_token()) ?>" data-action-token="<?= e(action_token('admin_floor_update')) ?>" data-status-token="<?= e(action_token('admin_floor_status')) ?>" data-details-token="<?= e(action_token('admin_floor_details')) ?>" data-availability-token="<?= e(action_token('check_availability')) ?>" data-selected-date="<?= e($selectedFloorDate) ?>" data-today-date="<?= e($todayDate) ?>" data-is-past-view="<?= $isPastFloorDate ? '1' : '0' ?>" style="display:none"></div>
+        <div id="floor-csrf-container" data-csrf="<?= e(csrf_token()) ?>" data-action-token="<?= e(action_token('admin_floor_update')) ?>" data-status-token="<?= e(action_token('admin_floor_status')) ?>" data-details-token="<?= e(action_token('admin_floor_details')) ?>" data-cancel-token="<?= e(action_token('admin_floor_cancel')) ?>" data-availability-token="<?= e(action_token('check_availability')) ?>" data-selected-date="<?= e($selectedFloorDate) ?>" data-today-date="<?= e($todayDate) ?>" data-is-past-view="<?= $isPastFloorDate ? '1' : '0' ?>" style="display:none"></div>
 
         <div class="segmented-tabs" data-admin-tabs>
           <?php $first = true; foreach ($zones as $key => $zone): ?>
@@ -373,6 +383,7 @@ include '../../includes/header.php';
     </div>
 
     <div class="admin-modal-footer">
+      <button type="button" class="btn btn-danger" id="floorDetailCancelBtn" style="display:none;">Cancel</button>
       <button type="button" class="btn btn-outline" data-modal-close>Close</button>
     </div>
   </div>
@@ -514,7 +525,7 @@ include '../../includes/header.php';
       <div class="form-row" style="margin-bottom:var(--space-4);">
         <div class="form-group" style="flex:1;">
           <label class="form-label">Date <span style="color:var(--clr-danger);">*</span></label>
-          <input type="date" class="form-input" id="reserveDate" name="date" required min="<?= date('Y-m-d') ?>">
+          <input type="date" class="form-input" id="reserveDate" name="date" required min="<?= e($todayDate) ?>">
         </div>
         <div class="form-group" style="flex:1;">
           <label class="form-label">Time <span style="color:var(--clr-danger);">*</span></label>

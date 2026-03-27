@@ -1480,6 +1480,27 @@
   background: #fffdf9;
 }
 
+.btn-danger {
+  background: linear-gradient(135deg, #c2410c, #991b1b);
+  border: 1px solid #7f1d1d;
+  color: #fff7f7;
+  box-shadow: 0 10px 24px rgba(153, 27, 27, 0.18);
+}
+
+.btn-danger:hover:not(:disabled),
+.btn-danger:focus-visible:not(:disabled) {
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+  border-color: #7f1d1d;
+  color: #ffffff;
+  box-shadow: 0 14px 28px rgba(127, 29, 29, 0.24);
+}
+
+.btn-danger:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
 .legend-item {
   display: flex;
   align-items: center;

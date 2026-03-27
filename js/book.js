@@ -67,11 +67,11 @@
 
   function renderNavButtons() {
     // Update ALL instances (each step panel has its own set)
-    $$('#btn-prev, [data-action="prev"]').forEach(function (btn) {
+    $$('[data-action="prev"]').forEach(function (btn) {
       // Keep Step 1 back buttons active so they can return to the dashboard.
       btn.disabled = false;
     });
-    $$('#btn-next, [data-action="next"]').forEach(function (btn) {
+    $$('[data-action="next"]').forEach(function (btn) {
       var label = 'Continue';
       if (state.currentStep === 3) label = 'Review Reservation';
       if (state.currentStep === 4) label = 'Confirm Reservation';
@@ -80,7 +80,7 @@
       btn.textContent = label;
       if (svg) btn.appendChild(svg);
     });
-    $$('#step-count, [data-role="step-count"]').forEach(function (el) {
+    $$('[data-role="step-count"]').forEach(function (el) {
       el.textContent = 'Step ' + state.currentStep + ' of ' + state.totalSteps;
     });
   }
@@ -217,13 +217,6 @@
     if (current > maxGuests) current = maxGuests;
     input.value = String(current);
     state.guests = String(current);
-
-    var hint = $('#guest-count-hint');
-    if (hint) {
-      hint.textContent = zoneId || state.zoneId
-        ? 'Up to ' + maxGuests + ' guests for this dining zone.'
-        : 'Up to ' + maxGuests + ' guests based on the table capacities in our database.';
-    }
 
     return maxGuests;
   }
@@ -526,8 +519,8 @@
     if (!wizard) return;
 
     wizard.addEventListener('click', function (e) {
-      var prevBtn = e.target.closest('#btn-prev');
-      var nextBtn = e.target.closest('#btn-next');
+      var prevBtn = e.target.closest('[data-action="prev"]');
+      var nextBtn = e.target.closest('[data-action="next"]');
 
       if (prevBtn) {
         clearStepError();

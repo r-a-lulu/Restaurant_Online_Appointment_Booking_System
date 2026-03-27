@@ -34,8 +34,12 @@ try {
   $pdo = db();
   $operationalStatusSql = "(SELECT status_id FROM appointment_status WHERE status_name IN ('pending','confirmed','completed'))";
   $allStatusSql = "(SELECT status_id FROM appointment_status WHERE status_name IN ('pending','confirmed','completed','cancelled','no_show'))";
+  $reportEndDate = (string) $pdo->query("SELECT CURDATE()")->fetchColumn();
+  $reportEnd = new DateTimeImmutable($reportEndDate);
+  $reportStart = $reportEnd->modify('-6 days');
+  $reportMonthStart = $reportEnd->modify('-6 months');
 
-  $stmt = $pdo->prepare("SELECT appointment_date, COALESCE(SUM(party_size), 0) AS guests FROM appointments WHERE appointment_date >= DATE_SUB(CURDATE(), INTERVAL 6 DAY) AND status_id IN $operationalStatusSql GROUP BY appointment_date");
+  $stmt = $pdo->prepare("SELECT appointment_date, COALESCE(SUM(party_size), 0) AS guests FROM appointments WHERE appointment_date BETWEEN DATE_SUB(CURDATE(), INTERVAL 6 DAY) AND CURDATE() AND status_id IN $operationalStatusSql GROUP BY appointment_date");
   $stmt->execute();
   $rows = $stmt->fetchAll() ?: [];
   $stmt->closeCursor();
@@ -45,8 +49,8 @@ try {
     $guestMap[$r['appointment_date']] = (int) $r['guests'];
   }
 
-  for ($i = 6; $i >= 0; $i--) {
-    $date = (new DateTime())->modify('-' . $i . ' days')->format('Y-m-d');
+  for ($i = 0; $i <= 6; $i++) {
+    $date = $reportStart->modify('+' . $i . ' days')->format('Y-m-d');
     $label = date('D', strtotime($date));
 
     $dayStmt = $pdo->prepare("SELECT COUNT(*) FROM appointments WHERE appointment_date = :p_date AND status_id IN $operationalStatusSql");
@@ -59,13 +63,13 @@ try {
   }
   $summary['total_res'] = array_sum(array_column($daily_stats, 'val'));
 
-  $stmt = $pdo->prepare("SELECT COUNT(*) FROM appointments WHERE appointment_date >= DATE_SUB(CURDATE(), INTERVAL 6 DAY) AND status_id IN $allStatusSql");
+  $stmt = $pdo->prepare("SELECT COUNT(*) FROM appointments WHERE appointment_date BETWEEN DATE_SUB(CURDATE(), INTERVAL 6 DAY) AND CURDATE() AND status_id IN $allStatusSql");
   $stmt->execute();
   $allReservationsCount = (int) $stmt->fetchColumn();
   $stmt->closeCursor();
 
   $timeSlots = ['17:00', '17:30', '18:00', '18:30', '19:00', '19:30', '20:00', '20:30', '21:00', '21:30'];
-  $stmt = $pdo->prepare("SELECT DATE_FORMAT(start_time, '%H:%i') AS slot, COUNT(*) AS val FROM appointments WHERE appointment_date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY) AND status_id IN $operationalStatusSql GROUP BY slot");
+  $stmt = $pdo->prepare("SELECT DATE_FORMAT(start_time, '%H:%i') AS slot, COUNT(*) AS val FROM appointments WHERE appointment_date BETWEEN DATE_SUB(CURDATE(), INTERVAL 30 DAY) AND CURDATE() AND status_id IN $operationalStatusSql GROUP BY slot");
   $stmt->execute();
   $rows = $stmt->fetchAll() ?: [];
   $stmt->closeCursor();
@@ -84,8 +88,11 @@ try {
     $peak_hours[] = ['time' => $slot, 'val' => $val];
   }
 
-  $stmt = $pdo->prepare("SELECT DATE_FORMAT(appointment_date, '%b') AS month, COUNT(*) AS val, YEAR(appointment_date) AS yr, MONTH(appointment_date) AS mo FROM appointments WHERE appointment_date >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH) AND status_id IN $operationalStatusSql GROUP BY yr, mo ORDER BY yr, mo");
-  $stmt->execute();
+  $stmt = $pdo->prepare("SELECT DATE_FORMAT(appointment_date, '%b') AS month, COUNT(*) AS val, YEAR(appointment_date) AS yr, MONTH(appointment_date) AS mo FROM appointments WHERE appointment_date BETWEEN :month_start AND :report_end AND status_id IN $operationalStatusSql GROUP BY yr, mo ORDER BY yr, mo");
+  $stmt->execute([
+    ':month_start' => $reportMonthStart->format('Y-m-d'),
+    ':report_end' => $reportEnd->format('Y-m-d'),
+  ]);
   $rows = $stmt->fetchAll() ?: [];
   $stmt->closeCursor();
 
@@ -96,7 +103,7 @@ try {
     $trends[] = ['month' => $r['month'], 'val' => $val];
   }
 
-  $stmt = $pdo->prepare("SELECT dz.zone_name, COUNT(*) AS res FROM appointments a LEFT JOIN `tables` t ON t.table_id = a.table_id JOIN dining_zones dz ON dz.zone_id = COALESCE(a.zone_id, t.zone_id) WHERE a.appointment_date >= DATE_SUB(CURDATE(), INTERVAL 6 DAY) AND a.status_id IN $operationalStatusSql GROUP BY dz.zone_id");
+  $stmt = $pdo->prepare("SELECT dz.zone_name, COUNT(*) AS res FROM appointments a LEFT JOIN `tables` t ON t.table_id = a.table_id JOIN dining_zones dz ON dz.zone_id = COALESCE(a.zone_id, t.zone_id) WHERE a.appointment_date BETWEEN DATE_SUB(CURDATE(), INTERVAL 6 DAY) AND CURDATE() AND a.status_id IN $operationalStatusSql GROUP BY dz.zone_id");
   $stmt->execute();
   $rows = $stmt->fetchAll() ?: [];
   $stmt->closeCursor();
@@ -110,7 +117,7 @@ try {
     $zones[] = ['name' => $r['zone_name'], 'pct' => $pct, 'res' => (int) $r['res']];
   }
 
-  $stmt = $pdo->prepare("SELECT COALESCE(SUM(party_size), 0) AS total_guests, COALESCE(AVG(party_size), 0) AS avg_party FROM appointments WHERE appointment_date >= DATE_SUB(CURDATE(), INTERVAL 6 DAY) AND status_id IN $operationalStatusSql");
+  $stmt = $pdo->prepare("SELECT COALESCE(SUM(party_size), 0) AS total_guests, COALESCE(AVG(party_size), 0) AS avg_party FROM appointments WHERE appointment_date BETWEEN DATE_SUB(CURDATE(), INTERVAL 6 DAY) AND CURDATE() AND status_id IN $operationalStatusSql");
   $stmt->execute();
   $row = $stmt->fetch() ?: [];
   $stmt->closeCursor();
@@ -118,13 +125,13 @@ try {
   $summary['total_guests'] = (int) ($row['total_guests'] ?? 0);
   $summary['avg_party'] = number_format((float) ($row['avg_party'] ?? 0), 1);
 
-  $stmt = $pdo->prepare("SELECT COUNT(*) FROM appointments WHERE appointment_date >= DATE_SUB(CURDATE(), INTERVAL 6 DAY) AND status_id = (SELECT status_id FROM appointment_status WHERE status_name = 'cancelled' LIMIT 1)");
+  $stmt = $pdo->prepare("SELECT COUNT(*) FROM appointments WHERE appointment_date BETWEEN DATE_SUB(CURDATE(), INTERVAL 6 DAY) AND CURDATE() AND status_id = (SELECT status_id FROM appointment_status WHERE status_name = 'cancelled' LIMIT 1)");
   $stmt->execute();
   $cancelled = (int) $stmt->fetchColumn();
   $stmt->closeCursor();
   $summary['cancel_rate'] = $allReservationsCount > 0 ? number_format(($cancelled / $allReservationsCount) * 100, 1) : '0.0';
 
-  $stmt = $pdo->prepare("SELECT COUNT(*) FROM appointments WHERE appointment_date >= DATE_SUB(CURDATE(), INTERVAL 6 DAY) AND status_id = (SELECT status_id FROM appointment_status WHERE status_name = 'no_show' LIMIT 1)");
+  $stmt = $pdo->prepare("SELECT COUNT(*) FROM appointments WHERE appointment_date BETWEEN DATE_SUB(CURDATE(), INTERVAL 6 DAY) AND CURDATE() AND status_id = (SELECT status_id FROM appointment_status WHERE status_name = 'no_show' LIMIT 1)");
   $stmt->execute();
   $summary['no_show_count'] = (int) $stmt->fetchColumn();
   $stmt->closeCursor();

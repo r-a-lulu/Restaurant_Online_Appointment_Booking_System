@@ -28,10 +28,12 @@ if (!$dateObj || (is_array($dateErrors) && (($dateErrors['warning_count'] ?? 0) 
     exit();
 }
 $floorDate = $dateObj->format('Y-m-d');
-$isToday = ($floorDate === date('Y-m-d')) ? 1 : 0;
 
 try {
     $pdo = db();
+    $dbClock = database_clock($pdo);
+    $isToday = ($floorDate === $dbClock['date']) ? 1 : 0;
+    $dbNowUnix = (int) $dbClock['unix'];
     $stmt = $pdo->prepare("SELECT t.table_id, t.zone_id, t.current_status, t.manual_status_until,
       EXISTS(
         SELECT 1 FROM appointments a
@@ -80,7 +82,7 @@ try {
         $manualOccupiedActive = $isToday === 1
             && ($r['current_status'] ?? '') === 'occupied'
             && !empty($r['manual_status_until'])
-            && strtotime((string) $r['manual_status_until']) > time();
+            && strtotime((string) $r['manual_status_until']) > $dbNowUnix;
 
         if ((int) $r['is_active_now'] === 1) {
             $status = 'occupied';

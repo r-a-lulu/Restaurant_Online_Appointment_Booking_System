@@ -39,17 +39,23 @@ if (!$dateObj || (is_array($dateErrors) && (($dateErrors['warning_count'] ?? 0) 
 }
 $floorDate = $dateObj->format('Y-m-d');
 
-if ($floorDate !== date('Y-m-d')) {
-    header('Content-Type: application/json');
-    echo json_encode(['error' => 'Manual occupied updates only apply to today\'s floor.']);
-    exit();
-}
-
 try {
     $pdo = db();
+    $dbClock = database_clock($pdo);
+    if ($floorDate !== $dbClock['date']) {
+        header('Content-Type: application/json');
+        echo json_encode(['error' => 'Manual occupied updates only apply to today\'s floor.']);
+        exit();
+    }
+
     if ($status === 'occupied') {
         $manualMinutes = floor_manual_occupied_minutes();
-        $manualUntil = (new DateTimeImmutable('now'))->modify('+' . $manualMinutes . ' minutes')->format('Y-m-d H:i:s');
+        $dbNow = DateTimeImmutable::createFromFormat('Y-m-d H:i:s', (string) $dbClock['datetime']);
+        if (!$dbNow) {
+            $dbNow = new DateTimeImmutable('@' . (int) $dbClock['unix']);
+            $dbNow = $dbNow->setTimezone(new DateTimeZone(date_default_timezone_get()));
+        }
+        $manualUntil = $dbNow->modify('+' . $manualMinutes . ' minutes')->format('Y-m-d H:i:s');
         $stmt = $pdo->prepare('UPDATE `tables` SET current_status = :status, manual_status_until = :manual_status_until WHERE table_id = :id');
         $stmt->execute([
             ':status' => $status,
@@ -57,6 +63,27 @@ try {
             ':id' => $tableId,
         ]);
     } else {
+        $activeReservationStmt = $pdo->prepare("SELECT COUNT(*)
+            FROM appointments a
+            JOIN appointment_status s ON s.status_id = a.status_id
+            WHERE a.table_id = :table_id
+              AND a.appointment_date = :floor_date
+              AND s.status_name = 'confirmed'
+              AND a.start_time <= CURTIME()
+              AND a.end_time > CURTIME()");
+        $activeReservationStmt->execute([
+            ':table_id' => $tableId,
+            ':floor_date' => $floorDate,
+        ]);
+        $hasActiveConfirmedReservation = (int) $activeReservationStmt->fetchColumn() > 0;
+        $activeReservationStmt->closeCursor();
+
+        if ($hasActiveConfirmedReservation) {
+            header('Content-Type: application/json');
+            echo json_encode(['error' => 'This table is currently occupied by an active confirmed reservation and cannot be cleared manually.']);
+            exit();
+        }
+
         $stmt = $pdo->prepare('UPDATE `tables` SET current_status = :status, manual_status_until = NULL WHERE table_id = :id');
         $stmt->execute([':status' => $status, ':id' => $tableId]);
     }

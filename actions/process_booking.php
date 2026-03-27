@@ -71,12 +71,6 @@ if (!$dateObj || (is_array($dateErrors) && (($dateErrors['warning_count'] ?? 0) 
     $redirectToBooking();
 }
 $appointmentDate = $dateObj->format('Y-m-d');
-$minDate = new DateTime('today');
-$minDate->modify('+1 day');
-if ($dateObj < $minDate) {
-    set_flash('booking_error', 'Reservations must be made at least 24 hours in advance.');
-    $redirectToBooking();
-}
 if ((int) $dateObj->format('N') === 1) {
     set_flash('booking_error', 'We are closed on Mondays. Please choose another date.');
     $redirectToBooking();
@@ -105,6 +99,19 @@ $redirectToConfirmation = static function (int $appointmentId) use ($source): vo
 
 try {
     $pdo = db();
+    $dbClock = database_clock($pdo);
+    $dbNow = DateTimeImmutable::createFromFormat('Y-m-d H:i:s', (string) $dbClock['datetime']);
+    if (!$dbNow) {
+        $dbNow = new DateTimeImmutable('@' . (int) $dbClock['unix']);
+        $dbNow = $dbNow->setTimezone(new DateTimeZone(date_default_timezone_get()));
+    }
+    $minimumReservationDateTime = $dbNow->modify('+24 hours');
+    $requestedReservationDateTime = DateTimeImmutable::createFromFormat('Y-m-d H:i:s', $appointmentDate . ' ' . $startTime);
+    if (!$requestedReservationDateTime || $requestedReservationDateTime < $minimumReservationDateTime) {
+        set_flash('booking_error', 'Reservations must be made at least 24 hours in advance.');
+        $redirectToBooking();
+    }
+
     // Shared idempotency helper — only matches active (pending/confirmed) bookings.
     $findExistingBookingId = static function (int $userId, int $tableId, string $date, string $time, ?int $serviceId, ?int $packageId) use ($pdo): int {
         $sql = "SELECT a.appointment_id

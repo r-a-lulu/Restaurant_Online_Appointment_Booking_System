@@ -66,6 +66,7 @@ $packages = [];
 $addOns = [];
 $zones = [];
 $user = [];
+$minReservationDate = date('Y-m-d', strtotime('+1 day'));
 
 $zoneMeta = [
   'The Patio' => [
@@ -93,6 +94,13 @@ $zoneMeta = [
 
 try {
   $pdo = db();
+  $dbClock = database_clock($pdo);
+  $dbToday = DateTimeImmutable::createFromFormat('Y-m-d H:i:s', (string) $dbClock['datetime']);
+  if (!$dbToday) {
+    $dbToday = new DateTimeImmutable('@' . (int) $dbClock['unix']);
+    $dbToday = $dbToday->setTimezone(new DateTimeZone(date_default_timezone_get()));
+  }
+  $minReservationDate = $dbToday->modify('+1 day')->format('Y-m-d');
 
   $stmt = $pdo->prepare('SELECT first_name, last_name, email, phone FROM users WHERE user_id = :id LIMIT 1');
   $stmt->execute([':id' => (int) $_SESSION['user_id']]);
@@ -300,9 +308,6 @@ include '../includes/nav.php';
               inputmode="numeric"
               required
             >
-            <p class="text-muted text-sm" id="guest-count-hint" style="margin-top: var(--space-2);">
-              Up to <?= e((string) $maxGuests) ?> guests based on the table capacities in our database.
-            </p>
           </div>
 
           <!-- Occasion (optional) -->
@@ -357,13 +362,13 @@ include '../includes/nav.php';
         <!-- Navigation -->
         <div class="wizard-nav">
           <div class="wizard-nav-left">
-            <button type="button" class="btn btn-outline" id="btn-prev">
+            <button type="button" class="btn btn-outline" data-action="prev">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
               Back
             </button>
-            <span class="wizard-step-count" id="step-count">Step 1 of 4</span>
+            <span class="wizard-step-count" data-role="step-count">Step 1 of 4</span>
           </div>
-          <button type="button" class="btn btn-primary btn-lg" id="btn-next">
+          <button type="button" class="btn btn-primary btn-lg" data-action="next">
             Continue
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
           </button>
@@ -430,13 +435,13 @@ include '../includes/nav.php';
 
         <div class="wizard-nav">
           <div class="wizard-nav-left">
-            <button type="button" class="btn btn-outline" id="btn-prev">
+            <button type="button" class="btn btn-outline" data-action="prev">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
               Back
             </button>
-            <span class="wizard-step-count" id="step-count">Step 2 of 4</span>
+            <span class="wizard-step-count" data-role="step-count">Step 2 of 4</span>
           </div>
-          <button type="button" class="btn btn-primary btn-lg" id="btn-next">
+          <button type="button" class="btn btn-primary btn-lg" data-action="next">
             Continue
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
           </button>
@@ -461,7 +466,7 @@ include '../includes/nav.php';
             <h3>Reservation Date</h3>
             <div class="form-group">
               <label for="book-date" class="form-label">Date <span style="color:var(--clr-destructive)">*</span></label>
-              <input type="date" id="book-date" class="form-input" required>
+              <input type="date" id="book-date" class="form-input" min="<?= e($minReservationDate) ?>" required>
               <p class="date-picker-note">We are open Tuesday – Sunday. Advance booking of at least 24 hours required.</p>
             </div>
           </div>
@@ -520,13 +525,13 @@ include '../includes/nav.php';
 
         <div class="wizard-nav">
           <div class="wizard-nav-left">
-            <button type="button" class="btn btn-outline" id="btn-prev">
+            <button type="button" class="btn btn-outline" data-action="prev">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
               Back
             </button>
-            <span class="wizard-step-count" id="step-count">Step 3 of 4</span>
+            <span class="wizard-step-count" data-role="step-count">Step 3 of 4</span>
           </div>
-          <button type="button" class="btn btn-primary btn-lg" id="btn-next">
+          <button type="button" class="btn btn-primary btn-lg" data-action="next">
             Review Reservation
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
           </button>
@@ -611,13 +616,13 @@ include '../includes/nav.php';
 
         <div class="wizard-nav">
           <div class="wizard-nav-left">
-            <button type="button" class="btn btn-outline" id="btn-prev">
+            <button type="button" class="btn btn-outline" data-action="prev">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
               Back
             </button>
-            <span class="wizard-step-count" id="step-count">Step 4 of 4</span>
+            <span class="wizard-step-count" data-role="step-count">Step 4 of 4</span>
           </div>
-          <button type="button" class="btn btn-primary btn-lg" id="btn-next">
+          <button type="button" class="btn btn-primary btn-lg" data-action="next">
             Confirm Reservation
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
           </button>
