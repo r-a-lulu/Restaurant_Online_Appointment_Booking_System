@@ -105,13 +105,16 @@ $redirectToConfirmation = static function (int $appointmentId) use ($source): vo
 
 try {
     $pdo = db();
+    // Shared idempotency helper — only matches active (pending/confirmed) bookings.
     $findExistingBookingId = static function (int $userId, int $tableId, string $date, string $time, ?int $serviceId, ?int $packageId) use ($pdo): int {
-        $sql = 'SELECT appointment_id
-            FROM appointments
-            WHERE user_id = :user_id
-              AND table_id = :table_id
-              AND appointment_date = :appointment_date
-              AND start_time = :start_time';
+        $sql = "SELECT a.appointment_id
+            FROM appointments a
+            JOIN appointment_status s ON s.status_id = a.status_id
+            WHERE a.user_id = :user_id
+              AND a.table_id = :table_id
+              AND a.appointment_date = :appointment_date
+              AND a.start_time = :start_time
+              AND s.status_name IN ('pending','confirmed')";
         $params = [
             ':user_id' => $userId,
             ':table_id' => $tableId,
@@ -120,20 +123,20 @@ try {
         ];
 
         if ($serviceId !== null) {
-            $sql .= ' AND service_id = :service_id';
+            $sql .= ' AND a.service_id = :service_id';
             $params[':service_id'] = $serviceId;
         } else {
-            $sql .= ' AND service_id IS NULL';
+            $sql .= ' AND a.service_id IS NULL';
         }
 
         if ($packageId !== null) {
-            $sql .= ' AND event_package_id = :event_package_id';
+            $sql .= ' AND a.event_package_id = :event_package_id';
             $params[':event_package_id'] = $packageId;
         } else {
-            $sql .= ' AND event_package_id IS NULL';
+            $sql .= ' AND a.event_package_id IS NULL';
         }
 
-        $sql .= ' ORDER BY appointment_id DESC LIMIT 1';
+        $sql .= ' ORDER BY a.appointment_id DESC LIMIT 1';
         $stmt = $pdo->prepare($sql);
         $stmt->execute($params);
         $appointmentId = (int) $stmt->fetchColumn();
@@ -192,6 +195,20 @@ try {
         }
     }
 
+    // Idempotency check: redirect to existing active booking before checking slot availability.
+    // This ensures a repeat submit by the same guest lands on the confirmation page.
+    $existingAppointmentId = $findExistingBookingId(
+        (int) $_SESSION['user_id'],
+        $tableId,
+        $appointmentDate,
+        $startTime,
+        $serviceId,
+        $packageId
+    );
+    if ($existingAppointmentId > 0) {
+        $redirectToConfirmation($existingAppointmentId);
+    }
+
     $slotStmt = $pdo->prepare(
         'SELECT
             fn_is_slot_available(:slot_appointment_date, :slot_start_time, :slot_end_time, :slot_table_id, NULL, NULL) AS is_available,
@@ -229,17 +246,7 @@ try {
         $redirectToBooking();
     }
 
-    $existingAppointmentId = $findExistingBookingId(
-        (int) $_SESSION['user_id'],
-        $tableId,
-        $appointmentDate,
-        $startTime,
-        $serviceId,
-        $packageId
-    );
-    if ($existingAppointmentId > 0) {
-        $redirectToConfirmation($existingAppointmentId);
-    }
+    // (Idempotency check already performed above before slot availability.)
 
     $proc = $pdo->prepare('CALL sp_appointment_create(:user_id, :service_id, :table_id, :zone_id, :event_package_id, :appointment_date, :start_time, :end_time, :party_size, :status_id, :special_requests)');
     $proc->execute([
@@ -325,14 +332,16 @@ try {
     if (strpos($normalizedMessage, 'duplicate entry') !== false && $tableId > 0) {
         try {
             $existingAppointmentStmt = db()->prepare(
-                'SELECT appointment_id
-                 FROM appointments
-                 WHERE user_id = :user_id
-                   AND table_id = :table_id
-                   AND appointment_date = :appointment_date
-                   AND start_time = :start_time
-                 ORDER BY appointment_id DESC
-                 LIMIT 1'
+                "SELECT a.appointment_id
+                 FROM appointments a
+                 JOIN appointment_status s ON s.status_id = a.status_id
+                 WHERE a.user_id = :user_id
+                   AND a.table_id = :table_id
+                   AND a.appointment_date = :appointment_date
+                   AND a.start_time = :start_time
+                   AND s.status_name IN ('pending','confirmed')
+                 ORDER BY a.appointment_id DESC
+                 LIMIT 1"
             );
             $existingAppointmentStmt->execute([
                 ':user_id' => (int) $_SESSION['user_id'],

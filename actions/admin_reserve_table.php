@@ -168,6 +168,53 @@ try {
         }
     }
 
+    // Idempotency check: if an active booking already exists for this user/table/date/time/service,
+    // return a clear error instead of hitting the slot-availability check or DB constraint.
+    {
+        $idempotencySql = "SELECT a.appointment_id
+            FROM appointments a
+            JOIN appointment_status s ON s.status_id = a.status_id
+            WHERE a.user_id = :user_id
+              AND a.table_id = :table_id
+              AND a.appointment_date = :appointment_date
+              AND a.start_time = :start_time
+              AND s.status_name IN ('pending','confirmed')";
+        $idempotencyParams = [
+            ':user_id'           => $actualUserId,
+            ':table_id'          => $tableId,
+            ':appointment_date'  => $date,
+            ':start_time'        => $startTime,
+        ];
+        if ($serviceId !== null) {
+            $idempotencySql .= ' AND a.service_id = :service_id';
+            $idempotencyParams[':service_id'] = $serviceId;
+        } else {
+            $idempotencySql .= ' AND a.service_id IS NULL';
+        }
+        if ($packageId !== null) {
+            $idempotencySql .= ' AND a.event_package_id = :event_package_id';
+            $idempotencyParams[':event_package_id'] = $packageId;
+        } else {
+            $idempotencySql .= ' AND a.event_package_id IS NULL';
+        }
+        $idempotencySql .= ' ORDER BY a.appointment_id DESC LIMIT 1';
+        $idempotencyStmt = $pdo->prepare($idempotencySql);
+        $idempotencyStmt->execute($idempotencyParams);
+        $existingId = (int) $idempotencyStmt->fetchColumn();
+        $idempotencyStmt->closeCursor();
+        if ($existingId > 0) {
+            $dupMessage = 'This reservation already exists (Ref #' . $existingId . ').';
+            if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+                header('Content-Type: application/json');
+                echo json_encode(['ok' => false, 'error' => $dupMessage, 'appointment_id' => $existingId, 'duplicate' => true]);
+                exit();
+            }
+            set_flash('admin_error', $dupMessage);
+            header('Location: pages/admin/floor.php');
+            exit();
+        }
+    }
+
     $slotStmt = $pdo->prepare(
         'SELECT
             fn_is_slot_available(:slot_appointment_date, :slot_start_time, :slot_end_time, :slot_table_id, NULL, NULL) AS is_available,
@@ -300,6 +347,45 @@ try {
     set_flash('admin_success', $successMessage);
     
 } catch (PDOException $e) {
+    $normalizedMessage = strtolower(trim((string) $e->getMessage()));
+    // Duplicate-entry fallback: find the existing active booking and surface it.
+    if (strpos($normalizedMessage, 'duplicate entry') !== false && $tableId > 0) {
+        try {
+            $dupStmt = db()->prepare(
+                "SELECT a.appointment_id
+                 FROM appointments a
+                 JOIN appointment_status s ON s.status_id = a.status_id
+                 WHERE a.user_id = :user_id
+                   AND a.table_id = :table_id
+                   AND a.appointment_date = :appointment_date
+                   AND a.start_time = :start_time
+                   AND s.status_name IN ('pending','confirmed')
+                 ORDER BY a.appointment_id DESC
+                 LIMIT 1"
+            );
+            $dupStmt->execute([
+                ':user_id'          => $actualUserId,
+                ':table_id'         => $tableId,
+                ':appointment_date' => $date,
+                ':start_time'       => $startTime,
+            ]);
+            $dupId = (int) $dupStmt->fetchColumn();
+            $dupStmt->closeCursor();
+            if ($dupId > 0) {
+                $dupMessage = 'This reservation already exists (Ref #' . $dupId . ').';
+                if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+                    header('Content-Type: application/json');
+                    echo json_encode(['ok' => false, 'error' => $dupMessage, 'appointment_id' => $dupId, 'duplicate' => true]);
+                    exit();
+                }
+                set_flash('admin_error', $dupMessage);
+                header('Location: pages/admin/floor.php');
+                exit();
+            }
+        } catch (PDOException $dupLookupError) {
+            error_log('Admin reservation duplicate lookup failed: ' . $dupLookupError->getMessage());
+        }
+    }
     if (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
         header('Content-Type: application/json');
         echo json_encode(['ok' => false, 'error' => admin_booking_error_message($e)]);
