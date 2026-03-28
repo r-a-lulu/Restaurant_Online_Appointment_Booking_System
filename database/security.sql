@@ -46,9 +46,10 @@ GRANT app_readwrite TO 'app_writer'@'%';
 GRANT app_admin TO 'app_admin'@'%';
 GRANT app_events TO 'app_events'@'%';
 
-SET DEFAULT ROLE app_readonly TO 'app_reader'@'%';
-SET DEFAULT ROLE app_readwrite TO 'app_writer'@'%';
-SET DEFAULT ROLE app_admin TO 'app_admin'@'%';
-SET DEFAULT ROLE app_events TO 'app_events'@'%';
+-- MariaDB uses FOR user@host here; MySQL uses TO.
+SET DEFAULT ROLE app_readonly FOR 'app_reader'@'%';
+SET DEFAULT ROLE app_readwrite FOR 'app_writer'@'%';
+SET DEFAULT ROLE app_admin FOR 'app_admin'@'%';
+SET DEFAULT ROLE app_events FOR 'app_events'@'%';
 
 FLUSH PRIVILEGES;
