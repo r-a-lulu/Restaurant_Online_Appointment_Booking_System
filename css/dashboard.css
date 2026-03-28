@@ -185,19 +185,36 @@
   background-color: #381a17;
 }
 
-/* ─── Mobile Toggle ─── */
-.sidebar-mobile-toggle {
+/* ─── Mobile Top Navigation ─── */
+.mobile-topbar {
   display: none;
-  position: fixed;
-  top: var(--space-4);
-  left: var(--space-4);
-  z-index: 60;
   background-color: var(--clr-sidebar);
-  color: var(--clr-sidebar-fg);
-  border: 1px solid var(--clr-sidebar-border);
-  border-radius: var(--radius-lg);
+  border-bottom: 1px solid var(--clr-sidebar-border);
+  height: 4rem;
+  padding: 0 var(--space-4);
+  align-items: center;
+  gap: var(--space-4);
+  z-index: 60;
+}
+
+.mobile-topbar-brand {
+  font-family: var(--font-serif);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #fff8eb;
+  letter-spacing: 0.02em;
+}
+
+.sidebar-mobile-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  color: #fff8eb;
+  border: none;
   padding: var(--space-2);
   cursor: pointer;
+  border-radius: var(--radius-md);
   transition: background-color var(--transition-fast);
 }
 
@@ -828,7 +845,7 @@
 /* ─── Responsive ─── */
 @media (max-width: 1024px) {
   .stat-cards {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: 1fr;
   }
   
   .book-form-grid {
@@ -840,10 +857,11 @@
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1023px) {
   /* Hide sidebar in grid, make it slide-in overlay */
   .dashboard-layout {
-    grid-template-columns: 1fr;
+    display: flex;
+    flex-direction: column;
   }
 
   .dashboard-sidebar {
@@ -863,6 +881,12 @@
     display: block;
   }
 
+  .mobile-topbar {
+    display: flex;
+    position: sticky;
+    top: 0;
+  }
+
   .sidebar-mobile-toggle {
     display: flex;
     align-items: center;
@@ -871,11 +895,26 @@
 
   .dashboard-content {
     padding: var(--space-6) var(--space-4);
-    padding-top: calc(var(--space-4) + 3rem + var(--space-4)); /* offset for toggle btn */
+    padding-top: var(--space-6);
   }
 
   .stat-cards {
-    grid-template-columns: repeat(2, 1fr);
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    gap: var(--space-4);
+    padding-bottom: var(--space-4);
+    margin-inline: calc(var(--space-4) * -1);
+    padding-inline: var(--space-4);
+    scrollbar-width: none;
+  }
+  .stat-cards::-webkit-scrollbar {
+    display: none;
+  }
+  .stat-card {
+    flex: 0 0 85%;
+    scroll-snap-align: center;
+    padding: var(--space-5);
   }
 
   .quick-actions {
@@ -910,7 +949,7 @@
   }
 
   .time-slot-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: 1fr;
   }
 
   .dashboard-page-title {
@@ -1242,3 +1281,5 @@
   opacity: 0.9;
   color: white;
 }
+
+

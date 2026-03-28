@@ -1,9 +1,9 @@
-/* ================================================================
-   admin.css — Admin Panel Layout & Components
-   Restaurant — matches guest dashboard aesthetic
+﻿/* ================================================================
+   admin.css â€” Admin Panel Layout & Components
+   Restaurant â€” matches guest dashboard aesthetic
    ================================================================ */
 
-/* ─── Admin Layout ─── */
+/* â”€â”€â”€ Admin Layout â”€â”€â”€ */
 .admin-layout {
   display: grid;
   grid-template-columns: var(--sidebar-width) 1fr;
@@ -12,7 +12,7 @@
   background-color: var(--clr-bg);
 }
 
-/* ─── Admin Sidebar (shares dashboard-sidebar base classes) ─── */
+/* â”€â”€â”€ Admin Sidebar (shares dashboard-sidebar base classes) â”€â”€â”€ */
 .admin-sidebar {
   position: sticky;
   top: 0;
@@ -28,7 +28,7 @@
   scrollbar-color: var(--clr-sidebar-border) transparent;
 }
 
-/* ─── Admin Badge ─── */
+/* â”€â”€â”€ Admin Badge â”€â”€â”€ */
 .admin-badge {
   display: inline-block;
   padding: 0.25rem 0.6rem;
@@ -49,7 +49,7 @@
   color: #1a1614;
 }
 
-/* ─── Admin Main ─── */
+/* â”€â”€â”€ Admin Main â”€â”€â”€ */
 .admin-main {
   display: flex;
   flex-direction: column;
@@ -63,7 +63,7 @@
   width: 100%;
 }
 
-/* ─── Admin Page Header ─── */
+/* â”€â”€â”€ Admin Page Header â”€â”€â”€ */
 .admin-header {
   margin-bottom: var(--space-8);
   padding-bottom: var(--space-6);
@@ -92,7 +92,7 @@
   margin-top: var(--space-1);
 }
 
-/* ─── Stat Cards ─── */
+/* â”€â”€â”€ Stat Cards â”€â”€â”€ */
 .admin-stat-cards {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -171,7 +171,7 @@
   flex-shrink: 0;
 }
 
-/* ─── Section / Card Block ─── */
+/* â”€â”€â”€ Section / Card Block â”€â”€â”€ */
 .admin-section {
   background-color: var(--clr-card);
   border: 1px solid var(--clr-border);
@@ -200,7 +200,7 @@
   padding: var(--space-6);
 }
 
-/* ─── Data Table ─── */
+/* â”€â”€â”€ Data Table â”€â”€â”€ */
 .admin-table-wrap {
   width: 100%;
   overflow-x: auto;
@@ -255,7 +255,7 @@
   margin-top: 0.1rem;
 }
 
-/* ─── Avatar Cell ─── */
+/* â”€â”€â”€ Avatar Cell â”€â”€â”€ */
 .admin-avatar-cell {
   display: flex;
   align-items: center;
@@ -278,7 +278,7 @@
   letter-spacing: 0.05em;
 }
 
-/* ─── Row Actions ─── */
+/* â”€â”€â”€ Row Actions â”€â”€â”€ */
 .admin-row-actions {
   vertical-align: middle;
   white-space: nowrap;
@@ -291,7 +291,7 @@
   flex-wrap: nowrap;
 }
 
-/* ─── Filter Bar ─── */
+/* â”€â”€â”€ Filter Bar â”€â”€â”€ */
 .admin-filter-bar {
   display: flex;
   align-items: center;
@@ -325,7 +325,7 @@
   box-shadow: 0 0 0 2px rgba(139, 69, 52, 0.12);
 }
 
-/* ─── Tabs (bottom-border style, identical to data tabs in reservations) ─── */
+/* â”€â”€â”€ Tabs (bottom-border style, identical to data tabs in reservations) â”€â”€â”€ */
 .admin-tabs {
   display: flex;
   gap: 0;
@@ -379,7 +379,7 @@
   display: block;
 }
 
-/* ─── Floor Zone Tab Buttons ─── */
+/* â”€â”€â”€ Floor Zone Tab Buttons â”€â”€â”€ */
 .floor-zones-tabs {
   display: flex;
   gap: var(--space-2);
@@ -387,7 +387,7 @@
   flex-wrap: wrap;
 }
 
-/* ─── Floor Grid ─── */
+/* â”€â”€â”€ Floor Grid â”€â”€â”€ */
 .floor-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
@@ -467,7 +467,7 @@
   background-color: #fef2f2;
 }
 
-/* ─── Floor Legend ─── */
+/* â”€â”€â”€ Floor Legend â”€â”€â”€ */
 .floor-legend {
   display: flex;
   align-items: center;
@@ -492,7 +492,7 @@
   border-radius: var(--radius-full);
 }
 
-/* ─── Occupancy Bars ─── */
+/* â”€â”€â”€ Occupancy Bars â”€â”€â”€ */
 .occupancy-list {
   display: flex;
   flex-direction: column;
@@ -528,7 +528,7 @@
   transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* ─── Pure CSS Vertical Bar Chart ─── */
+/* â”€â”€â”€ Pure CSS Vertical Bar Chart â”€â”€â”€ */
 .bar-chart {
   display: flex;
   align-items: flex-end;
@@ -590,7 +590,7 @@
   font-family: var(--font-sans);
 }
 
-/* ─── Horizontal Bar Chart ─── */
+/* â”€â”€â”€ Horizontal Bar Chart â”€â”€â”€ */
 .h-bar-chart {
   display: flex;
   flex-direction: column;
@@ -635,7 +635,7 @@
   transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* ─── Admin Modal ─── */
+/* â”€â”€â”€ Admin Modal â”€â”€â”€ */
 .admin-modal {
   display: none;
   position: fixed;
@@ -734,7 +734,7 @@
   gap: var(--space-3);
 }
 
-/* ─── Overview 2-col grid ─── */
+/* â”€â”€â”€ Overview 2-col grid â”€â”€â”€ */
 .admin-overview-grid {
   display: grid;
   grid-template-columns: 1fr;
@@ -747,7 +747,7 @@
   }
 }
 
-/* ─── Reports 2-col grid ─── */
+/* â”€â”€â”€ Reports 2-col grid â”€â”€â”€ */
 .admin-reports-grid {
   display: grid;
   grid-template-columns: 1fr;
@@ -760,11 +760,9 @@
   }
 }
 
-/* ─── Mobile Responsive ─── */
-@media (max-width: 767px) {
-  .admin-layout {
-    grid-template-columns: 1fr;
-  }
+/* â”€â”€â”€ Mobile Responsive â”€â”€â”€ */
+@media (max-width: 1023px) {
+  .admin-layout { display: flex; flex-direction: column; }
 
   .admin-sidebar {
     position: fixed;
@@ -782,12 +780,12 @@
 
   .admin-content {
     padding: var(--space-6) var(--space-4);
-    padding-top: calc(var(--space-12) + var(--space-4));
+    padding-top: var(--space-6);
   }
 
-  .admin-stat-cards {
-    grid-template-columns: 1fr 1fr;
-  }
+  .admin-stat-cards { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: var(--space-4); padding-bottom: var(--space-4); margin-inline: calc(var(--space-4) * -1); padding-inline: var(--space-4); scrollbar-width: none; }
+  .admin-stat-cards::-webkit-scrollbar { display: none; }
+  .admin-stat-card { flex: 0 0 85%; scroll-snap-align: center; padding: var(--space-5); }
 
   .admin-row-actions-inner {
     flex-wrap: wrap;
@@ -798,9 +796,9 @@
   }
 }
 
-/* ═══════════════════════════════════════════════════════════
-   Custom Confirm Dialog — replaces window.confirm()
-═══════════════════════════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   Custom Confirm Dialog â€” replaces window.confirm()
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
 /* Backdrop */
 .ac-backdrop {
@@ -887,7 +885,7 @@
   line-height: 1;
 }
 
-/* Cancel — neutral outline */
+/* Cancel â€” neutral outline */
 .ac-btn-cancel {
   background-color: transparent;
   border-color: var(--clr-border);
@@ -897,7 +895,7 @@
   background-color: var(--clr-muted);
 }
 
-/* Confirm — primary (approve / neutral actions) */
+/* Confirm â€” primary (approve / neutral actions) */
 .ac-btn-confirm {
   background-color: var(--clr-primary);
   color: var(--clr-primary-fg);
@@ -907,7 +905,7 @@
   background-color: var(--clr-primary-hover);
 }
 
-/* Danger — destructive actions (reject, cancel reservation) */
+/* Danger â€” destructive actions (reject, cancel reservation) */
 .ac-btn-danger {
   background-color: var(--clr-destructive);
   color: var(--clr-destructive-fg);
@@ -917,9 +915,9 @@
   opacity: 0.88;
 }
 
-/* ═══════════════════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    New Admin Dashboard Overview Grid 
-═══════════════════════════════════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
 .admin-overview-grid {
   display: grid;
@@ -1094,9 +1092,9 @@
   background-color: #e5e1dc;
 }
 
-/* ═══════════════════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    Floor Management V2 (Segmented Tabs, Cards, Blocks)
-═══════════════════════════════════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
 /* Segmented Tabs */
 .segmented-tabs {
@@ -1105,11 +1103,19 @@
   background-color: var(--clr-muted);
   border-radius: var(--radius-lg);
   padding: 4px;
-  width: max-content;
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
   margin-bottom: var(--space-6);
 }
 
+.segmented-tabs::-webkit-scrollbar {
+  display: none;
+}
+
 .segment-btn {
+  white-space: nowrap;
+  flex-shrink: 0;
   background: transparent;
   border: none;
   font-family: var(--font-sans);
@@ -1518,9 +1524,9 @@
 
 .legend-box.available { background-color: #dcfce7; border-color: #86efac; }
 .legend-box.occupied { background-color: #fee2e2; border-color: #fca5a5; }
-/* ═══════════════════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    Guest Directory & Profile Modal
-═══════════════════════════════════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
 /* Directory Table specific tweaks */
 .guest-table th {
@@ -1660,9 +1666,9 @@
   gap: var(--space-3);
 }
 
-/* ═══════════════════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    Reports Redesign
-═══════════════════════════════════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 .reports-stats-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -2051,7 +2057,7 @@
   width: 100%;
 }
 
-/* ─── Master Data Polish [NEW] ─── */
+/* â”€â”€â”€ Master Data Polish [NEW] â”€â”€â”€ */
 .admin-form-row {
   display: flex;
   gap: var(--space-3);
@@ -2151,9 +2157,9 @@
   width: 5rem;
 }
 
-/* ═══════════════════════════════════════════════════════════
-   Master Data — Tab Navigation
-═══════════════════════════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   Master Data â€” Tab Navigation
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
 .md-tabs {
   display: flex;
@@ -2214,7 +2220,7 @@
   display: block;
 }
 
-/* ─── Destructive outline button (replaces delete inline styles) ─── */
+/* â”€â”€â”€ Destructive outline button (replaces delete inline styles) â”€â”€â”€ */
 .btn-outline--destructive {
   color: var(--clr-destructive);
   border-color: var(--clr-destructive);
@@ -2226,7 +2232,7 @@
   border-color: var(--clr-destructive);
 }
 
-/* ─── Tables: zone filter bar ─── */
+/* â”€â”€â”€ Tables: zone filter bar â”€â”€â”€ */
 .md-zone-filter {
   display: flex;
   align-items: center;
@@ -2259,4 +2265,38 @@
   color: var(--clr-muted-fg);
   font-size: var(--text-sm);
 }
+
+
+/* --- Reserve Modal — Inline Field Validation --- */
+.reserve-field-invalid {
+  border-color: var(--clr-red-text, #dc2626) !important;
+  outline-color: var(--clr-red-text, #dc2626) !important;
+  box-shadow: 0 0 0 3px rgba(185, 28, 28, 0.15) !important;
+}
+
+.reserve-field-error {
+  display: none;
+  margin-top: 4px;
+  font-size: 0.75rem;
+  color: var(--clr-red-text, #dc2626);
+  font-weight: 500;
+}
+
+
+
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background-color: rgba(30, 23, 20, 0.55);
+  backdrop-filter: blur(3px);
+  z-index: 40;
+}
+.sidebar-overlay.visible {
+  display: block;
+  animation: acBackdropIn 0.2s ease;
+}
+
+
+
 

@@ -33,14 +33,15 @@ $navLinks = [
 ];
 ?>
 
-<!-- Mobile sidebar toggle button -->
-<button class="sidebar-mobile-toggle" id="sidebarToggle" aria-label="Open navigation menu">
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <line x1="3" y1="12" x2="21" y2="12"/>
-    <line x1="3" y1="6" x2="21" y2="6"/>
-    <line x1="3" y1="18" x2="21" y2="18"/>
-  </svg>
-</button>
+<!-- Mobile Top Navigation Bar -->
+<div class="mobile-topbar" id="sidebarMobileTopbar">
+  <button class="sidebar-mobile-toggle" id="sidebarToggle" aria-label="Open navigation menu">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/>
+    </svg>
+  </button>
+  <div class="mobile-topbar-brand"><?= e($siteName) ?></div>
+</div>
 
 <!-- Sidebar overlay (mobile) -->
 <div class="sidebar-overlay" id="sidebarOverlay"></div>
