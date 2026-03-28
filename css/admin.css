@@ -1,4 +1,4 @@
-﻿/* ================================================================
+/* ================================================================
    admin.css â€” Admin Panel Layout & Components
    Restaurant â€” matches guest dashboard aesthetic
    ================================================================ */
@@ -2298,5 +2298,158 @@
 }
 
 
+/* ═══════════════════════════════════════════════════════════
+   Master Data — Mobile Responsiveness
+   ═══════════════════════════════════════════════════════════ */
 
+/* ─── Tab Nav: horizontal scroll strip on small screens ─── */
+@media (max-width: 640px) {
+  .md-tabs {
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    flex-wrap: nowrap;
+  }
+  .md-tabs::-webkit-scrollbar { display: none; }
 
+  .md-tab-btn {
+    flex-shrink: 0;
+    padding: var(--space-3) var(--space-4);
+    font-size: var(--text-xs);
+  }
+}
+
+/* ─── Admin section padding reduction on mobile ─── */
+@media (max-width: 640px) {
+  .admin-section-body {
+    padding: var(--space-4);
+  }
+  .admin-section-header {
+    padding: var(--space-4);
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+  .admin-content {
+    padding: var(--space-4) var(--space-3);
+  }
+  .admin-page-title {
+    font-size: var(--text-2xl);
+  }
+}
+
+/* ─── Create-row form: stack fields vertically on mobile ─── */
+@media (max-width: 640px) {
+  .admin-form-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-3);
+    padding: var(--space-4);
+  }
+  .admin-form-row .form-input,
+  .admin-form-row .form-select {
+    width: 100%;
+    min-width: 0;
+    flex: none;
+  }
+  .admin-form-row .btn {
+    width: 100%;
+    justify-content: center;
+    height: auto;
+    padding: 0.7rem 1rem;
+  }
+}
+
+/* ─── Data tables: scroll horizontally as one unit ────────
+   KEY FIX: the zone-filter sits INSIDE admin-table-wrap, so
+   both the filter bar AND the table must share the same
+   min-width — otherwise they scroll independently and the
+   layout breaks.
+   ──────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .admin-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Give the filter bar the same minimum width as the table
+     so they move together when the user swipes */
+  .admin-table-wrap .md-zone-filter {
+    min-width: 580px;
+    /* override any flex-column layout inside the wrap */
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .admin-table {
+    min-width: 580px; /* matches zone filter */
+    font-size: var(--text-xs);
+  }
+
+  /* Tighten inline cell inputs */
+  .admin-table input.form-input,
+  .admin-table select.form-select {
+    padding: 0.35rem 0.5rem;
+    font-size: var(--text-xs);
+  }
+
+  /* Zone select inside table rows needs a readable width */
+  .admin-table td select.form-select {
+    min-width: 100px;
+  }
+
+  /* Reduce cell padding to gain horizontal space */
+  .admin-table thead th,
+  .admin-table tbody td {
+    padding: var(--space-2) var(--space-3);
+  }
+
+  /* Action buttons in last cell: stack vertically */
+  .admin-table td:last-child {
+    white-space: normal;
+    min-width: 90px;
+  }
+  .admin-table td:last-child .btn {
+    display: block;
+    width: 100%;
+    margin-bottom: var(--space-1);
+    text-align: center;
+  }
+  .admin-table td:last-child .btn:last-child {
+    margin-bottom: 0;
+  }
+}
+
+/* ─── Zone filter outside of tables (standalone bar) ─── */
+@media (max-width: 480px) {
+  /* Only applied when zone filter is NOT inside admin-table-wrap
+     i.e. the standalone filter at the top of a section */
+  .md-zone-filter:not(.admin-table-wrap .md-zone-filter) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-2);
+  }
+  .md-zone-select {
+    max-width: 100%;
+    width: 100%;
+  }
+}
+
+/* ─── Reports / floor stat grids collapse on mobile ─── */
+@media (max-width: 640px) {
+  .reports-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-4);
+  }
+  .reports-2col-grid,
+  .daily-split {
+    grid-template-columns: 1fr;
+  }
+  .floor-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 400px) {
+  .reports-stats-grid {
+    grid-template-columns: 1fr;
+  }
+}
