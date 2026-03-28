@@ -12,11 +12,22 @@
   const overlay = document.getElementById('sidebarOverlay');
 
   function openSidebar() {
-    layout && layout.classList.add('sidebar-open');
+    if (layout) {
+      layout.classList.add('sidebar-open');
+      localStorage.setItem('guestSidebarOpen', 'true');
+    }
   }
 
   function closeSidebar() {
-    layout && layout.classList.remove('sidebar-open');
+    if (layout) {
+      layout.classList.remove('sidebar-open');
+      localStorage.setItem('guestSidebarOpen', 'false');
+    }
+  }
+
+  // Restore state across navigations
+  if (layout && localStorage.getItem('guestSidebarOpen') === 'true') {
+    layout.classList.add('sidebar-open');
   }
 
   toggle && toggle.addEventListener('click', openSidebar);

@@ -2,6 +2,32 @@
   'use strict';
 
   /* ------------------------------------------------------------------
+     Mobile Sidebar Toggle
+  ------------------------------------------------------------------ */
+  const adminToggle = document.getElementById('adminSidebarToggle');
+  const adminSidebar = document.getElementById('adminSidebar');
+  const adminOverlay = document.getElementById('adminSidebarOverlay');
+
+  if (adminToggle && adminSidebar && adminOverlay) {
+    function toggleAdminSidebar() {
+      const isOpen = adminSidebar.classList.toggle('open');
+      adminOverlay.classList.toggle('visible');
+      adminToggle.setAttribute('aria-expanded', isOpen);
+      localStorage.setItem('adminSidebarOpen', isOpen ? 'true' : 'false');
+    }
+    
+    // Restore sidebar state across page loads
+    if (localStorage.getItem('adminSidebarOpen') === 'true') {
+      adminSidebar.classList.add('open');
+      adminOverlay.classList.add('visible');
+      adminToggle.setAttribute('aria-expanded', 'true');
+    }
+
+    adminToggle.addEventListener('click', toggleAdminSidebar);
+    adminOverlay.addEventListener('click', toggleAdminSidebar);
+  }
+
+  /* ------------------------------------------------------------------
      Floor Snapshot + Polling (10s)
   ------------------------------------------------------------------ */
   const floorMeta = document.getElementById('floor-csrf-container');
@@ -383,7 +409,10 @@
       reserveSeating.disabled = false;
     }
     if (reservePartySize) reservePartySize.removeAttribute('max');
-    if (reserveDate) reserveDate.value = '';
+    if (reserveDate) {
+      // Pre-fill with the currently viewed floor date so the modal is ready to submit
+      reserveDate.value = selectedFloorDate || '';
+    }
     if (reserveTime) reserveTime.value = '';
     if (reserveGuestSearch) reserveGuestSearch.value = '';
     if (reserveGuestSuggestions) {
@@ -419,49 +448,57 @@
       const csrf = floorMeta.dataset.csrf || '';
 
       if (!tableId || !cancelToken || !csrf) return;
-      if (!window.confirm || !window.confirm(getFloorCancelPrompt(floorDetailCancelBtn))) return;
+      const promptMsg = getFloorCancelPrompt(floorDetailCancelBtn);
 
-      floorDetailCancelBtn.disabled = true;
+      const performCancel = function() {
+        floorDetailCancelBtn.disabled = true;
 
-      const body = new URLSearchParams();
-      body.set('csrf_token', csrf);
-      body.set('action_token', cancelToken);
-      body.set('table_id', tableId);
-      body.set('floor_date', selectedFloorDate);
-      body.set('manual_override', manualOverride ? '1' : '0');
-      if (!manualOverride && appointmentId) {
-        body.set('appointment_id', appointmentId);
-      }
+        const body = new URLSearchParams();
+        body.set('csrf_token', csrf);
+        body.set('action_token', cancelToken);
+        body.set('table_id', tableId);
+        body.set('floor_date', selectedFloorDate);
+        body.set('manual_override', manualOverride ? '1' : '0');
+        if (!manualOverride && appointmentId) {
+          body.set('appointment_id', appointmentId);
+        }
 
-      fetch(actionUrl('admin_floor_cancel'), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: body.toString(),
-      })
-        .then(function (res) { return res.json(); })
-        .then(function (data) {
-          if (!data || !data.ok) {
-            if (window.alert) window.alert(data && data.error ? data.error : 'Could not cancel the occupied table right now.');
-            floorDetailCancelBtn.disabled = false;
-            return;
-          }
-
-          const tile = document.querySelector('.floor-tile-new[data-table-id="' + tableId + '"]');
-          if (tile) {
-            tile.removeAttribute('data-last-changed');
-            if (manualOverride) {
-              setTileStatus(tile, 'available');
-              updatePanelStats(tile.closest('.admin-panel'));
-            }
-          }
-
-          if (floorDetailModal) floorDetailModal.classList.remove('open');
-          refreshFloorSnapshot();
+        fetch(actionUrl('admin_floor_cancel'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: body.toString(),
         })
-        .catch(function () {
-          if (window.alert) window.alert('Could not cancel the occupied table right now.');
-          floorDetailCancelBtn.disabled = false;
-        });
+          .then(function (res) { return res.json(); })
+          .then(function (data) {
+            if (!data || !data.ok) {
+              if (window.alert) window.alert(data && data.error ? data.error : 'Could not cancel the occupied table right now.');
+              floorDetailCancelBtn.disabled = false;
+              return;
+            }
+
+            const tile = document.querySelector('.floor-tile-new[data-table-id="' + tableId + '"]');
+            if (tile) {
+              tile.removeAttribute('data-last-changed');
+              if (manualOverride) {
+                setTileStatus(tile, 'available');
+                updatePanelStats(tile.closest('.admin-panel'));
+              }
+            }
+
+            if (floorDetailModal) floorDetailModal.classList.remove('open');
+            refreshFloorSnapshot();
+          })
+          .catch(function () {
+            if (window.alert) window.alert('Could not cancel the occupied table right now.');
+            floorDetailCancelBtn.disabled = false;
+          });
+      };
+
+      if (window.uiConfirm) {
+        window.uiConfirm(promptMsg, performCancel);
+      } else if (window.confirm && window.confirm(promptMsg)) {
+        performCancel();
+      }
     });
   }
 
@@ -1176,10 +1213,104 @@
     });
   });
 
+  // ---------------------------------------------------------------
+  // Reserve Form — inline validation helpers
+  // (replaces hidden HTML5 tooltips inside scrollable modal)
+  // ---------------------------------------------------------------
+  function showReserveFieldError(field, msg) {
+    if (!field) return;
+    field.classList.add('reserve-field-invalid');
+    let err = field.parentElement.querySelector('.reserve-field-error');
+    if (!err) {
+      err = document.createElement('span');
+      err.className = 'reserve-field-error';
+      field.parentElement.appendChild(err);
+    }
+    err.textContent = msg;
+    err.style.display = 'block';
+
+    // Auto-clear the error when the user changes the field
+    function onInteract() {
+      field.classList.remove('reserve-field-invalid');
+      if (err) err.style.display = 'none';
+      field.removeEventListener('change', onInteract);
+      field.removeEventListener('input', onInteract);
+    }
+    field.addEventListener('change', onInteract);
+    field.addEventListener('input', onInteract);
+  }
+
+  function clearReserveFormErrors() {
+    if (!reserveTableForm) return;
+    reserveTableForm.querySelectorAll('.reserve-field-invalid').forEach(function (el) {
+      el.classList.remove('reserve-field-invalid');
+    });
+    reserveTableForm.querySelectorAll('.reserve-field-error').forEach(function (el) {
+      el.style.display = 'none';
+      el.textContent = '';
+    });
+  }
+
+  function runReserveFormValidation() {
+    // Returns the first invalid field element, or null if all valid.
+    let first = null;
+
+    function flag(field, msg) {
+      showReserveFieldError(field, msg);
+      if (!first) first = field;
+    }
+
+    // Guest selection
+    if (reserveUserId && !reserveUserId.value) {
+      flag(reserveUserId, 'Please select a guest.');
+    }
+
+    // Zone selection
+    if (reserveZone && !reserveZone.value) {
+      flag(reserveZone, 'Please select a dining zone.');
+    }
+
+    // Seating preference
+    if (reserveSeating && !reserveSeating.value) {
+      flag(reserveSeating, 'Please select a seating preference.');
+    }
+
+    // Service OR package — exactly one required, not both, not neither
+    const hasService = reserveService && !!reserveService.value;
+    const hasPackage = reservePackage && !!reservePackage.value;
+    if (!hasService && !hasPackage) {
+      if (reserveService) flag(reserveService, 'Please choose a service or an event package.');
+    } else if (hasService && hasPackage) {
+      if (reserveService) flag(reserveService, 'Choose either a service or a package, not both.');
+    }
+
+    // Date
+    if (reserveDate && !reserveDate.value) {
+      flag(reserveDate, 'Please enter a reservation date.');
+    }
+
+    // Time
+    if (reserveTime && !reserveTime.value) {
+      flag(reserveTime, 'Please select a time slot.');
+    }
+
+    return first;
+  }
+
   const reserveTableForm = document.getElementById('reserveTableForm');
   if (reserveTableForm) {
     reserveTableForm.addEventListener('submit', function (e) {
       e.preventDefault();
+
+      // --- Custom in-modal validation (HTML5 tooltips are invisible in scrollable overflow) ---
+      clearReserveFormErrors();
+      const firstError = runReserveFormValidation();
+      if (firstError) {
+        firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        firstError.focus();
+        return;
+      }
+      // ---
 
       const formData = new FormData(reserveTableForm);
       const modal = document.getElementById('reserveTableModal');
