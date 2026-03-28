@@ -1430,6 +1430,33 @@
     });
   }
 
+  /* ------------------------------------------------------------------
+     Mobile: Inject data-label onto table cells for card-style layout
+     The CSS uses td::before { content: attr(data-label) } to show
+     column names when the table is in card mode (≤768px).
+  ------------------------------------------------------------------ */
+  (function injectMobileTableLabels() {
+    // Reservations table — 9 columns
+    var resLabels = ['#', 'Guest', 'Zone', 'Seating', 'Date', 'Time', 'Guests', 'Status', 'Actions'];
+    document.querySelectorAll('.resTable tbody tr').forEach(function (row) {
+      Array.from(row.cells).forEach(function (cell, i) {
+        cell.setAttribute('data-label', resLabels[i] || '');
+      });
+    });
+
+    // Guest / users table — read headers dynamically
+    document.querySelectorAll('.guest-table').forEach(function (table) {
+      var headers = Array.from(table.querySelectorAll('thead th')).map(function (th) {
+        return th.textContent.trim();
+      });
+      table.querySelectorAll('tbody tr').forEach(function (row) {
+        Array.from(row.cells).forEach(function (cell, i) {
+          cell.setAttribute('data-label', headers[i] || '');
+        });
+      });
+    });
+  })();
+
 })();
 
 

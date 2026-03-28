@@ -2453,3 +2453,360 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════
+   ALL ADMIN PAGES — Comprehensive Mobile Responsiveness
+   ═══════════════════════════════════════════════════════════ */
+
+/* ─── 1. MOBILE TOP BAR (hamburger + title) ─── */
+/* The sidebar slides in on mobile; add a top bar so the user
+   can open it. admin.js handles the toggle. */
+.admin-mobile-topbar {
+  display: none;
+  position: sticky;
+  top: 0;
+  z-index: 60;
+  background-color: var(--clr-sidebar);
+  border-bottom: 1px solid var(--clr-sidebar-border);
+  padding: var(--space-4) var(--space-5);
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.admin-mobile-topbar-title {
+  font-family: var(--font-serif);
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--clr-fg);
+  flex: 1;
+}
+
+.admin-hamburger {
+  background: none;
+  border: none;
+  color: var(--clr-fg);
+  cursor: pointer;
+  padding: var(--space-1);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color var(--transition-fast);
+}
+
+.admin-hamburger:hover {
+  background-color: var(--clr-muted);
+}
+
+@media (max-width: 1023px) {
+  .admin-mobile-topbar {
+    display: flex;
+  }
+}
+
+/* ─── 2. RESERVATIONS — make 9-col table readable on mobile ─── */
+/* On mobile, switch from a horizontal table to vertical "cards"
+   using CSS data-label trick (no HTML changes needed). */
+@media (max-width: 768px) {
+  /* Reservations table: card-per-row layout */
+  .resTable thead {
+    display: none; /* hide column headers */
+  }
+
+  .resTable,
+  .resTable tbody,
+  .resTable tr {
+    display: block;
+    width: 100%;
+  }
+
+  .resTable tr {
+    background-color: var(--clr-card);
+    border: 1px solid var(--clr-border);
+    border-radius: var(--radius-lg);
+    margin-bottom: var(--space-3);
+    padding: var(--space-4);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .resTable td {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--space-2);
+    padding: var(--space-1) 0;
+    border: none;
+    font-size: var(--text-sm);
+    flex-wrap: wrap;
+  }
+
+  /* Add a label before each cell using the data-label attribute
+     — we inject these via admin.js below, or use nth-child fallback */
+  .resTable td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    font-size: var(--text-xs);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-widest);
+    color: var(--clr-muted-fg);
+    white-space: nowrap;
+    flex-shrink: 0;
+    padding-top: 2px;
+  }
+
+  /* Action buttons cell: always full-width row */
+  .resTable td.admin-row-actions {
+    margin-top: var(--space-2);
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--clr-border);
+  }
+
+  .resTable td.admin-row-actions .admin-row-actions-inner {
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+
+  /* Tabs for reservations: scroll horizontally */
+  .admin-tabs {
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    flex-wrap: nowrap;
+    padding: 0 var(--space-4);
+  }
+  .admin-tabs::-webkit-scrollbar { display: none; }
+
+  .admin-tab {
+    flex-shrink: 0;
+    font-size: var(--text-xs);
+    padding: var(--space-3) var(--space-4);
+  }
+
+  /* Filter bar: search full-width */
+  .admin-filter-bar {
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .admin-search-input {
+    min-width: 0;
+    width: 100%;
+  }
+}
+
+/* ─── 3. FLOOR PAGE — Header stacking ─── */
+@media (max-width: 640px) {
+  /* Floor page header: date picker + reserve button stack below title */
+  .admin-header-row[style*="justify-content:space-between"] {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: var(--space-4) !important;
+  }
+
+  /* The date input area stacks vertically on small phones */
+  .admin-header-row > div[style*="display:flex"] {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    width: 100%;
+  }
+
+  .admin-header-row form[style*="flex-direction:column"] {
+    min-width: 0 !important;
+    width: 100%;
+  }
+
+  /* Segmented tabs: scroll instead of wrap */
+  .segmented-tabs {
+    overflow-x: auto;
+    scrollbar-width: none;
+    flex-wrap: nowrap;
+  }
+  .segmented-tabs::-webkit-scrollbar { display: none; }
+
+  .segment-btn {
+    padding: 0.5rem 1.25rem;
+    font-size: var(--text-xs);
+  }
+
+  /* Floor tile grid: 2 columns on mobile */
+  .floor-grid-new {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* Floor schedule timetable: full horizontal scroll */
+  .floor-schedule-table {
+    min-width: 480px;
+  }
+}
+
+/* ─── 4. DASHBOARD — Recent reservations list ─── */
+@media (max-width: 640px) {
+  /* Each reservation row: stack info + actions */
+  .admin-res-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-3);
+    padding: var(--space-4);
+  }
+
+  .admin-res-actions {
+    align-self: flex-end;
+  }
+
+  /* Overview grid: already 1-col on mobile, reduce gap */
+  .admin-overview-grid {
+    gap: var(--space-4);
+  }
+}
+
+/* ─── 5. SETTINGS — form-row stacking ─── */
+/* settings.php uses .form-row (from dashboard.css) which is a
+   horizontal flexbox. Override it to stack vertically on mobile. */
+@media (max-width: 640px) {
+  .profile-sections .form-row {
+    flex-direction: column !important;
+    gap: var(--space-4) !important;
+  }
+
+  /* notification row: stack info + toggle */
+  .notification-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-3);
+  }
+
+  /* profile section header */
+  .profile-section-header {
+    padding: var(--space-5) var(--space-4);
+  }
+
+  .profile-section-body {
+    padding: var(--space-4) !important;
+  }
+}
+
+/* ─── 6. ADMIN MODALS — responsive on small screens ─── */
+@media (max-width: 640px) {
+  .admin-modal {
+    padding: var(--space-3);
+    align-items: flex-end; /* slide up from bottom on mobile */
+  }
+
+  .admin-modal-card {
+    max-width: 100%;
+    width: 100%;
+    max-height: 92vh;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    padding: var(--space-6) var(--space-4);
+  }
+
+  /* Modal detail rows: stack label + value */
+  .admin-modal-row {
+    grid-template-columns: 1fr;
+    gap: var(--space-1);
+  }
+
+  .admin-modal-row dt {
+    color: var(--clr-muted-fg);
+  }
+
+  /* Modal footer buttons: full-width */
+  .admin-modal-footer {
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .admin-modal-footer .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Reserve modal: form rows in modal stack */
+  #reserveTableModal .form-row {
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  #reserveTableModal .form-group {
+    flex: none !important;
+    width: 100% !important;
+  }
+}
+
+/* ─── 7. REPORTS PAGE — grids already handled above,
+   + ensure peak chart doesn't overflow ─── */
+@media (max-width: 640px) {
+  .peak-bars-wrap {
+    height: 180px;
+    overflow-x: auto;
+    min-width: 400px;
+  }
+
+  .trend-bars-wrap {
+    height: 180px;
+    overflow-x: auto;
+    min-width: 300px;
+  }
+
+  /* Wrap peak/trend in a scroll container */
+  .report-card {
+    overflow-x: auto;
+  }
+}
+
+/* ─── 8. ADMIN HEADER ROW — universal fix ─── */
+/* Prevent page title + actions colliding on any page */
+@media (max-width: 640px) {
+  .admin-header-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-3);
+  }
+
+  .admin-header {
+    padding-bottom: var(--space-4);
+    margin-bottom: var(--space-6);
+  }
+}
+
+/* ─── 9. USERS / GUESTS TABLE — horizontal scroll (simpler + correct) ─── */
+@media (max-width: 768px) {
+  /* The guest-table sits directly inside admin-section with no scroll wrapper.
+     We apply overflow on the section itself so the table scrolls. */
+  .admin-section:has(.guest-table),
+  .admin-section .guest-table {
+    display: block;
+    width: 100%;
+  }
+
+  .admin-section:has(.guest-table) {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .guest-table {
+    min-width: 560px;
+    font-size: var(--text-xs);
+  }
+
+  .guest-table thead th,
+  .guest-table tbody td {
+    padding: var(--space-2) var(--space-3);
+    white-space: nowrap;
+  }
+}
+
+/* ─── 10. CONFIRM DIALOG — always centered, never overflow ─── */
+@media (max-width: 480px) {
+  .ac-card {
+    padding: var(--space-6) var(--space-4);
+  }
+
+  .ac-actions {
+    flex-direction: column;
+  }
+
+  .ac-btn {
+    flex: none;
+    width: 100%;
+  }
+}
