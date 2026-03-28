@@ -54,7 +54,7 @@
   background-color: var(--clr-card);
   border-bottom: 1px solid var(--clr-border);
   position: sticky;
-  top: 0;
+  top: var(--nav-height);
   z-index: 30;
 }
 

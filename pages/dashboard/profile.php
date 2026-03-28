@@ -51,22 +51,20 @@ include '../../includes/header.php';
       <header class="dashboard-header" style="border-bottom:none; margin-bottom:var(--space-6); padding-bottom:0;">
         <div class="dashboard-header-row">
           <div>
-            <h1 class="dashboard-page-title" style="font-family:var(--font-serif); font-size:2.5rem; color:#1a100d;">My Profile</h1>
+            <h1 class="dashboard-page-title">My Profile</h1>
             <p class="dashboard-page-subtitle" style="font-size:1rem; color:#5c4e36;">Manage your personal information and password</p>
           </div>
         </div>
       </header>
       
       <!-- Profile Header -->
-      <div class="dash-section" style="margin-bottom: var(--space-6); border-color:#e5cd9e; display: flex; align-items: center; gap: var(--space-4); padding: var(--space-4);">
-          <div style="width: 70px; height: 70px; border-radius: 50%; background-color: var(--clr-primary, #b38b59); color: white; display: flex; align-items: center; justify-content: center; font-size: 1.75rem; font-weight: 500;">
+      <div class="dash-section profile-hero" style="margin-bottom: var(--space-6); border-color:#e5cd9e;">
+          <div class="profile-hero-avatar">
               <?= e($initials) ?>
           </div>
-          <div>
-              <h2 style="font-size: 1.5rem; font-family:var(--font-serif); color:#1a100d; margin: 0 0 0.25rem 0;">
-                  <?= e($firstName . ' ' . $lastName) ?>
-              </h2>
-              <p style="margin: 0; color:#5c4e36; display: flex; align-items: center; gap: 0.5rem; font-size: 0.95rem;">
+          <div class="profile-hero-details">
+              <h2><?= e($firstName . ' ' . $lastName) ?></h2>
+              <p>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
                   <?= e($user['email'] ?? '') ?>
               </p>
