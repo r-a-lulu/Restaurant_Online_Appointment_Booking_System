@@ -1,6 +1,6 @@
 <?php
 /**
- * Guest Settings — pages/dashboard/settings.php
+ * Guest Settings â€” pages/dashboard/settings.php
  */
 
 $pageTitle       = 'Settings';
@@ -171,11 +171,11 @@ include '../../includes/header.php';
 </div><!-- /.dashboard-layout -->
 
 <!-- Delete Account Confirmation Modal -->
-<div id="deleteAccountModal" class="admin-modal" style="display:none;">
-  <div class="admin-modal-card" style="max-width:420px;">
-    <div class="admin-modal-header">
-      <h2 class="admin-modal-title">Delete Account</h2>
-      <button class="admin-modal-close" aria-label="Close"
+<div id="deleteAccountModal" class="dashboard-modal" style="display:none;">
+  <div class="dashboard-modal-card" style="max-width:420px;">
+    <div class="dashboard-modal-header">
+      <h2 class="dashboard-modal-title">Delete Account</h2>
+      <button class="dashboard-modal-close" aria-label="Close"
         onclick="document.getElementById('deleteAccountModal').style.display='none'">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
@@ -189,7 +189,7 @@ include '../../includes/header.php';
         <input type="text" id="deleteConfirmInput" class="form-input" placeholder="DELETE">
       </div>
     </div>
-    <div class="admin-modal-footer">
+    <div class="dashboard-modal-footer">
       <button class="btn btn-outline" onclick="document.getElementById('deleteAccountModal').style.display='none'">Cancel</button>
       <button class="btn" id="confirmDeleteBtn"
         style="background:#ef4444; color:#fff; border:none;"
@@ -209,12 +209,14 @@ include '../../includes/header.php';
 
 <!-- Toast Notification -->
 <div id="settingsToast" style="
-  position:fixed; bottom:1.5rem; right:1.5rem; z-index:9999;
+  position:fixed; bottom:calc(1.5rem + env(safe-area-inset-bottom)); left:50%; z-index:9999;
+  width: max-content; max-width: calc(100vw - 3rem);
   background: var(--card-bg, #1e293b); color: var(--text-primary, #f8fafc);
   padding: var(--space-3) var(--space-5); border-radius: 0.5rem;
   box-shadow: 0 4px 20px rgba(0,0,0,0.3); font-size: var(--text-sm);
-  opacity:0; transform:translateY(0.5rem);
-  transition: opacity 0.25s ease, transform 0.25s ease; pointer-events:none;">
+  opacity:0; transform:translate(-50%, 0.5rem);
+  transition: opacity 0.25s ease, transform 0.25s ease; pointer-events:none;
+  text-align: center;">
 </div>
 
 <script>
@@ -222,10 +224,10 @@ function showSettingsToast(msg) {
   const t = document.getElementById('settingsToast');
   t.textContent = msg;
   t.style.opacity = '1';
-  t.style.transform = 'translateY(0)';
+  t.style.transform = 'translate(-50%, 0)';
   setTimeout(() => {
     t.style.opacity = '0';
-    t.style.transform = 'translateY(0.5rem)';
+    t.style.transform = 'translate(-50%, 0.5rem)';
   }, 2800);
 }
 </script>
@@ -233,3 +235,4 @@ function showSettingsToast(msg) {
 <script src="<?= $basePath ?>js/dashboard.js"></script>
 </body>
 </html>
+
