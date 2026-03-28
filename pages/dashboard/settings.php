@@ -70,7 +70,7 @@ include '../../includes/header.php';
                 <span class="switch-slider"></span>
               </label>
             </div>
-            <div style="display:flex; justify-content:flex-end; margin-top: var(--space-5);">
+            <div class="profile-form-actions profile-form-actions--end" style="margin-top: var(--space-5);">
               <button type="button" class="btn btn-primary" onclick="showSettingsToast('Notification preferences saved.')">Save Preferences</button>
             </div>
           </div>
@@ -103,7 +103,7 @@ include '../../includes/header.php';
                 <span class="switch-slider"></span>
               </label>
             </div>
-            <div style="display:flex; justify-content:flex-end; margin-top: var(--space-5);">
+            <div class="profile-form-actions profile-form-actions--end" style="margin-top: var(--space-5);">
               <button type="button" class="btn btn-primary" onclick="showSettingsToast('Security settings saved.')">Save Settings</button>
             </div>
           </div>
@@ -136,7 +136,7 @@ include '../../includes/header.php';
                 <span class="switch-slider"></span>
               </label>
             </div>
-            <div style="display:flex; justify-content:flex-end; margin-top: var(--space-5);">
+            <div class="profile-form-actions profile-form-actions--end" style="margin-top: var(--space-5);">
               <button type="button" class="btn btn-primary" onclick="showSettingsToast('Privacy settings saved.')">Save Settings</button>
             </div>
           </div>
@@ -149,7 +149,7 @@ include '../../includes/header.php';
             <p class="profile-section-desc">Irreversible actions. Please proceed with caution.</p>
           </div>
           <div class="profile-section-body">
-            <div style="display:flex; align-items:center; justify-content:space-between; gap: var(--space-4); flex-wrap:wrap;">
+            <div class="notification-row" style="border-bottom: none; padding-block: 0; align-items: center; flex-wrap: wrap;">
               <div>
                 <p class="notification-label">Delete Account</p>
                 <p class="notification-desc">Permanently remove your account and all associated data.</p>

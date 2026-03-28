@@ -220,6 +220,7 @@
   overflow-y: auto;
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
 
 .dashboard-content {
@@ -227,6 +228,7 @@
   padding: var(--space-8) var(--space-8);
   max-width: none;
   width: 100%;
+  min-width: 0;
 }
 
 /* ─── Dashboard Header ─── */
@@ -412,6 +414,7 @@
   align-items: center;
   gap: var(--space-2);
   flex-shrink: 0;
+  flex-wrap: wrap;
 }
 
 /* ─── Quick Actions ─── */
@@ -764,6 +767,29 @@
   gap: var(--space-4);
 }
 
+.profile-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-6);
+  margin-bottom: var(--space-6);
+}
+
+.profile-form-grid--single {
+  grid-template-columns: minmax(0, 1fr);
+  max-width: min(100%, 32rem);
+}
+
+.profile-form-actions {
+  display: flex;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.profile-form-actions--end {
+  justify-content: flex-end;
+}
+
 /* ─── Notification Row ─── */
 .notification-row {
   display: flex;
@@ -851,6 +877,8 @@
     top: 0;
     left: 0;
     height: 100vh;
+    width: min(86vw, 20rem);
+    max-width: calc(100vw - var(--space-8));
     transform: translateX(-100%);
     z-index: 50;
   }
@@ -874,6 +902,22 @@
     padding-top: calc(var(--space-4) + 3rem + var(--space-4)); /* offset for toggle btn */
   }
 
+  .dashboard-header {
+    margin-bottom: var(--space-6);
+    padding-bottom: var(--space-5);
+  }
+
+  .dashboard-header-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .dashboard-header-row > .btn,
+  .dashboard-header-row > a.btn {
+    width: 100%;
+    justify-content: center;
+  }
+
   .stat-cards {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -894,19 +938,80 @@
     grid-template-columns: 1fr;
   }
 
+  .profile-form-grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+    margin-bottom: var(--space-4);
+  }
+
+  .profile-form-grid--single {
+    max-width: none;
+  }
+
+  .profile-form-actions,
+  .profile-form-actions--end {
+    justify-content: stretch;
+  }
+
+  .profile-form-actions > .btn-confirm-res,
+  .profile-form-actions--end > .btn,
+  .profile-form-actions--end > .btn-confirm-res,
+  .profile-form-actions > .btn,
+  .profile-form-actions > button,
+  .profile-form-actions--end > button {
+    width: 100%;
+  }
+
+  .profile-section-header,
+  .profile-section-body,
+  .dash-section-header,
+  .dash-section-body {
+    padding-left: var(--space-4);
+    padding-right: var(--space-4);
+  }
+
+  .notification-row {
+    align-items: flex-start;
+  }
+
   .reservation-row {
     flex-wrap: wrap;
+    align-items: flex-start;
+    padding-left: var(--space-4);
+    padding-right: var(--space-4);
   }
 
   .reservation-actions {
     width: 100%;
-    justify-content: flex-end;
+    justify-content: stretch;
+  }
+
+  .reservation-actions > * {
+    flex: 1 1 100%;
+  }
+
+  .reservation-actions .btn,
+  .reservation-actions button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .history-row {
+    flex-wrap: wrap;
+    padding-left: var(--space-4);
+    padding-right: var(--space-4);
   }
 }
 
 @media (max-width: 480px) {
+  .dashboard-content {
+    padding-left: var(--space-3);
+    padding-right: var(--space-3);
+    padding-top: calc(var(--space-3) + 3rem + var(--space-3));
+  }
+
   .stat-cards {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
   }
 
   .time-slot-grid {
@@ -915,6 +1020,25 @@
 
   .dashboard-page-title {
     font-size: var(--text-2xl);
+  }
+
+  .stat-card {
+    padding: var(--space-5);
+  }
+
+  .reservation-date-block {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+
+  .profile-section-header,
+  .profile-section-body,
+  .dash-section-header,
+  .dash-section-body,
+  .reservation-row,
+  .history-row {
+    padding-left: var(--space-3);
+    padding-right: var(--space-3);
   }
 }
 

@@ -87,7 +87,7 @@ include '../../includes/header.php';
                 <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
                 <input type="hidden" name="action_token" value="<?= e(action_token('update_profile')) ?>">
               
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-6); margin-bottom: var(--space-6);">
+                <div class="profile-form-grid">
                     <div class="form-group" style="margin-bottom:0;">
                         <label class="form-label" for="first_name" style="font-family:var(--font-sans); font-size:0.9rem; font-weight:500; color:#5c4e36;">First Name</label>
                         <div style="margin-top:var(--space-2);">
@@ -102,7 +102,7 @@ include '../../includes/header.php';
                     </div>
                 </div>
                 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-6); margin-bottom: var(--space-6);">
+                <div class="profile-form-grid">
                     <div class="form-group" style="margin-bottom:0;">
                         <label class="form-label" for="email" style="font-family:var(--font-sans); font-size:0.9rem; font-weight:500; color:#5c4e36;">Email Address</label>
                         <div style="margin-top:var(--space-2);">
@@ -116,7 +116,9 @@ include '../../includes/header.php';
                         </div>
                     </div>
                 </div>
-                <button type="submit" class="btn-confirm-res" style="width: auto; padding: 0.75rem 2rem; border-radius: 8px;">Save Changes &rarr;</button>
+                <div class="profile-form-actions">
+                    <button type="submit" class="btn-confirm-res" style="padding: 0.75rem 2rem; border-radius: 8px;">Save Changes &rarr;</button>
+                </div>
             </form>
         </div>
       </div>
@@ -135,14 +137,16 @@ include '../../includes/header.php';
                 <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
                 <input type="hidden" name="action_token" value="<?= e(action_token('update_password')) ?>">
               
-                <div class="form-group" style="margin-bottom: var(--space-6); max-width: 50%;">
+                <div class="profile-form-grid profile-form-grid--single">
+                    <div class="form-group" style="margin-bottom: 0;">
                     <label class="form-label" for="current_password" style="font-family:var(--font-sans); font-size:0.9rem; font-weight:500; color:#5c4e36;">Current Password</label>
                     <div style="margin-top:var(--space-2);">
                         <input type="password" id="current_password" name="current_password" class="form-input custom-soft-select" style="width: 100%; border: 1px solid #d1d5db;" required>
                     </div>
                 </div>
+                </div>
                 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-6); margin-bottom: var(--space-6);">
+                <div class="profile-form-grid">
                     <div class="form-group" style="margin-bottom:0;">
                         <label class="form-label" for="new_password" style="font-family:var(--font-sans); font-size:0.9rem; font-weight:500; color:#5c4e36;">New Password</label>
                         <div style="margin-top:var(--space-2);">
@@ -156,7 +160,9 @@ include '../../includes/header.php';
                         </div>
                     </div>
                 </div>
-                <button type="submit" class="btn-confirm-res" style="width: auto; padding: 0.75rem 2rem; border-radius: 8px;">Update Password &rarr;</button>
+                <div class="profile-form-actions">
+                    <button type="submit" class="btn-confirm-res" style="padding: 0.75rem 2rem; border-radius: 8px;">Update Password &rarr;</button>
+                </div>
             </form>
         </div>
       </div>
