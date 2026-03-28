@@ -17,7 +17,7 @@ $dashSuccess = get_flash('dash_success');
 
 try {
   $pdo = db();
-  $stmt = $pdo->prepare("SELECT appointment_id, zone_name, appointment_date, start_time, party_size, status_name FROM vw_appointments_detail WHERE user_id = :uid AND status_name IN ('pending', 'confirmed') ORDER BY appointment_date DESC, start_time DESC");
+  $stmt = $pdo->prepare("SELECT appointment_id, customer_email, service_name, package_name, zone_name, table_label, appointment_date, start_time, end_time, party_size, status_name, special_requests, created_at FROM vw_appointments_detail WHERE user_id = :uid AND status_name IN ('pending', 'confirmed') ORDER BY appointment_date DESC, start_time DESC");
   $stmt->execute([':uid' => (int) $_SESSION['user_id']]);
   $allReservations = $stmt->fetchAll() ?: [];
   $stmt->closeCursor();
@@ -56,6 +56,10 @@ include '../../includes/header.php';
       </header>
 
       <div class="dash-section">
+        <div class="dash-section-header">
+          <h2 class="dash-section-title">Active Reservations</h2>
+          <span class="badge badge-secondary">Tap a reservation to view details</span>
+        </div>
         <div class="reservation-list" style="margin-top: 1rem;">
           <?php foreach ($allReservations as $row): ?>
             <?php
@@ -63,7 +67,26 @@ include '../../includes/header.php';
               $badgeClass = $sName === 'confirmed' ? 'badge-confirmed' : 'badge-pending';
               $badgeLabel = $sName === 'confirmed' ? 'Upcoming' : 'Pending';
             ?>
-          <div class="reservation-row">
+          <div
+            class="reservation-row reservation-row--clickable"
+            tabindex="0"
+            role="button"
+            aria-label="View details for reservation #<?= e((string) $row['appointment_id']) ?>"
+            data-reservation-details="1"
+            data-appointment-id="<?= e((string) $row['appointment_id']) ?>"
+            data-zone-name="<?= e($row['zone_name'] ?? '-') ?>"
+            data-start-time="<?= e((string) $row['start_time']) ?>"
+            data-end-time="<?= e((string) $row['end_time']) ?>"
+            data-party-size="<?= e((string) $row['party_size']) ?>"
+            data-status-label="<?= e($badgeLabel) ?>"
+            data-status-name="<?= e((string) $row['status_name']) ?>"
+            data-appointment-date="<?= e((string) $row['appointment_date']) ?>"
+            data-table-label="<?= e($row['table_label'] ?? 'Unassigned') ?>"
+            data-service-name="<?= e($row['service_name'] ?? '') ?>"
+            data-package-name="<?= e($row['package_name'] ?? '') ?>"
+            data-customer-email="<?= e($row['customer_email'] ?? '') ?>"
+            data-special-requests="<?= e($row['special_requests'] ?? '') ?>"
+            data-created-at="<?= e((string) $row['created_at']) ?>">
             <div class="reservation-date-block">
               <span class="reservation-date-day"><?= e(date('d', strtotime($row['appointment_date']))) ?></span>
               <span class="reservation-date-month"><?= e(date('M', strtotime($row['appointment_date']))) ?></span>
@@ -90,6 +113,68 @@ include '../../includes/header.php';
               </div>
             </div>
           <?php endif; ?>
+        </div>
+      </div>
+
+      <div class="reservation-detail-modal" id="reservationDetailModal" aria-hidden="true">
+        <div class="reservation-detail-card" role="dialog" aria-modal="true" aria-labelledby="reservationDetailTitle">
+          <div class="reservation-detail-header">
+            <div>
+              <p class="reservation-detail-eyebrow">Reservation Details</p>
+              <h2 class="reservation-detail-title" id="reservationDetailTitle">Reservation #<span id="reservationDetailId">-</span></h2>
+            </div>
+            <button type="button" class="reservation-detail-close" id="reservationDetailClose" aria-label="Close reservation details">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+
+          <div class="reservation-detail-grid">
+            <div class="reservation-detail-item">
+              <span class="reservation-detail-label">Status</span>
+              <span class="reservation-detail-value" id="reservationDetailStatus">-</span>
+            </div>
+            <div class="reservation-detail-item">
+              <span class="reservation-detail-label">Dining Zone</span>
+              <span class="reservation-detail-value" id="reservationDetailZone">-</span>
+            </div>
+            <div class="reservation-detail-item">
+              <span class="reservation-detail-label">Date</span>
+              <span class="reservation-detail-value" id="reservationDetailDate">-</span>
+            </div>
+            <div class="reservation-detail-item">
+              <span class="reservation-detail-label">Time</span>
+              <span class="reservation-detail-value" id="reservationDetailTime">-</span>
+            </div>
+            <div class="reservation-detail-item">
+              <span class="reservation-detail-label">Party Size</span>
+              <span class="reservation-detail-value" id="reservationDetailParty">-</span>
+            </div>
+            <div class="reservation-detail-item">
+              <span class="reservation-detail-label">Seating</span>
+              <span class="reservation-detail-value" id="reservationDetailTable">-</span>
+            </div>
+            <div class="reservation-detail-item">
+              <span class="reservation-detail-label">Service</span>
+              <span class="reservation-detail-value" id="reservationDetailService">-</span>
+            </div>
+            <div class="reservation-detail-item">
+              <span class="reservation-detail-label">Package</span>
+              <span class="reservation-detail-value" id="reservationDetailPackage">-</span>
+            </div>
+            <div class="reservation-detail-item">
+              <span class="reservation-detail-label">Contact Email</span>
+              <span class="reservation-detail-value" id="reservationDetailEmail">-</span>
+            </div>
+            <div class="reservation-detail-item">
+              <span class="reservation-detail-label">Created</span>
+              <span class="reservation-detail-value" id="reservationDetailCreated">-</span>
+            </div>
+          </div>
+
+          <div class="reservation-detail-notes">
+            <span class="reservation-detail-label">Special Requests</span>
+            <p class="reservation-detail-notes-value" id="reservationDetailNotes">No special requests.</p>
+          </div>
         </div>
       </div>
 

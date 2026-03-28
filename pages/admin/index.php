@@ -57,7 +57,7 @@ try {
     $stats['occupancy'] = (int) round(($bookedTables / $totalTables) * 100);
   }
 
-  $stmt = $pdo->prepare("SELECT v.appointment_id, v.customer_name, v.zone_name, v.party_size, v.start_time, v.status_name, a.user_id, (SELECT COUNT(*) FROM appointments a2 WHERE a2.user_id = a.user_id AND a2.appointment_id <> v.appointment_id AND a2.status_id IN (SELECT status_id FROM appointment_status WHERE status_name IN ('pending','confirmed'))) AS active_count FROM vw_upcoming_appointments v JOIN appointments a ON a.appointment_id = v.appointment_id ORDER BY v.appointment_date ASC, v.start_time ASC LIMIT 5");
+  $stmt = $pdo->prepare("SELECT v.appointment_id, v.customer_name, v.customer_email, v.zone_name, v.table_label, v.appointment_date, v.start_time, v.end_time, v.party_size, v.status_name, v.special_requests, v.created_at, a.user_id, (SELECT COUNT(*) FROM appointments a2 WHERE a2.user_id = a.user_id AND a2.appointment_id <> v.appointment_id AND a2.status_id IN (SELECT status_id FROM appointment_status WHERE status_name IN ('pending','confirmed'))) AS active_count FROM vw_upcoming_appointments v JOIN appointments a ON a.appointment_id = v.appointment_id ORDER BY v.appointment_date ASC, v.start_time ASC LIMIT 5");
   $stmt->execute();
   $recent = $stmt->fetchAll() ?: [];
   $stmt->closeCursor();
@@ -191,7 +191,25 @@ include '../../includes/header.php';
                 $badge = $row['status_name'] === 'pending' ? 'badge-pending' : ($row['status_name'] === 'confirmed' ? 'badge-confirmed' : 'badge-cancelled');
                 $badgeLabel = $row['status_name'] === 'confirmed' ? 'Upcoming' : ucfirst($row['status_name']);
               ?>
-              <div class="admin-res-row" data-status="<?= e($row['status_name']) ?>">
+              <div
+                class="admin-res-row admin-res-row--clickable"
+                data-status="<?= e($row['status_name']) ?>"
+                data-admin-reservation-details="1"
+                tabindex="0"
+                role="button"
+                aria-label="View details for reservation #<?= e((string) $row['appointment_id']) ?>"
+                data-appointment-id="<?= e((string) $row['appointment_id']) ?>"
+                data-customer-name="<?= e($row['customer_name'] ?? '') ?>"
+                data-customer-email="<?= e($row['customer_email'] ?? '') ?>"
+                data-zone-name="<?= e($row['zone_name'] ?? '-') ?>"
+                data-table-label="<?= e($row['table_label'] ?? 'Unassigned') ?>"
+                data-appointment-date="<?= e((string) $row['appointment_date']) ?>"
+                data-start-time="<?= e((string) $row['start_time']) ?>"
+                data-end-time="<?= e((string) $row['end_time']) ?>"
+                data-party-size="<?= e((string) $row['party_size']) ?>"
+                data-status-label="<?= e($badgeLabel) ?>"
+                data-special-requests="<?= e($row['special_requests'] ?? '') ?>"
+                data-created-at="<?= e((string) $row['created_at']) ?>">
                 <div class="admin-res-info">
                   <div class="admin-res-name-row">
                     <span class="admin-res-name"><?= e($row['customer_name']) ?></span>
@@ -270,6 +288,32 @@ include '../../includes/header.php';
           </div>
         </div>
 
+      </div>
+
+      <div class="admin-modal" id="adminReservationDetailModal" aria-hidden="true">
+        <div class="admin-modal-card" role="dialog" aria-modal="true" aria-labelledby="adminReservationDetailTitle">
+          <div class="admin-modal-header">
+            <div>
+              <h2 class="admin-modal-title" id="adminReservationDetailTitle">Reservation #<span id="adminReservationDetailId">-</span></h2>
+              <p class="admin-page-subtitle" style="margin-top: var(--space-1);">Full reservation details for admin review.</p>
+            </div>
+            <button class="admin-modal-close" id="adminReservationDetailClose" aria-label="Close reservation details" type="button">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+          <dl class="admin-modal-rows">
+            <div class="admin-modal-row"><dt>Status</dt><dd id="adminReservationDetailStatus">-</dd></div>
+            <div class="admin-modal-row"><dt>Guest</dt><dd id="adminReservationDetailGuest">-</dd></div>
+            <div class="admin-modal-row"><dt>Email</dt><dd id="adminReservationDetailEmail">-</dd></div>
+            <div class="admin-modal-row"><dt>Zone</dt><dd id="adminReservationDetailZone">-</dd></div>
+            <div class="admin-modal-row"><dt>Seating</dt><dd id="adminReservationDetailTable">-</dd></div>
+            <div class="admin-modal-row"><dt>Date</dt><dd id="adminReservationDetailDate">-</dd></div>
+            <div class="admin-modal-row"><dt>Time</dt><dd id="adminReservationDetailTime">-</dd></div>
+            <div class="admin-modal-row"><dt>Party Size</dt><dd id="adminReservationDetailParty">-</dd></div>
+            <div class="admin-modal-row"><dt>Created</dt><dd id="adminReservationDetailCreated">-</dd></div>
+            <div class="admin-modal-row"><dt>Special Requests</dt><dd id="adminReservationDetailNotes">No special requests.</dd></div>
+          </dl>
+        </div>
       </div>
 
     </div>

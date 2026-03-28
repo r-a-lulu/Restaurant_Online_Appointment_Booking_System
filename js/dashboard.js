@@ -35,7 +35,12 @@
 
   /* Close on Escape */
   document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape') closeSidebar();
+    if (e.key === 'Escape') {
+      closeSidebar();
+      if (reservationDetailModal && reservationDetailModal.classList.contains('open')) {
+        closeReservationDetail();
+      }
+    }
   });
 
   /* ─── Tabs ─── */
@@ -77,6 +82,17 @@
     document.body.style.overflow = '';
   }
 
+  function formatDashboardTime(time24) {
+    if (!time24) return '';
+    const parts = String(time24).split(':');
+    let h = parseInt(parts[0], 10);
+    const m = parts[1] || '00';
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    if (h > 12) h -= 12;
+    if (h === 0) h = 12;
+    return h + ':' + m + ' ' + ampm;
+  }
+
   cancelBtns.forEach(function (btn) {
     btn.addEventListener('click', openCancelModal);
   });
@@ -94,6 +110,95 @@
   });
 
   /* ─── Interactive Star Rating (History page) ─── */
+  const reservationDetailModal = document.getElementById('reservationDetailModal');
+  const reservationDetailClose = document.getElementById('reservationDetailClose');
+  const reservationRows = document.querySelectorAll('[data-reservation-details="1"]');
+
+  function setReservationDetailText(id, value) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = value && String(value).trim() !== '' ? value : '-';
+  }
+
+  function formatDetailDate(dateValue) {
+    if (!dateValue) return '-';
+    const parsed = new Date(dateValue + 'T00:00:00');
+    if (Number.isNaN(parsed.getTime())) return dateValue;
+    return parsed.toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  }
+
+  function formatDetailDateTime(dateTimeValue) {
+    if (!dateTimeValue) return '-';
+    const normalized = String(dateTimeValue).replace(' ', 'T');
+    const parsed = new Date(normalized);
+    if (Number.isNaN(parsed.getTime())) return dateTimeValue;
+    return parsed.toLocaleString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit'
+    });
+  }
+
+  function openReservationDetail(row) {
+    if (!reservationDetailModal || !row) return;
+
+    const startTime = row.dataset.startTime ? formatDashboardTime(row.dataset.startTime) : '-';
+    const endTime = row.dataset.endTime ? formatDashboardTime(row.dataset.endTime) : '-';
+    const partySize = row.dataset.partySize || '';
+    const notes = row.dataset.specialRequests || '';
+
+    setReservationDetailText('reservationDetailId', row.dataset.appointmentId || '-');
+    setReservationDetailText('reservationDetailStatus', row.dataset.statusLabel || row.dataset.statusName || '-');
+    setReservationDetailText('reservationDetailZone', row.dataset.zoneName || '-');
+    setReservationDetailText('reservationDetailDate', formatDetailDate(row.dataset.appointmentDate || ''));
+    setReservationDetailText('reservationDetailTime', startTime !== '-' && endTime !== '-' ? startTime + ' - ' + endTime : startTime);
+    setReservationDetailText('reservationDetailParty', partySize ? partySize + (partySize === '1' ? ' Guest' : ' Guests') : '-');
+    setReservationDetailText('reservationDetailTable', row.dataset.tableLabel || '-');
+    setReservationDetailText('reservationDetailService', row.dataset.serviceName || '-');
+    setReservationDetailText('reservationDetailPackage', row.dataset.packageName || '-');
+    setReservationDetailText('reservationDetailEmail', row.dataset.customerEmail || '-');
+    setReservationDetailText('reservationDetailCreated', formatDetailDateTime(row.dataset.createdAt || ''));
+    setReservationDetailText('reservationDetailNotes', notes || 'No special requests.');
+
+    reservationDetailModal.classList.add('open');
+    reservationDetailModal.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeReservationDetail() {
+    if (!reservationDetailModal) return;
+    reservationDetailModal.classList.remove('open');
+    reservationDetailModal.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+  }
+
+  reservationRows.forEach(function (row) {
+    row.addEventListener('click', function (e) {
+      if (e.target.closest('.reservation-actions')) return;
+      openReservationDetail(row);
+    });
+
+    row.addEventListener('keydown', function (e) {
+      if (e.target.closest('.reservation-actions')) return;
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        openReservationDetail(row);
+      }
+    });
+  });
+
+  reservationDetailClose && reservationDetailClose.addEventListener('click', closeReservationDetail);
+  reservationDetailModal && reservationDetailModal.addEventListener('click', function (e) {
+    if (e.target === reservationDetailModal) closeReservationDetail();
+  });
+
   const ratingGroups = document.querySelectorAll('.rating-interactive');
   ratingGroups.forEach(function (group) {
     const stars = group.querySelectorAll('.rating-star');

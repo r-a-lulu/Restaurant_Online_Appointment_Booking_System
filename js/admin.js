@@ -73,6 +73,110 @@
     return ACTIONS_BASE + encodeURIComponent(action);
   }
 
+  function formatAdminTime(time24) {
+    if (!time24) return '-';
+    const parts = String(time24).split(':');
+    let h = parseInt(parts[0], 10);
+    const m = parts[1] || '00';
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    if (h > 12) h -= 12;
+    if (h === 0) h = 12;
+    return h + ':' + m + ' ' + ampm;
+  }
+
+  function formatAdminDate(dateValue) {
+    if (!dateValue) return '-';
+    const parsed = new Date(dateValue + 'T00:00:00');
+    if (Number.isNaN(parsed.getTime())) return dateValue;
+    return parsed.toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  }
+
+  function formatAdminDateTime(dateTimeValue) {
+    if (!dateTimeValue) return '-';
+    const normalized = String(dateTimeValue).replace(' ', 'T');
+    const parsed = new Date(normalized);
+    if (Number.isNaN(parsed.getTime())) return dateTimeValue;
+    return parsed.toLocaleString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit'
+    });
+  }
+
+  const adminReservationDetailModal = document.getElementById('adminReservationDetailModal');
+  const adminReservationDetailClose = document.getElementById('adminReservationDetailClose');
+  const adminReservationRows = document.querySelectorAll('[data-admin-reservation-details="1"]');
+
+  function setAdminReservationDetailText(id, value) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = value && String(value).trim() !== '' ? value : '-';
+  }
+
+  function openAdminReservationDetail(row) {
+    if (!adminReservationDetailModal || !row) return;
+
+    const startTime = row.dataset.startTime ? formatAdminTime(row.dataset.startTime) : '-';
+    const endTime = row.dataset.endTime ? formatAdminTime(row.dataset.endTime) : '-';
+    const partySize = row.dataset.partySize || '';
+    const timeLabel = startTime !== '-' && endTime !== '-' ? startTime + ' - ' + endTime : startTime;
+
+    setAdminReservationDetailText('adminReservationDetailId', row.dataset.appointmentId || '-');
+    setAdminReservationDetailText('adminReservationDetailStatus', row.dataset.statusLabel || '-');
+    setAdminReservationDetailText('adminReservationDetailGuest', row.dataset.customerName || '-');
+    setAdminReservationDetailText('adminReservationDetailEmail', row.dataset.customerEmail || '-');
+    setAdminReservationDetailText('adminReservationDetailZone', row.dataset.zoneName || '-');
+    setAdminReservationDetailText('adminReservationDetailTable', row.dataset.tableLabel || '-');
+    setAdminReservationDetailText('adminReservationDetailDate', formatAdminDate(row.dataset.appointmentDate || ''));
+    setAdminReservationDetailText('adminReservationDetailTime', timeLabel);
+    setAdminReservationDetailText('adminReservationDetailParty', partySize ? partySize + (partySize === '1' ? ' Guest' : ' Guests') : '-');
+    setAdminReservationDetailText('adminReservationDetailCreated', formatAdminDateTime(row.dataset.createdAt || ''));
+    setAdminReservationDetailText('adminReservationDetailNotes', row.dataset.specialRequests || 'No special requests.');
+
+    adminReservationDetailModal.classList.add('open');
+    adminReservationDetailModal.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeAdminReservationDetail() {
+    if (!adminReservationDetailModal) return;
+    adminReservationDetailModal.classList.remove('open');
+    adminReservationDetailModal.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+  }
+
+  adminReservationRows.forEach(function (row) {
+    row.addEventListener('click', function (e) {
+      if (e.target.closest('form, button, a, input, select, textarea')) return;
+      openAdminReservationDetail(row);
+    });
+
+    row.addEventListener('keydown', function (e) {
+      if (e.target.closest('form, button, a, input, select, textarea')) return;
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        openAdminReservationDetail(row);
+      }
+    });
+  });
+
+  adminReservationDetailClose && adminReservationDetailClose.addEventListener('click', closeAdminReservationDetail);
+  adminReservationDetailModal && adminReservationDetailModal.addEventListener('click', function (e) {
+    if (e.target === adminReservationDetailModal) closeAdminReservationDetail();
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && adminReservationDetailModal && adminReservationDetailModal.classList.contains('open')) {
+      closeAdminReservationDetail();
+    }
+  });
+
   document.querySelectorAll('[data-modal-open]').forEach(function (btn) {
     btn.addEventListener('click', function (e) {
       e.preventDefault();

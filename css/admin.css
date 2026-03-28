@@ -1188,6 +1188,20 @@
   border-bottom: 1px solid var(--clr-border);
 }
 
+.admin-res-row--clickable {
+  cursor: pointer;
+}
+
+.admin-res-row--clickable:focus-visible,
+.admin-table-row--clickable:focus-visible {
+  outline: 2px solid var(--clr-primary);
+  outline-offset: -2px;
+}
+
+.admin-table-row--clickable {
+  cursor: pointer;
+}
+
 .admin-card-title {
   font-family: var(--font-serif);
   font-size: var(--text-lg);
